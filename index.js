@@ -319,7 +319,6 @@ const x402Manifest = {
 // x402scan and other discovery tools look for /.well-known/x402 (no extension)
 app.get("/.well-known/x402", (_req, res) => {
   res.setHeader("Content-Type", "application/json");
-  res.setHeader("Cache-Control", "public, max-age=3600");
   res.json(x402Manifest);
 });
 
