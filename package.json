@@ -1,46 +1,31 @@
 {
-
-  "type": "module",
-
-  "name": "x402-research-skill",
-
+  "name": "x402-research-api",
   "version": "1.0.0",
-
-  "description": "",
-
+  "description": "x402 payable real-time research API — AI agents pay 0.02 USDC on Base for structured research powered by Perplexity",
+  "type": "module",
   "main": "index.js",
-
   "scripts": {
-
-    "test": "echo \"Error: no test specified\" && exit 1"
-
+    "start": "node index.js",
+    "dev": "node --watch index.js"
   },
-
-  "keywords": [],
-
-  "author": "",
-
-  "license": "ISC",
-
+  "keywords": [
+    "x402",
+    "api",
+    "perplexity",
+    "usdc",
+    "base",
+    "ai-agents",
+    "micropayments"
+  ],
+  "license": "MIT",
   "dependencies": {
-
+    "@coinbase/x402": "^2.1.0",
     "@x402/core": "^2.6.0",
-
     "@x402/evm": "^2.6.0",
-
     "@x402/express": "^2.6.0",
-
-    "@x402/extensions": "^2.6.0",
-
     "axios": "^1.13.6",
-
     "cors": "^2.8.6",
-
-    "dotenv": "^17.3.1",
-
-    "express": "^5.2.1"
-
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1"
   }
-
 }
-
