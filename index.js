@@ -5,11 +5,16 @@
  * AI agents pay 0.02 USDC on Base mainnet to get structured, real-time
  * research results powered by Perplexity's Sonar model.
  *
+ * ── NEW in v2.1 ─────────────────────────────────────────────────────
+ *   • ERC-20 Multi-Token: Accept USDC + EURC on Base (EIP-3009)
+ *   • Sign-In-With-X (SIWX): CAIP-122 wallet auth for repeat access
+ *   • Updated x402 manifest with new capabilities
+ *
  * ── Setup ──────────────────────────────────────────────────────────
  *   npm init -y
  *   npm i express dotenv axios cors \
  *         @x402/core @x402/evm @x402/express \
- *         @x402/extensions/bazaar    # optional — for Bazaar discovery
+ *         @x402/extensions
  *   node index.js
  *
  * ── Deploy ─────────────────────────────────────────────────────────
@@ -26,9 +31,10 @@
  *
  * ── Protocol ───────────────────────────────────────────────────────
  *   Chain:   Base mainnet (eip155:8453)
- *   Token:   USDC (6 decimals)
- *   Price:   $0.02 per research query
+ *   Tokens:  USDC + EURC (EIP-3009), any ERC-20 (Permit2)
+ *   Price:   $0.02 per research query / $0.10 deep research
  *   Scheme:  exact (x402 v2)
+ *   Auth:    SIWX (CAIP-122 wallet sign-in for repeat access)
  */
 
 import "dotenv/config";
@@ -40,18 +46,22 @@ import { DEMO_PAGE_HTML, DEMO_VIDEO_HTML } from "./demo-pages.js";
 import { FAVICON_ICO, FAVICON_SVG, FAVICON_16, FAVICON_32, APPLE_TOUCH, OG_IMAGE } from "./favicons.js";
 
 // ── x402 v2 SDK imports ──────────────────────────────────────────
-import { paymentMiddleware, x402ResourceServer } from "@x402/express";
+import {
+  paymentMiddlewareFromHTTPServer,
+  x402ResourceServer,
+  x402HTTPResourceServer,
+} from "@x402/express";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 
-// ── Bazaar Discovery Extension (optional) ────────────────────────
-// Uncomment the lines below once @x402/extensions/bazaar is installed
-// and you want your endpoint to appear in the x402 Bazaar registry.
-//
-// import {
-//   bazaarResourceServerExtension,
-//   declareDiscoveryExtension,
-// } from "@x402/extensions/bazaar";
+// ── SIWX Extension (Sign-In-With-X) ─────────────────────────────
+import {
+  declareSIWxExtension,
+  siwxResourceServerExtension,
+  createSIWxSettleHook,
+  createSIWxRequestHook,
+  InMemorySIWxStorage,
+} from "@x402/extensions/sign-in-with-x";
 
 // ═══════════════════════════════════════════════════════════════════
 //  Configuration
@@ -66,6 +76,10 @@ const FACILITATOR_URL =
 
 // Base mainnet CAIP-2 identifier
 const NETWORK = "eip155:8453";
+
+// Token addresses on Base mainnet
+const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+const EURC_BASE = "0x60a3E35Cc302bFA44Cb288Bc5a4F316Fdb1adb42";
 
 // Price: $0.02 USDC (standard), $0.10 USDC (deep research)
 const PRICE = "$0.02";
@@ -106,8 +120,13 @@ app.use(
       "X-PAYMENT",
       "PAYMENT-SIGNATURE",
       "PAYMENT-REQUIRED",
+      "SIGN-IN-WITH-X",
     ],
-    exposedHeaders: ["PAYMENT-REQUIRED", "PAYMENT-SIGNATURE"],
+    exposedHeaders: [
+      "PAYMENT-REQUIRED",
+      "PAYMENT-SIGNATURE",
+      "SIGN-IN-WITH-X",
+    ],
   })
 );
 
@@ -146,7 +165,7 @@ app.get("/og-image.png", (_req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════
-//  x402 Payment Middleware (v2 SDK)
+//  x402 Payment Middleware (v2.1 — Multi-Token + SIWX)
 // ═══════════════════════════════════════════════════════════════════
 
 // 1. Connect to the CDP mainnet facilitator
@@ -154,16 +173,16 @@ const facilitatorClient = new HTTPFacilitatorClient({
   url: FACILITATOR_URL,
 });
 
-// 2. Create resource server and register Base mainnet EVM scheme
-const resourceServer = new x402ResourceServer(facilitatorClient).register(
-  NETWORK,
-  new ExactEvmScheme()
-);
+// 2. SIWX storage — tracks which wallets have paid (in-memory)
+const siwxStorage = new InMemorySIWxStorage();
 
-// ── Bazaar: register discovery extension (uncomment when ready) ──
-// resourceServer.registerExtension(bazaarResourceServerExtension);
+// 3. Create resource server with multi-token + SIWX support
+const resourceServer = new x402ResourceServer(facilitatorClient)
+  .register(NETWORK, new ExactEvmScheme())
+  .registerExtension(siwxResourceServerExtension)
+  .onAfterSettle(createSIWxSettleHook({ storage: siwxStorage }));
 
-// 3. Define route-level payment configuration
+// 4. Define route-level payment configuration (multi-token + SIWX)
 const routeConfig = {
   "POST /research": {
     accepts: [
@@ -172,12 +191,26 @@ const routeConfig = {
         price: PRICE,
         network: NETWORK,
         payTo: PAY_TO,
+        // Default: USDC (EIP-3009 — gasless, no approval needed)
+      },
+      {
+        scheme: "exact",
+        price: PRICE,
+        network: NETWORK,
+        payTo: PAY_TO,
+        asset: EURC_BASE,
+        // EURC (EIP-3009 — gasless, native support on Base)
       },
     ],
     description:
       "Broad real-time research for any topic — structured JSON " +
       "with citations, powered by Perplexity Sonar",
     mimeType: "application/json",
+    // SIWX: let returning buyers sign in instead of repaying
+    extensions: declareSIWxExtension({
+      statement:
+        "Sign in to access AgentOracle research you have already paid for",
+    }),
   },
   "POST /deep-research": {
     accepts: [
@@ -186,17 +219,34 @@ const routeConfig = {
         price: DEEP_PRICE,
         network: NETWORK,
         payTo: PAY_TO,
+        // Default: USDC
+      },
+      {
+        scheme: "exact",
+        price: DEEP_PRICE,
+        network: NETWORK,
+        payTo: PAY_TO,
+        asset: EURC_BASE,
+        // EURC
       },
     ],
     description:
       "Deep research with extended analysis — comprehensive JSON " +
       "with detailed findings, powered by Perplexity Sonar Pro",
     mimeType: "application/json",
+    extensions: declareSIWxExtension({
+      statement:
+        "Sign in to access AgentOracle deep research you have already paid for",
+    }),
   },
 };
 
-// 4. Apply middleware — unpaid requests get HTTP 402 + PAYMENT-REQUIRED header
-app.use(paymentMiddleware(routeConfig, resourceServer));
+// 5. Build HTTP resource server with SIWX request verification
+const httpServer = new x402HTTPResourceServer(resourceServer, routeConfig)
+  .onProtectedRequest(createSIWxRequestHook({ storage: siwxStorage }));
+
+// 6. Apply middleware — unpaid requests get HTTP 402 + PAYMENT-REQUIRED header
+app.use(paymentMiddlewareFromHTTPServer(httpServer));
 
 // ═══════════════════════════════════════════════════════════════════
 //  GET /preview — Free sample response (no payment required)
@@ -224,8 +274,14 @@ app.get("/preview", (_req, res) => {
       confidence_score: 0.92
     },
     pricing: {
-      research: "$0.02 USDC per query (Perplexity Sonar)",
-      deep_research: "$0.10 USDC per query (Perplexity Sonar Pro)"
+      research: "$0.02 USDC/EURC per query (Perplexity Sonar)",
+      deep_research: "$0.10 USDC/EURC per query (Perplexity Sonar Pro)"
+    },
+    accepted_tokens: ["USDC", "EURC", "Any ERC-20 via Permit2"],
+    features: {
+      multi_token: "Accept USDC, EURC, or any ERC-20 token on Base",
+      siwx: "Sign-In-With-X — returning buyers access content without repaying",
+      mcp_compatible: "Works with x402 MCP Toolkit for AI workflow integration",
     },
     try_it: "POST /research with x402 payment header — see /.well-known/x402.json for details"
   });
@@ -237,23 +293,37 @@ app.get("/preview", (_req, res) => {
 
 const x402Manifest = {
   x402Version: 2,
-  version: "x402/1.0",
+  version: "x402/2.1",
   name: "AgentOracle Research API",
   description:
     "Pay-per-query real-time research powered by Perplexity Sonar. " +
     "Two tiers: standard ($0.02) and deep ($0.10). Structured JSON " +
     "with citations, key facts, and confidence scores. No API keys " +
-    "needed — just pay with USDC on Base.",
+    "needed — just pay with USDC or EURC on Base. " +
+    "Supports ERC-20 multi-token payments (EIP-3009 + Permit2), " +
+    "Sign-In-With-X (SIWX) for repeat access, and x402 MCP Toolkit.",
+  features: [
+    "erc20-multi-token",
+    "siwx-wallet-auth",
+    "mcp-compatible",
+    "eip-3009",
+    "permit2",
+  ],
   endpoints: [
     {
       path: "/research",
       method: "POST",
       price: "0.02",
       currency: "USDC",
+      acceptedTokens: [
+        { symbol: "USDC", address: USDC_BASE, standard: "EIP-3009" },
+        { symbol: "EURC", address: EURC_BASE, standard: "EIP-3009" },
+      ],
       chain: "base",
       network: NETWORK,
       scheme: "exact",
       model: "sonar",
+      siwx: true,
       description:
         "Real-time research for any topic — structured JSON " +
         "with citations, powered by Perplexity Sonar",
@@ -279,10 +349,15 @@ const x402Manifest = {
       method: "POST",
       price: "0.10",
       currency: "USDC",
+      acceptedTokens: [
+        { symbol: "USDC", address: USDC_BASE, standard: "EIP-3009" },
+        { symbol: "EURC", address: EURC_BASE, standard: "EIP-3009" },
+      ],
       chain: "base",
       network: NETWORK,
       scheme: "exact",
       model: "sonar-pro",
+      siwx: true,
       description:
         "Deep research with comprehensive analysis — detailed JSON " +
         "with expert findings, powered by Perplexity Sonar Pro",
@@ -311,6 +386,19 @@ const x402Manifest = {
     base: {
       network: NETWORK,
       payTo: PAY_TO,
+      tokens: {
+        USDC: { address: USDC_BASE, standard: "EIP-3009" },
+        EURC: { address: EURC_BASE, standard: "EIP-3009" },
+      },
+    },
+  },
+  extensions: {
+    siwx: {
+      supported: true,
+      standard: "CAIP-122",
+      description:
+        "Sign-In-With-X — prove wallet ownership to access " +
+        "previously purchased content without repaying",
     },
   },
   pay_to: PAY_TO,
@@ -336,8 +424,15 @@ app.get("/health", (_req, res) => {
   res.json({
     status: "ok",
     service: "x402-research-api",
+    version: "2.1.0",
     chain: "base",
     network: NETWORK,
+    features: [
+      "erc20-multi-token",
+      "siwx-wallet-auth",
+      "mcp-compatible",
+    ],
+    acceptedTokens: ["USDC", "EURC"],
     endpoints: {
       "/research": { price: PRICE, model: PERPLEXITY_MODEL },
       "/deep-research": { price: DEEP_PRICE, model: PERPLEXITY_MODEL_PRO },
@@ -354,6 +449,7 @@ app.get("/health", (_req, res) => {
 //
 //  Flow:
 //    1. x402 middleware intercepts — returns 402 if unpaid
+//       (accepts USDC or EURC; SIWX auth for returning buyers)
 //    2. On valid payment, this handler runs
 //    3. Proxies to Perplexity API (sonar model, streaming off)
 //    4. Returns structured JSON: summary, key_facts, sources, confidence_score
@@ -518,7 +614,7 @@ app.get("/demo/video", (_req, res) => {
 // ═══════════════════════════════════════════════════════════════════
 //
 //  Body: { "query": "any natural-language question" }
-//  Price: $0.10 USDC — uses sonar-pro for deeper, more comprehensive research
+//  Price: $0.10 USDC/EURC — uses sonar-pro for deeper, more comprehensive research
 //
 
 app.post("/deep-research", async (req, res) => {
@@ -657,8 +753,8 @@ app.use((_req, res) => {
   res.status(404).json({
     error: "Not Found",
     available_endpoints: {
-      "POST /research": "Standard research ($0.02 USDC on Base)",
-      "POST /deep-research": "Deep research with Sonar Pro ($0.10 USDC on Base)",
+      "POST /research": "Standard research ($0.02 USDC/EURC on Base)",
+      "POST /deep-research": "Deep research with Sonar Pro ($0.10 USDC/EURC on Base)",
       "GET /health": "Service health check",
       "GET /.well-known/x402": "x402 discovery document",
       "GET /.well-known/x402.json": "x402 service manifest (alias)",
@@ -685,16 +781,19 @@ app.use((err, _req, res, _next) => {
 
 app.listen(PORT, () => {
   console.log("═══════════════════════════════════════════════════");
-  console.log("  x402 Research API — Live");
+  console.log("  AgentOracle Research API v2.1 — Live");
   console.log("═══════════════════════════════════════════════════");
   console.log(`  Endpoint:     http://localhost:${PORT}/research`);
+  console.log(`  Deep:         http://localhost:${PORT}/deep-research`);
   console.log(`  Health:       http://localhost:${PORT}/health`);
   console.log(`  Discovery:    http://localhost:${PORT}/.well-known/x402`);
   console.log(`  Manifest:     http://localhost:${PORT}/.well-known/x402.json`);
   console.log(`  Chain:        Base mainnet (${NETWORK})`);
-  console.log(`  Price:        ${PRICE} USDC per query`);
+  console.log(`  Tokens:       USDC + EURC (EIP-3009)`);
+  console.log(`  SIWX:         Enabled (CAIP-122 wallet auth)`);
+  console.log(`  Price:        ${PRICE} / ${DEEP_PRICE} per query`);
   console.log(`  Pay to:       ${PAY_TO}`);
   console.log(`  Facilitator:  ${FACILITATOR_URL}`);
-  console.log(`  Model:        ${PERPLEXITY_MODEL}`);
+  console.log(`  Model:        ${PERPLEXITY_MODEL} / ${PERPLEXITY_MODEL_PRO}`);
   console.log("═══════════════════════════════════════════════════");
 });
