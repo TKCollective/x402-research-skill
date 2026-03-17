@@ -1,7 +1,7 @@
 {
   "name": "x402-research-api",
-  "version": "1.0.0",
-  "description": "x402 payable real-time research API — AI agents pay 0.02 USDC on Base for structured research powered by Perplexity",
+  "version": "2.1.0",
+  "description": "x402 payable real-time research API — AI agents pay USDC/EURC on Base for structured research powered by Perplexity. Multi-token ERC-20 + SIWX wallet auth.",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -13,9 +13,13 @@
     "api",
     "perplexity",
     "usdc",
+    "eurc",
+    "erc20",
+    "siwx",
     "base",
     "ai-agents",
-    "micropayments"
+    "micropayments",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {
@@ -23,6 +27,7 @@
     "@x402/core": "^2.6.0",
     "@x402/evm": "^2.6.0",
     "@x402/express": "^2.6.0",
+    "@x402/extensions": "^2.6.0",
     "axios": "^1.13.6",
     "cors": "^2.8.6",
     "dotenv": "^16.6.1",
