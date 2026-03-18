@@ -375,10 +375,29 @@ app.post("/preview", async (req, res) => {
       preview_remaining: Math.max(0, PREVIEW_RATE_LIMIT - pEntry.count),
     });
   } catch (err) {
-    console.error("[/preview] Perplexity API error:", err.message);
+    console.error("[/preview] Perplexity API error:", err.message, err.response?.status, JSON.stringify(err.response?.data));
+    
+    if (err.response) {
+      const status = err.response.status;
+      if (status === 401) {
+        return res.status(502).json({
+          error: "Preview Unavailable",
+          message: "Upstream API key error.",
+        });
+      }
+      if (status === 429) {
+        return res.status(503).json({
+          error: "Preview Unavailable",
+          message: "Upstream rate limit reached. Try again shortly.",
+          retry_after_seconds: 10,
+        });
+      }
+    }
+    
     return res.status(502).json({
       error: "Preview Unavailable",
       message: "Could not generate preview. Try again shortly.",
+      debug: process.env.NODE_ENV !== "production" ? err.message : undefined,
     });
   }
 });
