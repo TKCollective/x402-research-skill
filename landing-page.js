@@ -774,6 +774,20 @@ a:hover { color: var(--color-primary-hover); }
   border-radius: var(--radius-sm);
 }
 
+.bento-card__badge-new {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #0D0D0D;
+  background: #C9A96E;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  margin-left: var(--space-2);
+  vertical-align: middle;
+}
+
 /* === HOW IT WORKS === */
 .steps-grid {
   display: grid;
@@ -1076,13 +1090,19 @@ a:hover { color: var(--color-primary-hover); }
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-6);
-  max-width: 800px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
 @media (min-width: 640px) {
   .pricing-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 960px) {
+  .pricing-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -1651,13 +1671,13 @@ a:hover { color: var(--color-primary-hover); }
     <div class="hero__content">
       <div class="hero__badge fade-in">
         <span class="hero__badge-dot"></span>
-        Live on Base Mainnet
+        v1.1.0 — Live on Base + SKALE
       </div>
       <h1 class="hero__headline fade-in">
         Research API<br>for <span class="gold-text">AI Agents</span>
       </h1>
       <p class="hero__subtitle fade-in">
-        Give your autonomous agent real-time research capabilities. Pay per query with USDC or EURC via the x402 protocol — no API keys, no subscriptions. Returning buyers sign in with their wallet via SIWX.
+        Give your autonomous agent real-time research capabilities. Pay per query with USDC via the x402 protocol — no API keys, no subscriptions, no auth overhead.
       </p>
       <div class="hero__ctas fade-in">
         <a href="https://agentoracle.co/.well-known/x402.json" class="btn btn--primary" target="_blank" rel="noopener noreferrer">View x402 Manifest →</a>
@@ -1682,7 +1702,7 @@ a:hover { color: var(--color-primary-hover); }
   <span class="cp">method:</span> <span class="cs">"POST"</span>,
   <span class="cp">headers:</span> {
     <span class="cs">"Content-Type"</span>: <span class="cs">"application/json"</span>,
-    <span class="cs">"X-PAYMENT"</span>: x402Payment  <span class="ck">// USDC or EURC on Base</span>
+    <span class="cs">"X-PAYMENT"</span>: x402Payment  <span class="ck">// USDC on Base</span>
   },
   <span class="cp">body:</span> <span class="cf">JSON.stringify</span>({
     <span class="cp">query:</span> <span class="cs">"Latest AI agent frameworks 2026"</span>
@@ -1710,15 +1730,19 @@ a:hover { color: var(--color-primary-hover); }
     </span>
     <span class="stat-pill">
       <span class="stat-pill__icon">◆</span>
-      USDC + EURC
+      Structured JSON
     </span>
     <span class="stat-pill">
       <span class="stat-pill__icon">◆</span>
-      SIWX Wallet Auth
+      Zero API Keys
     </span>
     <span class="stat-pill">
       <span class="stat-pill__icon">◆</span>
-      MCP Compatible
+      MCP Server
+    </span>
+    <span class="stat-pill">
+      <span class="stat-pill__icon">◆</span>
+      SKALE Gasless
     </span>
   </div>
 </div>
@@ -1750,20 +1774,18 @@ a:hover { color: var(--color-primary-hover); }
 
       <div class="bento-card">
         <div class="bento-card__icon">◈</div>
-        <h3 class="bento-card__title">Multi-Token Payments</h3>
+        <h3 class="bento-card__title">x402 Payments</h3>
         <p class="bento-card__desc">
-          Accept USDC, EURC, or any ERC-20 token on Base. EIP-3009 for gasless transfers, Permit2 for universal token support. Pay in the stablecoin you prefer.
+          HTTP-native micropayments. Your agent pays per request with USDC — built into the protocol layer, not bolted on.
         </p>
-        <span class="bento-card__tag">NEW</span>
       </div>
 
       <div class="bento-card">
-        <div class="bento-card__icon">🔐</div>
-        <h3 class="bento-card__title">Sign-In-With-X (SIWX)</h3>
+        <div class="bento-card__icon">⬡</div>
+        <h3 class="bento-card__title">Verifiable On-Chain</h3>
         <p class="bento-card__desc">
-          CAIP-122 wallet authentication. Returning buyers prove wallet ownership and access content they already paid for — no repayment needed.
+          Every payment settles on Base L2. Full transaction transparency via BaseScan. Trustless and auditable.
         </p>
-        <span class="bento-card__tag">NEW</span>
       </div>
 
       <div class="bento-card bento-card--large">
@@ -1776,18 +1798,42 @@ a:hover { color: var(--color-primary-hover); }
       </div>
 
       <div class="bento-card">
-        <div class="bento-card__icon">⬡</div>
-        <h3 class="bento-card__title">Verifiable On-Chain</h3>
-        <p class="bento-card__desc">
-          Every payment settles on Base L2. Full transaction transparency via BaseScan. Trustless and auditable.
-        </p>
-      </div>
-
-      <div class="bento-card">
         <div class="bento-card__icon">↯</div>
         <h3 class="bento-card__title">Low Latency</h3>
         <p class="bento-card__desc">
           Deployed on Vercel Edge for sub-second responses globally. Your agent doesn't wait.
+        </p>
+      </div>
+
+      <div class="bento-card">
+        <div class="bento-card__icon">🔍</div>
+        <h3 class="bento-card__title">Live Preview <span class="bento-card__badge-new">NEW</span></h3>
+        <p class="bento-card__desc">
+          Try before you pay. POST /preview with any query — get truncated results free. 10 requests per hour.
+        </p>
+      </div>
+
+      <div class="bento-card">
+        <div class="bento-card__icon">📊</div>
+        <h3 class="bento-card__title">Confidence Scoring <span class="bento-card__badge-new">NEW</span></h3>
+        <p class="bento-card__desc">
+          Every response includes a confidence object with score (0-1), level (high/medium/low), sources found, and facts extracted.
+        </p>
+      </div>
+
+      <div class="bento-card">
+        <div class="bento-card__icon">⚡</div>
+        <h3 class="bento-card__title">Rate Limit Headers <span class="bento-card__badge-new">NEW</span></h3>
+        <p class="bento-card__desc">
+          X-RateLimit-Limit, Remaining, and Reset headers on every response. Plan agent usage with 100 requests/hour per IP.
+        </p>
+      </div>
+
+      <div class="bento-card">
+        <div class="bento-card__icon">🔀</div>
+        <h3 class="bento-card__title">Tier Selector <span class="bento-card__badge-new">NEW</span></h3>
+        <p class="bento-card__desc">
+          Pass tier: 'deep' in the /research body to upgrade to Sonar Pro without switching endpoints. One endpoint, both tiers.
         </p>
       </div>
     </div>
@@ -1922,14 +1968,14 @@ a:hover { color: var(--color-primary-hover); }
         <div class="step__number">01</div>
         <h3 class="step__title">Discover Pricing</h3>
         <p class="step__desc">
-          Your agent fetches the x402 manifest at <code>/.well-known/x402.json</code> to learn the endpoint, price, and accepted tokens (USDC, EURC, or any ERC-20 on Base).
+          Your agent fetches the x402 manifest at <code>/.well-known/x402.json</code> to learn the endpoint, price, and accepted currency (USDC on Base).
         </p>
       </div>
       <div class="step">
         <div class="step__number">02</div>
         <h3 class="step__title">Send Payment + Query</h3>
         <p class="step__desc">
-          POST to <code>/research</code> or <code>/deep-research</code> with a JSON body and an <code>X-PAYMENT</code> header. Pay with USDC, EURC, or sign in with SIWX for repeat access.
+          POST to <code>/research</code> or <code>/deep-research</code> with a JSON body and an <code>X-PAYMENT</code> header containing the USDC payment proof.
         </p>
       </div>
       <div class="step">
@@ -2081,15 +2127,41 @@ a:hover { color: var(--color-primary-hover); }
     <div class="section-center">
       <span class="section-label fade-in">Pricing</span>
       <h2 class="section-title fade-in">Pay Only for What You Use</h2>
-      <p class="section-subtitle fade-in">No subscriptions. No minimums. No API keys. Pay per query with USDC or EURC on Base. Returning buyers use SIWX wallet auth.</p>
+      <p class="section-subtitle fade-in">No subscriptions. No minimums. No API keys. Just pay per query with USDC on Base.</p>
     </div>
 
     <div class="pricing-grid fade-in">
+      <!-- /preview -->
+      <div class="pricing-card">
+        <div class="pricing-card__endpoint">/preview</div>
+        <div class="pricing-card__price gold-gradient">FREE</div>
+        <div class="pricing-card__unit">no payment required</div>
+        <ul class="pricing-card__features" role="list">
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+            Live truncated results
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+            Confidence scores
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+            10 requests/hour
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+            No payment required
+          </li>
+        </ul>
+        <a href="#try-it" class="btn btn--ghost" style="width: 100%;">Try /preview</a>
+      </div>
+
       <!-- /research -->
       <div class="pricing-card pricing-card--featured">
         <div class="pricing-card__endpoint">/research</div>
         <div class="pricing-card__price gold-gradient">$0.02</div>
-        <div class="pricing-card__unit">per query · USDC or EURC on Base</div>
+        <div class="pricing-card__unit">per query · USDC on Base</div>
         <ul class="pricing-card__features" role="list">
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
@@ -2101,7 +2173,7 @@ a:hover { color: var(--color-primary-hover); }
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-            SIWX wallet auth for repeat access
+            Sub-2 second responses
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
@@ -2115,7 +2187,7 @@ a:hover { color: var(--color-primary-hover); }
       <div class="pricing-card">
         <div class="pricing-card__endpoint">/deep-research</div>
         <div class="pricing-card__price gold-gradient">$0.10</div>
-        <div class="pricing-card__unit">per query · USDC or EURC on Base</div>
+        <div class="pricing-card__unit">per query · USDC on Base</div>
         <ul class="pricing-card__features" role="list">
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
@@ -2127,7 +2199,7 @@ a:hover { color: var(--color-primary-hover); }
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-            SIWX wallet auth for repeat access
+            Higher confidence scoring
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
@@ -2186,16 +2258,8 @@ a:hover { color: var(--color-primary-hover); }
         <span class="spec-item__value">Base (L2)</span>
       </div>
       <div class="spec-item">
-        <span class="spec-item__label">Tokens</span>
-        <span class="spec-item__value">USDC + EURC</span>
-      </div>
-      <div class="spec-item">
-        <span class="spec-item__label">Token Standard</span>
-        <span class="spec-item__value">EIP-3009 + Permit2</span>
-      </div>
-      <div class="spec-item">
-        <span class="spec-item__label">Auth</span>
-        <span class="spec-item__value">SIWX (CAIP-122)</span>
+        <span class="spec-item__label">Currency</span>
+        <span class="spec-item__value">USDC</span>
       </div>
       <div class="spec-item">
         <span class="spec-item__label">Facilitator</span>
@@ -2207,7 +2271,7 @@ a:hover { color: var(--color-primary-hover); }
       </div>
       <div class="spec-item">
         <span class="spec-item__label">Endpoints</span>
-        <span class="spec-item__value">/research · /deep-research</span>
+        <span class="spec-item__value">/preview · /research · /deep-research</span>
       </div>
       <div class="spec-item">
         <span class="spec-item__label">Hosting</span>
@@ -2224,6 +2288,18 @@ a:hover { color: var(--color-primary-hover); }
       <div class="spec-item">
         <span class="spec-item__label">Response Format</span>
         <span class="spec-item__value">JSON</span>
+      </div>
+      <div class="spec-item">
+        <span class="spec-item__label">Gasless Payments</span>
+        <span class="spec-item__value">SKALE Base (coming soon)</span>
+      </div>
+      <div class="spec-item">
+        <span class="spec-item__label">Rate Limits</span>
+        <span class="spec-item__value">100/hr paid · 10/hr preview</span>
+      </div>
+      <div class="spec-item">
+        <span class="spec-item__label">Version</span>
+        <span class="spec-item__value">v1.1.0</span>
       </div>
     </div>
   </div>
