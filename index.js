@@ -5,16 +5,11 @@
  * AI agents pay 0.02 USDC on Base mainnet to get structured, real-time
  * research results powered by Perplexity's Sonar model.
  *
- * ── NEW in v2.1 ─────────────────────────────────────────────────────
- *   • ERC-20 Multi-Token: Accept USDC + EURC on Base (EIP-3009)
- *   • Sign-In-With-X (SIWX): CAIP-122 wallet auth for repeat access
- *   • Updated x402 manifest with new capabilities
- *
  * ── Setup ──────────────────────────────────────────────────────────
  *   npm init -y
  *   npm i express dotenv axios cors \
  *         @x402/core @x402/evm @x402/express \
- *         @x402/extensions
+ *         @x402/extensions/bazaar    # optional — for Bazaar discovery
  *   node index.js
  *
  * ── Deploy ─────────────────────────────────────────────────────────
@@ -31,10 +26,9 @@
  *
  * ── Protocol ───────────────────────────────────────────────────────
  *   Chain:   Base mainnet (eip155:8453)
- *   Tokens:  USDC + EURC (EIP-3009), any ERC-20 (Permit2)
- *   Price:   $0.02 per research query / $0.10 deep research
+ *   Token:   USDC (6 decimals)
+ *   Price:   $0.02 per research query
  *   Scheme:  exact (x402 v2)
- *   Auth:    SIWX (CAIP-122 wallet sign-in for repeat access)
  */
 
 import "dotenv/config";
@@ -46,22 +40,18 @@ import { DEMO_PAGE_HTML, DEMO_VIDEO_HTML } from "./demo-pages.js";
 import { FAVICON_ICO, FAVICON_SVG, FAVICON_16, FAVICON_32, APPLE_TOUCH, OG_IMAGE } from "./favicons.js";
 
 // ── x402 v2 SDK imports ──────────────────────────────────────────
-import {
-  paymentMiddlewareFromHTTPServer,
-  x402ResourceServer,
-  x402HTTPResourceServer,
-} from "@x402/express";
+import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 
-// ── SIWX Extension (Sign-In-With-X) ─────────────────────────────
-import {
-  declareSIWxExtension,
-  siwxResourceServerExtension,
-  createSIWxSettleHook,
-  createSIWxRequestHook,
-  InMemorySIWxStorage,
-} from "@x402/extensions/sign-in-with-x";
+// ── Bazaar Discovery Extension (optional) ────────────────────────
+// Uncomment the lines below once @x402/extensions/bazaar is installed
+// and you want your endpoint to appear in the x402 Bazaar registry.
+//
+// import {
+//   bazaarResourceServerExtension,
+//   declareDiscoveryExtension,
+// } from "@x402/extensions/bazaar";
 
 // ═══════════════════════════════════════════════════════════════════
 //  Configuration
@@ -77,10 +67,6 @@ const FACILITATOR_URL =
 // Base mainnet CAIP-2 identifier
 const NETWORK = "eip155:8453";
 
-// Token addresses on Base mainnet
-const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
-const EURC_BASE = "0x60a3E35Cc302bFA44Cb288Bc5a4F316Fdb1adb42";
-
 // Price: $0.02 USDC (standard), $0.10 USDC (deep research)
 const PRICE = "$0.02";
 const DEEP_PRICE = "$0.10";
@@ -88,6 +74,46 @@ const DEEP_PRICE = "$0.10";
 // Perplexity models
 const PERPLEXITY_MODEL = "sonar";
 const PERPLEXITY_MODEL_PRO = "sonar-pro";
+
+// ── Rate Limiting (in-memory, per-IP) ────────────────────────────
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const RATE_LIMIT_MAX = 100; // 100 requests per hour per IP
+const rateLimitStore = new Map();
+
+function getRateLimitInfo(ip) {
+  const now = Date.now();
+  let entry = rateLimitStore.get(ip);
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    entry = { windowStart: now, count: 0 };
+    rateLimitStore.set(ip, entry);
+  }
+  return entry;
+}
+
+function consumeRateLimit(ip) {
+  const entry = getRateLimitInfo(ip);
+  entry.count += 1;
+  rateLimitStore.set(ip, entry);
+  return entry;
+}
+
+function setRateLimitHeaders(res, entry) {
+  const remaining = Math.max(0, RATE_LIMIT_MAX - entry.count);
+  const resetAt = Math.ceil((entry.windowStart + RATE_LIMIT_WINDOW_MS) / 1000);
+  res.setHeader("X-RateLimit-Limit", String(RATE_LIMIT_MAX));
+  res.setHeader("X-RateLimit-Remaining", String(remaining));
+  res.setHeader("X-RateLimit-Reset", String(resetAt));
+}
+
+// Clean up stale rate limit entries every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of rateLimitStore) {
+    if (now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+      rateLimitStore.delete(ip);
+    }
+  }
+}, 10 * 60 * 1000);
 
 // ── Validation ───────────────────────────────────────────────────
 if (!PAY_TO || PAY_TO === "0x...") {
@@ -120,12 +146,13 @@ app.use(
       "X-PAYMENT",
       "PAYMENT-SIGNATURE",
       "PAYMENT-REQUIRED",
-      "SIGN-IN-WITH-X",
     ],
     exposedHeaders: [
       "PAYMENT-REQUIRED",
       "PAYMENT-SIGNATURE",
-      "SIGN-IN-WITH-X",
+      "X-RateLimit-Limit",
+      "X-RateLimit-Remaining",
+      "X-RateLimit-Reset",
     ],
   })
 );
@@ -165,7 +192,7 @@ app.get("/og-image.png", (_req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════
-//  x402 Payment Middleware (v2.1 — Multi-Token + SIWX)
+//  x402 Payment Middleware (v2 SDK)
 // ═══════════════════════════════════════════════════════════════════
 
 // 1. Connect to the CDP mainnet facilitator
@@ -173,16 +200,16 @@ const facilitatorClient = new HTTPFacilitatorClient({
   url: FACILITATOR_URL,
 });
 
-// 2. SIWX storage — tracks which wallets have paid (in-memory)
-const siwxStorage = new InMemorySIWxStorage();
+// 2. Create resource server and register Base mainnet EVM scheme
+const resourceServer = new x402ResourceServer(facilitatorClient).register(
+  NETWORK,
+  new ExactEvmScheme()
+);
 
-// 3. Create resource server with multi-token + SIWX support
-const resourceServer = new x402ResourceServer(facilitatorClient)
-  .register(NETWORK, new ExactEvmScheme())
-  .registerExtension(siwxResourceServerExtension)
-  .onAfterSettle(createSIWxSettleHook({ storage: siwxStorage }));
+// ── Bazaar: register discovery extension (uncomment when ready) ──
+// resourceServer.registerExtension(bazaarResourceServerExtension);
 
-// 4. Define route-level payment configuration (multi-token + SIWX)
+// 3. Define route-level payment configuration
 const routeConfig = {
   "POST /research": {
     accepts: [
@@ -191,26 +218,12 @@ const routeConfig = {
         price: PRICE,
         network: NETWORK,
         payTo: PAY_TO,
-        // Default: USDC (EIP-3009 — gasless, no approval needed)
-      },
-      {
-        scheme: "exact",
-        price: PRICE,
-        network: NETWORK,
-        payTo: PAY_TO,
-        asset: EURC_BASE,
-        // EURC (EIP-3009 — gasless, native support on Base)
       },
     ],
     description:
       "Broad real-time research for any topic — structured JSON " +
       "with citations, powered by Perplexity Sonar",
     mimeType: "application/json",
-    // SIWX: let returning buyers sign in instead of repaying
-    extensions: declareSIWxExtension({
-      statement:
-        "Sign in to access AgentOracle research you have already paid for",
-    }),
   },
   "POST /deep-research": {
     accepts: [
@@ -219,71 +232,175 @@ const routeConfig = {
         price: DEEP_PRICE,
         network: NETWORK,
         payTo: PAY_TO,
-        // Default: USDC
-      },
-      {
-        scheme: "exact",
-        price: DEEP_PRICE,
-        network: NETWORK,
-        payTo: PAY_TO,
-        asset: EURC_BASE,
-        // EURC
       },
     ],
     description:
       "Deep research with extended analysis — comprehensive JSON " +
       "with detailed findings, powered by Perplexity Sonar Pro",
     mimeType: "application/json",
-    extensions: declareSIWxExtension({
-      statement:
-        "Sign in to access AgentOracle deep research you have already paid for",
-    }),
   },
 };
 
-// 5. Build HTTP resource server with SIWX request verification
-const httpServer = new x402HTTPResourceServer(resourceServer, routeConfig)
-  .onProtectedRequest(createSIWxRequestHook({ storage: siwxStorage }));
-
-// 6. Apply middleware — unpaid requests get HTTP 402 + PAYMENT-REQUIRED header
-app.use(paymentMiddlewareFromHTTPServer(httpServer));
+// 4. Apply middleware — unpaid requests get HTTP 402 + PAYMENT-REQUIRED header
+app.use(paymentMiddleware(routeConfig, resourceServer));
 
 // ═══════════════════════════════════════════════════════════════════
-//  GET /preview — Free sample response (no payment required)
+//  POST /preview — Live preview (free, truncated results)
 // ═══════════════════════════════════════════════════════════════════
+//
+//  Agents can test a real query before paying. Returns a truncated
+//  summary (first 200 chars), limited key_facts (max 2), no sources,
+//  and a confidence score. Full results require x402 payment.
+//
+//  Rate limited: 10 preview requests per hour per IP.
 
+const PREVIEW_RATE_LIMIT = 10;
+const previewRateLimitStore = new Map();
+
+app.post("/preview", async (req, res) => {
+  const { query } = req.body;
+
+  if (!query || typeof query !== "string" || query.trim().length === 0) {
+    return res.status(400).json({
+      error: "Bad Request",
+      message: 'Request body must include a non-empty "query" string.',
+      example: { query: "What are the latest developments in AI agent frameworks?" },
+    });
+  }
+
+  if (query.length > 2000) {
+    return res.status(400).json({
+      error: "Bad Request",
+      message: "Query must be 2000 characters or fewer.",
+    });
+  }
+
+  // Preview-specific rate limiting (stricter)
+  const ip = req.ip || req.headers["x-forwarded-for"] || "unknown";
+  const now = Date.now();
+  let pEntry = previewRateLimitStore.get(ip);
+  if (!pEntry || now - pEntry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    pEntry = { windowStart: now, count: 0 };
+  }
+  pEntry.count += 1;
+  previewRateLimitStore.set(ip, pEntry);
+
+  if (pEntry.count > PREVIEW_RATE_LIMIT) {
+    return res.status(429).json({
+      error: "Rate Limited",
+      message: `Preview is limited to ${PREVIEW_RATE_LIMIT} requests per hour. Use POST /research with x402 payment for unlimited queries.`,
+      upgrade: "POST /research ($0.02 USDC) or POST /deep-research ($0.10 USDC)",
+    });
+  }
+
+  try {
+    const perplexityResponse = await axios.post(
+      "https://api.perplexity.ai/chat/completions",
+      {
+        model: PERPLEXITY_MODEL,
+        stream: false,
+        max_tokens: 500, // shorter for preview
+        messages: [
+          {
+            role: "system",
+            content:
+              'Respond only in clean JSON: { "summary": string, "key_facts": array, ' +
+              '"sources": array, "confidence_score": number }. ' +
+              "Keep concise, accurate, real-time.",
+          },
+          {
+            role: "user",
+            content: query.trim(),
+          },
+        ],
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${PERPLEXITY_KEY}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        timeout: 15000,
+      }
+    );
+
+    const choice = perplexityResponse.data?.choices?.[0];
+    const rawContent = choice?.message?.content || "";
+
+    let fullResult;
+    try {
+      const cleaned = rawContent
+        .replace(/^```(?:json)?\s*/i, "")
+        .replace(/\s*```$/i, "")
+        .trim();
+      fullResult = JSON.parse(cleaned);
+    } catch {
+      fullResult = {
+        summary: rawContent,
+        key_facts: [],
+        sources: [],
+        confidence_score: 0.5,
+      };
+    }
+
+    // Truncate for preview
+    const truncatedSummary = fullResult.summary
+      ? fullResult.summary.substring(0, 200) + (fullResult.summary.length > 200 ? "..." : "")
+      : "";
+    const truncatedFacts = (fullResult.key_facts || []).slice(0, 2);
+    const totalFacts = (fullResult.key_facts || []).length;
+    const totalSources = (fullResult.sources || []).length;
+
+    return res.json({
+      preview: true,
+      query: query.trim(),
+      result: {
+        summary: truncatedSummary,
+        key_facts: truncatedFacts,
+        confidence_score: fullResult.confidence_score || 0.5,
+      },
+      truncated: {
+        summary_length: fullResult.summary ? fullResult.summary.length : 0,
+        total_key_facts: totalFacts,
+        shown_key_facts: truncatedFacts.length,
+        total_sources: totalSources,
+        shown_sources: 0,
+      },
+      upgrade: {
+        message: "Pay to unlock full results with all facts, sources, and complete summary.",
+        standard: "POST /research — $0.02 USDC (Sonar)",
+        deep: "POST /deep-research — $0.10 USDC (Sonar Pro)",
+        how: "See /.well-known/x402.json for payment details",
+      },
+      preview_remaining: Math.max(0, PREVIEW_RATE_LIMIT - pEntry.count),
+    });
+  } catch (err) {
+    console.error("[/preview] Perplexity API error:", err.message);
+    return res.status(502).json({
+      error: "Preview Unavailable",
+      message: "Could not generate preview. Try again shortly.",
+    });
+  }
+});
+
+// Keep GET /preview for backward compatibility (static sample)
 app.get("/preview", (_req, res) => {
   res.json({
-    note: "Free preview — no payment required. For real-time queries, use POST /research with x402 payment.",
+    note: "Free preview — send a POST request with {\"query\": \"your question\"} to get a live truncated preview. No payment required.",
     sample_query: "What are the latest developments in AI agent frameworks?",
     sample_result: {
-      summary: "AI agent frameworks are evolving rapidly in 2026. LangChain and CrewAI lead the open-source ecosystem, while x402 protocol enables native agent-to-service payments via USDC micropayments on Base. The MCP standard is becoming the default for tool access, and ERC-8004 is establishing on-chain agent identity.",
+      summary: "AI agent frameworks are evolving rapidly in 2026. LangChain and CrewAI lead the open-source ecosystem, while x402 protocol enables native agent-to-service payments...",
       key_facts: [
         "LangChain and CrewAI dominate open-source agent frameworks",
-        "x402 protocol enables agent-to-service payments without API keys",
-        "MCP (Model Context Protocol) standardizing tool access across providers",
-        "ERC-8004 creating on-chain agent identity standard",
-        "Over $24M in x402 payment volume processed in the last 30 days"
-      ],
-      sources: [
-        "https://docs.langchain.com",
-        "https://www.crewai.com",
-        "https://x402.org",
-        "https://docs.cdp.coinbase.com/x402"
+        "x402 protocol enables agent-to-service payments without API keys"
       ],
       confidence_score: 0.92
     },
     pricing: {
-      research: "$0.02 USDC/EURC per query (Perplexity Sonar)",
-      deep_research: "$0.10 USDC/EURC per query (Perplexity Sonar Pro)"
+      research: "$0.02 USDC per query (Perplexity Sonar)",
+      deep_research: "$0.10 USDC per query (Perplexity Sonar Pro)"
     },
-    accepted_tokens: ["USDC", "EURC", "Any ERC-20 via Permit2"],
-    features: {
-      multi_token: "Accept USDC, EURC, or any ERC-20 token on Base",
-      siwx: "Sign-In-With-X — returning buyers access content without repaying",
-      mcp_compatible: "Works with x402 MCP Toolkit for AI workflow integration",
-    },
-    try_it: "POST /research with x402 payment header — see /.well-known/x402.json for details"
+    try_it: "POST /preview with {\"query\": \"...\"} for a live preview, or POST /research with x402 payment for full results"
   });
 });
 
@@ -293,40 +410,26 @@ app.get("/preview", (_req, res) => {
 
 const x402Manifest = {
   x402Version: 2,
-  version: "x402/2.1",
+  version: "x402/1.0",
   name: "AgentOracle Research API",
   description:
     "Pay-per-query real-time research powered by Perplexity Sonar. " +
     "Two tiers: standard ($0.02) and deep ($0.10). Structured JSON " +
     "with citations, key facts, and confidence scores. No API keys " +
-    "needed — just pay with USDC or EURC on Base. " +
-    "Supports ERC-20 multi-token payments (EIP-3009 + Permit2), " +
-    "Sign-In-With-X (SIWX) for repeat access, and x402 MCP Toolkit.",
-  features: [
-    "erc20-multi-token",
-    "siwx-wallet-auth",
-    "mcp-compatible",
-    "eip-3009",
-    "permit2",
-  ],
+    "needed — just pay with USDC on Base.",
   endpoints: [
     {
-      path: "/research",
+      path: "/preview",
       method: "POST",
-      price: "0.02",
+      price: "0.00",
       currency: "USDC",
-      acceptedTokens: [
-        { symbol: "USDC", address: USDC_BASE, standard: "EIP-3009" },
-        { symbol: "EURC", address: EURC_BASE, standard: "EIP-3009" },
-      ],
       chain: "base",
       network: NETWORK,
-      scheme: "exact",
+      scheme: "free",
       model: "sonar",
-      siwx: true,
       description:
-        "Real-time research for any topic — structured JSON " +
-        "with citations, powered by Perplexity Sonar",
+        "Free live preview — returns truncated summary (200 chars), " +
+        "2 key facts, confidence score. No sources. 10 requests/hour.",
       input: {
         body: {
           query: {
@@ -338,10 +441,46 @@ const x402Manifest = {
         },
       },
       output: {
+        summary: "string (truncated)",
+        key_facts: "array (max 2)",
+        confidence_score: "number",
+      },
+    },
+    {
+      path: "/research",
+      method: "POST",
+      price: "0.02",
+      currency: "USDC",
+      chain: "base",
+      network: NETWORK,
+      scheme: "exact",
+      model: "sonar",
+      description:
+        "Real-time research for any topic — structured JSON " +
+        "with citations, powered by Perplexity Sonar",
+      input: {
+        body: {
+          query: {
+            type: "string",
+            required: true,
+            maxLength: 2000,
+            description: "Natural-language research question",
+          },
+          tier: {
+            type: "string",
+            required: false,
+            enum: ["standard", "deep"],
+            default: "standard",
+            description: "Pass 'deep' to upgrade to Sonar Pro ($0.10)",
+          },
+        },
+      },
+      output: {
         summary: "string",
         key_facts: "array",
         sources: "array",
         confidence_score: "number",
+        confidence_level: "string (high|medium|low)",
       },
     },
     {
@@ -349,15 +488,10 @@ const x402Manifest = {
       method: "POST",
       price: "0.10",
       currency: "USDC",
-      acceptedTokens: [
-        { symbol: "USDC", address: USDC_BASE, standard: "EIP-3009" },
-        { symbol: "EURC", address: EURC_BASE, standard: "EIP-3009" },
-      ],
       chain: "base",
       network: NETWORK,
       scheme: "exact",
       model: "sonar-pro",
-      siwx: true,
       description:
         "Deep research with comprehensive analysis — detailed JSON " +
         "with expert findings, powered by Perplexity Sonar Pro",
@@ -386,19 +520,6 @@ const x402Manifest = {
     base: {
       network: NETWORK,
       payTo: PAY_TO,
-      tokens: {
-        USDC: { address: USDC_BASE, standard: "EIP-3009" },
-        EURC: { address: EURC_BASE, standard: "EIP-3009" },
-      },
-    },
-  },
-  extensions: {
-    siwx: {
-      supported: true,
-      standard: "CAIP-122",
-      description:
-        "Sign-In-With-X — prove wallet ownership to access " +
-        "previously purchased content without repaying",
     },
   },
   pay_to: PAY_TO,
@@ -417,82 +538,105 @@ app.get("/.well-known/x402.json", (_req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════
-//  GET /health — Simple health check
+//  GET /health — Health check with feature flags
 // ═══════════════════════════════════════════════════════════════════
 
 app.get("/health", (_req, res) => {
   res.json({
     status: "ok",
+    version: "1.1.0",
     service: "x402-research-api",
-    version: "2.1.0",
     chain: "base",
     network: NETWORK,
-    features: [
-      "erc20-multi-token",
-      "siwx-wallet-auth",
-      "mcp-compatible",
-    ],
-    acceptedTokens: ["USDC", "EURC"],
     endpoints: {
-      "/research": { price: PRICE, model: PERPLEXITY_MODEL },
-      "/deep-research": { price: DEEP_PRICE, model: PERPLEXITY_MODEL_PRO },
+      "POST /preview": { price: "free", model: PERPLEXITY_MODEL, note: "Live truncated preview, 10/hr" },
+      "POST /research": { price: PRICE, model: PERPLEXITY_MODEL, tier_selector: true },
+      "POST /deep-research": { price: DEEP_PRICE, model: PERPLEXITY_MODEL_PRO },
+    },
+    features: {
+      live_preview: true,
+      confidence_scoring: true,
+      rate_limit_headers: true,
+      tier_selector: true,
+    },
+    rate_limits: {
+      paid: `${RATE_LIMIT_MAX}/hour per IP`,
+      preview: `${PREVIEW_RATE_LIMIT}/hour per IP`,
     },
     uptime: process.uptime(),
   });
 });
 
 // ═══════════════════════════════════════════════════════════════════
-//  POST /research — Paid Research Endpoint
+//  POST /research — Paid Research Endpoint (with tier selector)
 // ═══════════════════════════════════════════════════════════════════
 //
-//  Body: { "query": "any natural-language question" }
+//  Body: { "query": "any question", "tier": "standard"|"deep" }
 //
-//  Flow:
-//    1. x402 middleware intercepts — returns 402 if unpaid
-//       (accepts USDC or EURC; SIWX auth for returning buyers)
-//    2. On valid payment, this handler runs
-//    3. Proxies to Perplexity API (sonar model, streaming off)
-//    4. Returns structured JSON: summary, key_facts, sources, confidence_score
+//  Features (v1.1):
+//    - Tier selector: pass tier: "deep" to use Sonar Pro ($0.10)
+//    - Rate limit headers: X-RateLimit-Limit, Remaining, Reset
+//    - Confidence scoring: multi-signal confidence with level flag
+//    - Default tier is "standard" ($0.02, Sonar)
 
 app.post("/research", async (req, res) => {
-  const { query } = req.body;
+  const { query, tier } = req.body;
 
   // ── Input validation ────────────────────────────────────────────
   if (!query || typeof query !== "string" || query.trim().length === 0) {
     return res.status(400).json({
       error: "Bad Request",
       message: 'Request body must include a non-empty "query" string.',
-      example: { query: "What are the latest developments in quantum computing?" },
+      example: { query: "What are the latest developments in quantum computing?", tier: "standard" },
     });
   }
 
-  if (query.length > 2000) {
+  // ── Tier selector ───────────────────────────────────────────────
+  const useDeep = tier === "deep";
+  const selectedModel = useDeep ? PERPLEXITY_MODEL_PRO : PERPLEXITY_MODEL;
+  const maxLen = useDeep ? 4000 : 2000;
+  const selectedTier = useDeep ? "deep" : "standard";
+
+  if (query.length > maxLen) {
     return res.status(400).json({
       error: "Bad Request",
-      message: "Query must be 2000 characters or fewer.",
+      message: `Query must be ${maxLen} characters or fewer for ${selectedTier} tier.`,
+    });
+  }
+
+  // ── Rate limiting ───────────────────────────────────────────────
+  const ip = req.ip || req.headers["x-forwarded-for"] || "unknown";
+  const rlEntry = consumeRateLimit(ip);
+  setRateLimitHeaders(res, rlEntry);
+
+  if (rlEntry.count > RATE_LIMIT_MAX) {
+    return res.status(429).json({
+      error: "Rate Limited",
+      message: `Maximum ${RATE_LIMIT_MAX} requests per hour. Try again later.`,
+      retry_after_seconds: Math.ceil((rlEntry.windowStart + RATE_LIMIT_WINDOW_MS - Date.now()) / 1000),
     });
   }
 
   try {
     // ── Call Perplexity API ──────────────────────────────────────
+    const systemPrompt = useDeep
+      ? 'Respond only in clean JSON: { "summary": string (detailed 2-3 paragraph summary), ' +
+        '"key_facts": array (10-15 detailed facts), "analysis": string (expert analysis paragraph), ' +
+        '"sources": array, "confidence_score": number }. ' +
+        "Be thorough, detailed, and cite all sources. Provide expert-level analysis."
+      : 'Respond only in clean JSON: { "summary": string, "key_facts": array, ' +
+        '"sources": array, "confidence_score": number }. ' +
+        "Keep concise, accurate, real-time.";
+
     const perplexityResponse = await axios.post(
       "https://api.perplexity.ai/chat/completions",
       {
-        model: PERPLEXITY_MODEL,
+        model: selectedModel,
         stream: false,
-        max_tokens: 2000,
+        max_tokens: maxLen,
         messages: [
-          {
-            role: "system",
-            content:
-              'Respond only in clean JSON: { "summary": string, "key_facts": array, ' +
-              '"sources": array, "confidence_score": number }. ' +
-              "Keep concise, accurate, real-time.",
-          },
-          {
-            role: "user",
-            content: query.trim(),
-          },
+          { role: "system", content: systemPrompt },
+          { role: "user", content: query.trim() },
         ],
       },
       {
@@ -501,7 +645,7 @@ app.post("/research", async (req, res) => {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        timeout: 30000, // 30-second timeout
+        timeout: useDeep ? 60000 : 30000,
       }
     );
 
@@ -509,17 +653,14 @@ app.post("/research", async (req, res) => {
     const choice = perplexityResponse.data?.choices?.[0];
     const rawContent = choice?.message?.content || "";
 
-    // Attempt to parse Perplexity's response as JSON
     let structuredResult;
     try {
-      // Strip markdown code fences if the model wraps output
       const cleaned = rawContent
         .replace(/^```(?:json)?\s*/i, "")
         .replace(/\s*```$/i, "")
         .trim();
       structuredResult = JSON.parse(cleaned);
     } catch {
-      // If parsing fails, wrap the raw text in our schema
       structuredResult = {
         summary: rawContent,
         key_facts: [],
@@ -528,7 +669,7 @@ app.post("/research", async (req, res) => {
       };
     }
 
-    // ── Enrich with Perplexity citations if available ────────────
+    // ── Enrich with Perplexity citations ─────────────────────────
     const citations = perplexityResponse.data?.citations || [];
     if (
       citations.length > 0 &&
@@ -537,11 +678,30 @@ app.post("/research", async (req, res) => {
       structuredResult.sources = citations;
     }
 
+    // ── Confidence scoring ───────────────────────────────────────
+    const rawScore = structuredResult.confidence_score || 0.5;
+    const sourceCount = (structuredResult.sources || []).length;
+    const factCount = (structuredResult.key_facts || []).length;
+    let adjustedScore = rawScore;
+    if (sourceCount >= 5) adjustedScore = Math.min(1, adjustedScore + 0.05);
+    if (sourceCount === 0) adjustedScore = Math.max(0.1, adjustedScore - 0.15);
+    if (factCount >= 5) adjustedScore = Math.min(1, adjustedScore + 0.03);
+    adjustedScore = Math.round(adjustedScore * 100) / 100;
+    const confidenceLevel = adjustedScore >= 0.85 ? "high" : adjustedScore >= 0.6 ? "medium" : "low";
+    structuredResult.confidence_score = adjustedScore;
+
     // ── Return structured result ────────────────────────────────
     return res.json({
       query: query.trim(),
+      tier: selectedTier,
       result: structuredResult,
-      model: perplexityResponse.data?.model || PERPLEXITY_MODEL,
+      confidence: {
+        score: adjustedScore,
+        level: confidenceLevel,
+        sources_found: sourceCount,
+        facts_extracted: factCount,
+      },
+      model: perplexityResponse.data?.model || selectedModel,
       usage: perplexityResponse.data?.usage || null,
     });
   } catch (err) {
@@ -549,7 +709,6 @@ app.post("/research", async (req, res) => {
     console.error("[/research] Perplexity API error:", err.message);
 
     if (err.response) {
-      // Perplexity returned an HTTP error
       const status = err.response.status;
       const detail = err.response.data;
 
@@ -589,7 +748,6 @@ app.post("/research", async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════════
 //  Landing Page — served inline (no static files needed)
 // ═══════════════════════════════════════════════════════════════════
 
@@ -614,8 +772,7 @@ app.get("/demo/video", (_req, res) => {
 // ═══════════════════════════════════════════════════════════════════
 //
 //  Body: { "query": "any natural-language question" }
-//  Price: $0.10 USDC/EURC — uses sonar-pro for deeper, more comprehensive research
-//
+//  Price: $0.10 USDC — uses sonar-pro for deeper, more comprehensive research
 
 app.post("/deep-research", async (req, res) => {
   const { query } = req.body;
@@ -632,6 +789,19 @@ app.post("/deep-research", async (req, res) => {
     return res.status(400).json({
       error: "Bad Request",
       message: "Query must be 4000 characters or fewer.",
+    });
+  }
+
+  // ── Rate limiting ───────────────────────────────────────────────
+  const ip = req.ip || req.headers["x-forwarded-for"] || "unknown";
+  const rlEntry = consumeRateLimit(ip);
+  setRateLimitHeaders(res, rlEntry);
+
+  if (rlEntry.count > RATE_LIMIT_MAX) {
+    return res.status(429).json({
+      error: "Rate Limited",
+      message: `Maximum ${RATE_LIMIT_MAX} requests per hour. Try again later.`,
+      retry_after_seconds: Math.ceil((rlEntry.windowStart + RATE_LIMIT_WINDOW_MS - Date.now()) / 1000),
     });
   }
 
@@ -695,10 +865,28 @@ app.post("/deep-research", async (req, res) => {
       structuredResult.sources = citations;
     }
 
+    // ── Confidence scoring ───────────────────────────────────────
+    const rawScore = structuredResult.confidence_score || 0.5;
+    const sourceCount = (structuredResult.sources || []).length;
+    const factCount = (structuredResult.key_facts || []).length;
+    let adjustedScore = rawScore;
+    if (sourceCount >= 5) adjustedScore = Math.min(1, adjustedScore + 0.05);
+    if (sourceCount === 0) adjustedScore = Math.max(0.1, adjustedScore - 0.15);
+    if (factCount >= 5) adjustedScore = Math.min(1, adjustedScore + 0.03);
+    adjustedScore = Math.round(adjustedScore * 100) / 100;
+    const confidenceLevel = adjustedScore >= 0.85 ? "high" : adjustedScore >= 0.6 ? "medium" : "low";
+    structuredResult.confidence_score = adjustedScore;
+
     return res.json({
       query: query.trim(),
       tier: "deep",
       result: structuredResult,
+      confidence: {
+        score: adjustedScore,
+        level: confidenceLevel,
+        sources_found: sourceCount,
+        facts_extracted: factCount,
+      },
       model: perplexityResponse.data?.model || PERPLEXITY_MODEL_PRO,
       usage: perplexityResponse.data?.usage || null,
     });
@@ -745,7 +933,6 @@ app.post("/deep-research", async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════════
 //  404 Catch-All
 // ═══════════════════════════════════════════════════════════════════
 
@@ -753,8 +940,9 @@ app.use((_req, res) => {
   res.status(404).json({
     error: "Not Found",
     available_endpoints: {
-      "POST /research": "Standard research ($0.02 USDC/EURC on Base)",
-      "POST /deep-research": "Deep research with Sonar Pro ($0.10 USDC/EURC on Base)",
+      "POST /preview": "Free live preview (truncated results, 10/hr)",
+      "POST /research": "Standard research ($0.02 USDC on Base, tier selector available)",
+      "POST /deep-research": "Deep research with Sonar Pro ($0.10 USDC on Base)",
       "GET /health": "Service health check",
       "GET /.well-known/x402": "x402 discovery document",
       "GET /.well-known/x402.json": "x402 service manifest (alias)",
@@ -781,19 +969,16 @@ app.use((err, _req, res, _next) => {
 
 app.listen(PORT, () => {
   console.log("═══════════════════════════════════════════════════");
-  console.log("  AgentOracle Research API v2.1 — Live");
+  console.log("  x402 Research API — Live");
   console.log("═══════════════════════════════════════════════════");
   console.log(`  Endpoint:     http://localhost:${PORT}/research`);
-  console.log(`  Deep:         http://localhost:${PORT}/deep-research`);
   console.log(`  Health:       http://localhost:${PORT}/health`);
   console.log(`  Discovery:    http://localhost:${PORT}/.well-known/x402`);
   console.log(`  Manifest:     http://localhost:${PORT}/.well-known/x402.json`);
   console.log(`  Chain:        Base mainnet (${NETWORK})`);
-  console.log(`  Tokens:       USDC + EURC (EIP-3009)`);
-  console.log(`  SIWX:         Enabled (CAIP-122 wallet auth)`);
-  console.log(`  Price:        ${PRICE} / ${DEEP_PRICE} per query`);
+  console.log(`  Price:        ${PRICE} USDC per query`);
   console.log(`  Pay to:       ${PAY_TO}`);
   console.log(`  Facilitator:  ${FACILITATOR_URL}`);
-  console.log(`  Model:        ${PERPLEXITY_MODEL} / ${PERPLEXITY_MODEL_PRO}`);
+  console.log(`  Model:        ${PERPLEXITY_MODEL}`);
   console.log("═══════════════════════════════════════════════════");
 });
