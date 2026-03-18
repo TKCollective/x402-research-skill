@@ -971,6 +971,47 @@ app.post("/deep-research", async (req, res) => {
   }
 });
 
+//  GET /skale — SKALE gasless integration info
+// ═══════════════════════════════════════════════════════════════════
+
+app.get("/skale", (_req, res) => {
+  res.json({
+    status: "integration_in_progress",
+    message: "SKALE gasless payments are being integrated. " +
+      "Agents will be able to pay with zero gas fees on SKALE Base.",
+    skale_network: {
+      name: "SKALE Base",
+      chain_id: 1187947933,
+      caip2: SKALE_NETWORK,
+      rpc: "https://skale-base.skalenodes.com/v1/base",
+      explorer: "https://skale-base-explorer.skalenodes.com/",
+      gas_fees: "zero",
+      native_token: "CREDIT",
+    },
+    payment_token: {
+      name: SKALE_USDC_NAME,
+      address: SKALE_USDC_ADDRESS,
+      decimals: 6,
+    },
+    facilitator: SKALE_FACILITATOR_URL,
+    current_payments: {
+      base: {
+        network: NETWORK,
+        research_price: PRICE,
+        deep_research_price: DEEP_PRICE,
+      },
+    },
+    coming_soon: [
+      "Gasless payments via SKALE Base — agents pay $0.02 USDC with zero gas",
+      "Automatic network detection — agents choose Base or SKALE at payment time",
+      "Native SKALE bridge support for USDC transfers",
+    ],
+    docs: "https://docs.skale.space/cookbook/x402/accepting-payments",
+    partnership: "Integration in collaboration with SKALE Labs (@SkaleNetwork)",
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
 //  404 Catch-All
 // ═══════════════════════════════════════════════════════════════════
 
