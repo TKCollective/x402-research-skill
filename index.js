@@ -67,6 +67,14 @@ const FACILITATOR_URL =
 // Base mainnet CAIP-2 identifier
 const NETWORK = "eip155:8453";
 
+// SKALE Base mainnet — gasless agent payments
+const SKALE_NETWORK = "eip155:1187947933";
+const SKALE_FACILITATOR_URL =
+  process.env.SKALE_FACILITATOR_URL ||
+  "https://facilitator.dirtroad.dev";
+const SKALE_USDC_ADDRESS = "0x2e08028E3C4c2356572E096d8EF835cD5C6030bD";
+const SKALE_USDC_NAME = "Bridged USDC (SKALE Bridge)";
+
 // Price: $0.02 USDC (standard), $0.10 USDC (deep research)
 const PRICE = "$0.02";
 const DEEP_PRICE = "$0.10";
@@ -195,21 +203,23 @@ app.get("/og-image.png", (_req, res) => {
 //  x402 Payment Middleware (v2 SDK)
 // ═══════════════════════════════════════════════════════════════════
 
-// 1. Connect to the CDP mainnet facilitator
+// 1. Connect to the CDP mainnet facilitator (Base) + SKALE facilitator
 const facilitatorClient = new HTTPFacilitatorClient({
   url: FACILITATOR_URL,
 });
+const skaleFacilitatorClient = new HTTPFacilitatorClient({
+  url: SKALE_FACILITATOR_URL,
+});
 
-// 2. Create resource server and register Base mainnet EVM scheme
-const resourceServer = new x402ResourceServer(facilitatorClient).register(
-  NETWORK,
-  new ExactEvmScheme()
-);
+// 2. Create resource server and register both Base + SKALE EVM schemes
+const resourceServer = new x402ResourceServer(facilitatorClient)
+  .register(NETWORK, new ExactEvmScheme())
+  .register(SKALE_NETWORK, new ExactEvmScheme());
 
 // ── Bazaar: register discovery extension (uncomment when ready) ──
 // resourceServer.registerExtension(bazaarResourceServerExtension);
 
-// 3. Define route-level payment configuration
+// 3. Define route-level payment configuration (Base + SKALE gasless)
 const routeConfig = {
   "POST /research": {
     accepts: [
@@ -219,10 +229,24 @@ const routeConfig = {
         network: NETWORK,
         payTo: PAY_TO,
       },
+      {
+        scheme: "exact",
+        network: SKALE_NETWORK,
+        payTo: PAY_TO,
+        price: {
+          amount: "20000",  // $0.02 in 6-decimal USDC
+          asset: SKALE_USDC_ADDRESS,
+          extra: {
+            name: SKALE_USDC_NAME,
+            version: "1",
+          },
+        },
+      },
     ],
     description:
       "Broad real-time research for any topic — structured JSON " +
-      "with citations, powered by Perplexity Sonar",
+      "with citations, powered by Perplexity Sonar. " +
+      "Accepts payment on Base ($0.02 USDC) or SKALE Base (gasless).",
     mimeType: "application/json",
   },
   "POST /deep-research": {
@@ -233,10 +257,24 @@ const routeConfig = {
         network: NETWORK,
         payTo: PAY_TO,
       },
+      {
+        scheme: "exact",
+        network: SKALE_NETWORK,
+        payTo: PAY_TO,
+        price: {
+          amount: "100000",  // $0.10 in 6-decimal USDC
+          asset: SKALE_USDC_ADDRESS,
+          extra: {
+            name: SKALE_USDC_NAME,
+            version: "1",
+          },
+        },
+      },
     ],
     description:
       "Deep research with extended analysis — comprehensive JSON " +
-      "with detailed findings, powered by Perplexity Sonar Pro",
+      "with detailed findings, powered by Perplexity Sonar Pro. " +
+      "Accepts payment on Base ($0.10 USDC) or SKALE Base (gasless).",
     mimeType: "application/json",
   },
 };
@@ -540,6 +578,14 @@ const x402Manifest = {
       network: NETWORK,
       payTo: PAY_TO,
     },
+    skale_base: {
+      network: SKALE_NETWORK,
+      payTo: PAY_TO,
+      facilitator_url: SKALE_FACILITATOR_URL,
+      gasless: true,
+      usdc_address: SKALE_USDC_ADDRESS,
+      note: "Zero gas fees — agents pay only the query price",
+    },
   },
   pay_to: PAY_TO,
 };
@@ -565,8 +611,11 @@ app.get("/health", (_req, res) => {
     status: "ok",
     version: "1.1.0",
     service: "x402-research-api",
-    chain: "base",
-    network: NETWORK,
+    chain: "base + skale",
+    networks: {
+      base: NETWORK,
+      skale_base: SKALE_NETWORK,
+    },
     endpoints: {
       "POST /preview": { price: "free", model: PERPLEXITY_MODEL, note: "Live truncated preview, 10/hr" },
       "POST /research": { price: PRICE, model: PERPLEXITY_MODEL, tier_selector: true },
@@ -995,6 +1044,8 @@ app.listen(PORT, () => {
   console.log(`  Discovery:    http://localhost:${PORT}/.well-known/x402`);
   console.log(`  Manifest:     http://localhost:${PORT}/.well-known/x402.json`);
   console.log(`  Chain:        Base mainnet (${NETWORK})`);
+  console.log(`  SKALE:        SKALE Base gasless (${SKALE_NETWORK})`);
+  console.log(`  SKALE Facil:  ${SKALE_FACILITATOR_URL}`);
   console.log(`  Price:        ${PRICE} USDC per query`);
   console.log(`  Pay to:       ${PAY_TO}`);
   console.log(`  Facilitator:  ${FACILITATOR_URL}`);
