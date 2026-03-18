@@ -203,18 +203,16 @@ app.get("/og-image.png", (_req, res) => {
 //  x402 Payment Middleware (v2 SDK)
 // ═══════════════════════════════════════════════════════════════════
 
-// 1. Connect to the CDP mainnet facilitator (Base) + SKALE facilitator
+// 1. Connect to facilitators
 const facilitatorClient = new HTTPFacilitatorClient({
   url: FACILITATOR_URL,
 });
-const skaleFacilitatorClient = new HTTPFacilitatorClient({
-  url: SKALE_FACILITATOR_URL,
-});
 
-// 2. Create resource server and register both Base + SKALE EVM schemes
-const resourceServer = new x402ResourceServer(facilitatorClient)
-  .register(NETWORK, new ExactEvmScheme())
-  .register(SKALE_NETWORK, new ExactEvmScheme());
+// 2. Create resource server — register EVM scheme for all EVM networks
+const resourceServer = new x402ResourceServer(facilitatorClient).register(
+  NETWORK,
+  new ExactEvmScheme()
+);
 
 // ── Bazaar: register discovery extension (uncomment when ready) ──
 // resourceServer.registerExtension(bazaarResourceServerExtension);
@@ -229,24 +227,10 @@ const routeConfig = {
         network: NETWORK,
         payTo: PAY_TO,
       },
-      {
-        scheme: "exact",
-        network: SKALE_NETWORK,
-        payTo: PAY_TO,
-        price: {
-          amount: "20000",  // $0.02 in 6-decimal USDC
-          asset: SKALE_USDC_ADDRESS,
-          extra: {
-            name: SKALE_USDC_NAME,
-            version: "1",
-          },
-        },
-      },
     ],
     description:
       "Broad real-time research for any topic — structured JSON " +
-      "with citations, powered by Perplexity Sonar. " +
-      "Accepts payment on Base ($0.02 USDC) or SKALE Base (gasless).",
+      "with citations, powered by Perplexity Sonar",
     mimeType: "application/json",
   },
   "POST /deep-research": {
@@ -257,24 +241,10 @@ const routeConfig = {
         network: NETWORK,
         payTo: PAY_TO,
       },
-      {
-        scheme: "exact",
-        network: SKALE_NETWORK,
-        payTo: PAY_TO,
-        price: {
-          amount: "100000",  // $0.10 in 6-decimal USDC
-          asset: SKALE_USDC_ADDRESS,
-          extra: {
-            name: SKALE_USDC_NAME,
-            version: "1",
-          },
-        },
-      },
     ],
     description:
       "Deep research with extended analysis — comprehensive JSON " +
-      "with detailed findings, powered by Perplexity Sonar Pro. " +
-      "Accepts payment on Base ($0.10 USDC) or SKALE Base (gasless).",
+      "with detailed findings, powered by Perplexity Sonar Pro",
     mimeType: "application/json",
   },
 };
@@ -1012,6 +982,7 @@ app.use((_req, res) => {
       "POST /research": "Standard research ($0.02 USDC on Base, tier selector available)",
       "POST /deep-research": "Deep research with Sonar Pro ($0.10 USDC on Base)",
       "GET /health": "Service health check",
+      "GET /skale": "SKALE gasless integration info (coming soon)",
       "GET /.well-known/x402": "x402 discovery document",
       "GET /.well-known/x402.json": "x402 service manifest (alias)",
       "GET /": "AgentOracle landing page",
