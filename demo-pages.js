@@ -811,9 +811,12 @@ a:hover {
 
 <span class="syn-bracket">{</span>
   <span class="syn-key">"price"</span>: <span class="syn-str">"$0.02 USDC"</span>,
-  <span class="syn-key">"network"</span>: <span class="syn-str">"Base Mainnet"</span>,
+  <span class="syn-key">"networks"</span>: <span class="syn-bracket">[</span>
+    <span class="syn-str">"Base Mainnet (eip155:8453)"</span>,
+    <span class="syn-str">"SKALE Base (gasless)"</span>
+  <span class="syn-bracket">]</span>,
   <span class="syn-key">"payTo"</span>: <span class="syn-str">"0xdF90...e109"</span>,
-  <span class="syn-key">"facilitator"</span>: <span class="syn-str">"https://x402.org/facilitator"</span>
+  <span class="syn-key">"facilitator"</span>: <span class="syn-str">"https://facilitator.xpay.sh"</span>
 <span class="syn-bracket">}</span></pre>
           </div>
         </div>
@@ -823,7 +826,7 @@ a:hover {
       <div class="step-card" data-step="2">
         <div class="step-number">Step 3</div>
         <h2 class="step-title">Agent pays $0.02 via x402</h2>
-        <p class="step-description">The agent automatically sends a USDC micropayment on Base mainnet. Payment IS the authentication — no keys, no accounts, no friction.</p>
+        <p class="step-description">The agent automatically sends a USDC micropayment — on Base mainnet or SKALE Base (zero gas fees). Payment IS the authentication — no keys, no accounts, no friction.</p>
         <div class="payment-animation" id="paymentAnim">
           <div class="payment-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--gold);">
@@ -836,7 +839,7 @@ a:hover {
           <div class="payment-chain">
             <div class="chain-badge">
               <span class="dot"></span>
-              Base Mainnet — Confirmed
+              Base Mainnet — Confirmed  |  SKALE Gasless Available
             </div>
           </div>
         </div>
@@ -868,8 +871,10 @@ a:hover {
     <span class="syn-bracket">{</span> <span class="syn-key">"title"</span>: <span class="syn-str">"State of AI Agents 2026"</span>, <span class="syn-key">"url"</span>: <span class="syn-str">"..."</span> <span class="syn-bracket">}</span>,
     <span class="syn-bracket">{</span> <span class="syn-key">"title"</span>: <span class="syn-str">"Agent Framework Benchmark"</span>, <span class="syn-key">"url"</span>: <span class="syn-str">"..."</span> <span class="syn-bracket">}</span>
   <span class="syn-bracket">]</span>,
-  <span class="syn-key">"confidence"</span>: <span class="syn-num">0.94</span>,
-  <span class="syn-key">"tokens_used"</span>: <span class="syn-num">847</span>
+  <span class="syn-key">"confidence_score"</span>: <span class="syn-num">0.94</span>,
+  <span class="syn-key">"model"</span>: <span class="syn-str">"sonar"</span>,
+  <span class="syn-key">"tokens_used"</span>: <span class="syn-num">847</span>,
+  <span class="syn-key">"version"</span>: <span class="syn-str">"1.2.0"</span>
 <span class="syn-bracket">}</span></pre>
           </div>
         </div>
@@ -877,7 +882,7 @@ a:hover {
         <!-- CTA Section -->
         <div class="cta-section">
           <h2>That's it. Payment is the API key.</h2>
-          <p>No signup. No rate limits. No API keys. Just pay $0.02 per query and get structured research data back.</p>
+          <p>No signup. No API keys. Zero gas on SKALE. Just pay $0.02 per query and get structured research with confidence scoring.</p>
           <div class="cta-buttons">
             <a href="https://agentoracle.co" class="btn btn-gold" target="_blank" rel="noopener noreferrer">
               Try it yourself →
@@ -1938,7 +1943,9 @@ a:hover {
           '    "AutoGPT 3.0 — built-in research primitives"',
           '  ],',
           '  "sources": 4,',
-          '  "confidence": 0.94',
+          '  "confidence_score": 0.94,',
+          '  "model": "sonar",',
+          '  "version": "1.2.0"',
           '}'
         ];
 
