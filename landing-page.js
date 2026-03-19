@@ -230,9 +230,9 @@ a:hover { color: var(--color-primary-hover); }
   .container { padding-inline: var(--space-8); }
 }
 
-/* === SECTION === */
+/* === SECTION — 20% MORE PADDING === */
 .section {
-  padding-block: clamp(var(--space-16), 8vw, var(--space-24));
+  padding-block: clamp(var(--space-20), 10vw, var(--space-32));
   position: relative;
 }
 
@@ -248,7 +248,7 @@ a:hover { color: var(--color-primary-hover); }
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--color-primary);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
 }
 
 .section-title {
@@ -257,7 +257,7 @@ a:hover { color: var(--color-primary-hover); }
   font-weight: 800;
   color: var(--color-text);
   line-height: 1.1;
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
 }
 
 .section-subtitle {
@@ -265,7 +265,7 @@ a:hover { color: var(--color-primary-hover); }
   color: var(--color-text-muted);
   line-height: 1.7;
   max-width: 600px;
-  margin-bottom: var(--space-10);
+  margin-bottom: var(--space-12);
 }
 
 .section-center {
@@ -475,6 +475,84 @@ a:hover { color: var(--color-primary-hover); }
 
 [data-theme="light"] .hero__glow {
   background: radial-gradient(ellipse at 60% 40%, rgba(160, 136, 64, 0.05) 0%, transparent 70%);
+}
+
+/* === HERO PARTICLES (CSS-only floating gold shapes) === */
+.hero__particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hero__particle {
+  position: absolute;
+  opacity: 0;
+  animation: float-up linear infinite;
+}
+
+.hero__particle--diamond {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid rgba(201, 169, 110, 0.25);
+  transform: rotate(45deg);
+}
+
+.hero__particle--hexagon {
+  width: 14px;
+  height: 14px;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  border: 1.5px solid rgba(201, 169, 110, 0.2);
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px rgba(201, 169, 110, 0.2);
+}
+
+.hero__particle--dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(201, 169, 110, 0.2);
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 0;
+    transform: translateY(100%) rotate(0deg);
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-100vh) rotate(180deg);
+  }
+}
+
+.hero__particle:nth-child(1)  { left: 5%;  animation-duration: 18s; animation-delay: 0s; }
+.hero__particle:nth-child(2)  { left: 15%; animation-duration: 22s; animation-delay: 3s; }
+.hero__particle:nth-child(3)  { left: 25%; animation-duration: 20s; animation-delay: 1s; }
+.hero__particle:nth-child(4)  { left: 35%; animation-duration: 24s; animation-delay: 5s; }
+.hero__particle:nth-child(5)  { left: 45%; animation-duration: 19s; animation-delay: 2s; }
+.hero__particle:nth-child(6)  { left: 55%; animation-duration: 21s; animation-delay: 7s; }
+.hero__particle:nth-child(7)  { left: 65%; animation-duration: 23s; animation-delay: 4s; }
+.hero__particle:nth-child(8)  { left: 75%; animation-duration: 17s; animation-delay: 6s; }
+.hero__particle:nth-child(9)  { left: 85%; animation-duration: 25s; animation-delay: 1.5s; }
+.hero__particle:nth-child(10) { left: 92%; animation-duration: 20s; animation-delay: 8s; }
+.hero__particle:nth-child(11) { left: 10%; animation-duration: 26s; animation-delay: 10s; }
+.hero__particle:nth-child(12) { left: 50%; animation-duration: 22s; animation-delay: 12s; }
+
+[data-theme="light"] .hero__particle--diamond {
+  border-color: rgba(160, 136, 64, 0.2);
+}
+[data-theme="light"] .hero__particle--hexagon {
+  box-shadow: inset 0 0 0 1.5px rgba(160, 136, 64, 0.15);
+}
+[data-theme="light"] .hero__particle--dot {
+  background: rgba(160, 136, 64, 0.15);
 }
 
 .hero__inner {
@@ -700,17 +778,18 @@ a:hover { color: var(--color-primary-hover); }
   line-height: 1;
 }
 
-/* === BENTO GRID (Features) === */
+/* === BENTO GRID (Features) — more gap === */
 .bento-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-5);
+  gap: var(--space-6);
 }
 
 @media (min-width: 768px) {
   .bento-grid {
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: auto auto;
+    gap: var(--space-8);
   }
 }
 
@@ -718,16 +797,18 @@ a:hover { color: var(--color-primary-hover); }
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  padding: var(--space-8);
+  padding: var(--space-10);
   position: relative;
   overflow: hidden;
   transition: border-color var(--transition-interactive),
-              box-shadow var(--transition-slow);
+              box-shadow var(--transition-slow),
+              transform var(--transition-slow);
 }
 
 .bento-card:hover {
   border-color: rgba(201, 169, 110, 0.3);
   box-shadow: var(--shadow-card-hover), 0 0 30px rgba(201, 169, 110, 0.08);
+  transform: translateY(-2px);
 }
 
 [data-theme="light"] .bento-card:hover {
@@ -741,10 +822,28 @@ a:hover { color: var(--color-primary-hover); }
   .bento-card--large { grid-column: 1 / 3; }
 }
 
+/* SVG icon container for feature cards */
 .bento-card__icon {
-  font-size: var(--text-xl);
   margin-bottom: var(--space-5);
   line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-lg);
+  background: var(--color-primary-highlight);
+  border: 1px solid rgba(201, 169, 110, 0.15);
+}
+
+.bento-card__icon svg {
+  width: 22px;
+  height: 22px;
+  stroke: var(--color-primary);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .bento-card__title {
@@ -792,13 +891,13 @@ a:hover { color: var(--color-primary-hover); }
 .steps-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-8);
+  gap: var(--space-10);
 }
 
 @media (min-width: 768px) {
   .steps-grid {
     grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-10);
+    gap: var(--space-12);
   }
 }
 
@@ -845,7 +944,7 @@ a:hover { color: var(--color-primary-hover); }
 .usecase-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-6);
+  gap: var(--space-8);
 }
 
 @media (min-width: 768px) {
@@ -858,7 +957,7 @@ a:hover { color: var(--color-primary-hover); }
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  padding: var(--space-8);
+  padding: var(--space-10);
   transition: border-color var(--transition-interactive),
               box-shadow var(--transition-slow);
   display: flex;
@@ -964,7 +1063,7 @@ a:hover { color: var(--color-primary-hover); }
 .json-section {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-10);
+  gap: var(--space-12);
   align-items: start;
 }
 
@@ -1004,11 +1103,55 @@ a:hover { color: var(--color-primary-hover); }
   margin-top: 3px;
 }
 
+/* === COLLAPSIBLE JSON TOGGLE === */
+.collapsible-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-primary);
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  cursor: pointer;
+  margin-bottom: var(--space-4);
+  transition: all var(--transition-interactive);
+}
+
+.collapsible-toggle:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-highlight);
+}
+
+.collapsible-toggle__arrow {
+  transition: transform 0.3s ease;
+  display: inline-block;
+}
+
+.collapsible-toggle.is-open .collapsible-toggle__arrow {
+  transform: rotate(180deg);
+}
+
+.collapsible-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+  opacity: 0;
+}
+
+.collapsible-content.is-open {
+  max-height: 800px;
+  opacity: 1;
+}
+
 /* === MCP SECTION === */
 .mcp-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-8);
+  gap: var(--space-10);
   align-items: center;
 }
 
@@ -1085,11 +1228,11 @@ a:hover { color: var(--color-primary-hover); }
   color: var(--color-text-faint);
 }
 
-/* === PRICING === */
+/* === PRICING — color-coded cards === */
 .pricing-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-6);
+  gap: var(--space-8);
   max-width: 1100px;
   margin: 0 auto;
 }
@@ -1110,18 +1253,39 @@ a:hover { color: var(--color-primary-hover); }
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-2xl);
-  padding: var(--space-8);
+  padding: var(--space-10);
   position: relative;
   overflow: hidden;
   transition: border-color var(--transition-interactive),
-              box-shadow var(--transition-slow);
+              box-shadow var(--transition-slow),
+              transform var(--transition-slow);
 }
 
 .pricing-card:hover {
   border-color: rgba(201, 169, 110, 0.3);
   box-shadow: var(--shadow-card-hover), 0 0 30px rgba(201, 169, 110, 0.08);
+  transform: translateY(-4px);
 }
 
+/* /preview card — GREEN accent */
+.pricing-card--green::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--color-green), transparent);
+}
+
+.pricing-card--green {
+  border-color: rgba(74, 222, 128, 0.15);
+}
+
+.pricing-card--green:hover {
+  border-color: rgba(74, 222, 128, 0.3);
+  box-shadow: var(--shadow-card-hover), 0 0 30px rgba(74, 222, 128, 0.08);
+}
+
+/* /research card — GOLD accent (featured) */
 .pricing-card--featured {
   border-color: rgba(201, 169, 110, 0.25);
 }
@@ -1132,6 +1296,24 @@ a:hover { color: var(--color-primary-hover); }
   top: 0; left: 0; right: 0;
   height: 3px;
   background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+}
+
+/* /deep-research card — PURPLE accent */
+.pricing-card--purple::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--color-purple), transparent);
+}
+
+.pricing-card--purple {
+  border-color: rgba(167, 139, 250, 0.15);
+}
+
+.pricing-card--purple:hover {
+  border-color: rgba(167, 139, 250, 0.3);
+  box-shadow: var(--shadow-card-hover), 0 0 30px rgba(167, 139, 250, 0.08);
 }
 
 .pricing-card__endpoint {
@@ -1180,7 +1362,7 @@ a:hover { color: var(--color-primary-hover); }
 
 /* === TRUST BAR === */
 .trust-bar {
-  padding-block: var(--space-10);
+  padding-block: var(--space-12);
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
 }
@@ -1233,6 +1415,198 @@ a:hover { color: var(--color-primary-hover); }
   opacity: 1;
 }
 
+/* === ERROR HANDLING SECTION === */
+.error-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+  max-width: 800px;
+}
+
+.error-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  transition: border-color var(--transition-interactive);
+}
+
+.error-card:hover {
+  border-color: rgba(201, 169, 110, 0.2);
+}
+
+.error-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-6);
+  cursor: pointer;
+  user-select: none;
+  gap: var(--space-4);
+}
+
+.error-card__header:hover {
+  background: var(--color-surface-2);
+}
+
+.error-card__left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.error-card__code {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-primary);
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-primary-highlight);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.error-card__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.error-card__chevron {
+  transition: transform 0.3s ease;
+  color: var(--color-text-faint);
+  flex-shrink: 0;
+}
+
+.error-card.is-open .error-card__chevron {
+  transform: rotate(180deg);
+}
+
+.error-card__body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s ease;
+}
+
+.error-card.is-open .error-card__body {
+  max-height: 200px;
+}
+
+.error-card__body-inner {
+  padding: 0 var(--space-6) var(--space-6) var(--space-6);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: 1.7;
+  font-family: var(--font-mono);
+}
+
+/* === LIVE DEMO SECTION === */
+.live-demo {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.live-demo__form {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.live-demo__input {
+  flex: 1;
+  padding: var(--space-3) var(--space-5);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  outline: none;
+  transition: border-color var(--transition-interactive), box-shadow var(--transition-interactive);
+}
+
+.live-demo__input::placeholder {
+  color: var(--color-text-faint);
+}
+
+.live-demo__input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-highlight);
+}
+
+.live-demo__btn {
+  padding: var(--space-3) var(--space-8);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: #0D0D0D;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-interactive), box-shadow var(--transition-interactive);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.live-demo__btn:hover {
+  background: var(--color-primary-hover);
+  box-shadow: var(--shadow-gold-glow);
+}
+
+.live-demo__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.live-demo__spinner {
+  display: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(13, 13, 13, 0.3);
+  border-top-color: #0D0D0D;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.live-demo__btn.is-loading .live-demo__spinner {
+  display: inline-block;
+}
+
+.live-demo__btn.is-loading .live-demo__btn-text {
+  display: none;
+}
+
+.live-demo__result {
+  display: none;
+}
+
+.live-demo__result.is-visible {
+  display: block;
+}
+
+.live-demo__error {
+  display: none;
+  padding: var(--space-4) var(--space-5);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-lg);
+  color: #EF4444;
+  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+}
+
+.live-demo__error.is-visible {
+  display: block;
+}
+
 /* === SPECS === */
 .specs-grid {
   display: grid;
@@ -1273,7 +1647,7 @@ a:hover { color: var(--color-primary-hover); }
 /* === BOTTOM CTA === */
 .bottom-cta {
   text-align: center;
-  padding-block: clamp(var(--space-16), 8vw, var(--space-32));
+  padding-block: clamp(var(--space-20), 10vw, var(--space-32));
   position: relative;
   overflow: hidden;
 }
@@ -1301,7 +1675,7 @@ a:hover { color: var(--color-primary-hover); }
 .bottom-cta__sub {
   font-size: var(--text-base);
   color: var(--color-text-muted);
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-10);
   max-width: 500px;
   margin-inline: auto;
   position: relative;
@@ -1317,22 +1691,351 @@ a:hover { color: var(--color-primary-hover); }
   z-index: 1;
 }
 
-/* === FOOTER === */
-.footer {
-  border-top: 1px solid var(--color-border);
-  padding-block: var(--space-8);
+/* === LIVE API STATUS DOT (header) === */
+.header__status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  text-decoration: none;
+  white-space: nowrap;
 }
 
-.footer__inner {
+.header__status:hover {
+  border-color: var(--color-green);
+  color: var(--color-text);
+}
+
+.header__status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-green);
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.5);
+  animation: status-pulse 2.5s ease-in-out infinite;
+}
+
+.header__status-dot--offline {
+  background: #EF4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
+  animation: none;
+}
+
+.header__status-dot--checking {
+  background: var(--color-text-faint);
+  box-shadow: none;
+  animation: status-pulse 1s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@media (max-width: 768px) {
+  .header__status {
+    display: none;
+  }
+}
+
+/* === COMPARISON TABLE === */
+.compare-section {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.compare-table {
+  width: 100%;
+  min-width: 700px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--text-sm);
+}
+
+.compare-table thead th {
+  padding: var(--space-4) var(--space-5);
+  text-align: left;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  border-bottom: 2px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.compare-table thead th:first-child {
+  color: var(--color-text-faint);
+  font-weight: 500;
+}
+
+.compare-table thead th.compare-highlight {
+  color: var(--color-primary);
+  position: relative;
+}
+
+.compare-table tbody td {
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-text);
+  vertical-align: middle;
+}
+
+.compare-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.compare-table tbody td:first-child {
+  font-weight: 600;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.compare-table tbody td.compare-highlight {
+  background: var(--color-primary-highlight);
+}
+
+.compare-table .check-yes {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.compare-table .check-no {
+  color: var(--color-text-faint);
+}
+
+.compare-table-wrapper {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.compare-table-wrapper .compare-table {
+  margin: 0;
+}
+
+.compare-note {
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
+  margin-top: var(--space-4);
+}
+
+/* === FAQ SECTION === */
+.faq-grid {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.faq-item {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  transition: border-color var(--transition-interactive);
+}
+
+.faq-item:hover {
+  border-color: rgba(201, 169, 110, 0.25);
+}
+
+.faq-item__trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-text);
+  min-height: 44px;
+}
+
+.faq-item__trigger:hover {
+  color: var(--color-primary);
+}
+
+.faq-item__icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--color-text-faint);
+  transition: transform 0.3s ease, color 0.2s ease;
+}
+
+.faq-item.is-open .faq-item__icon {
+  transform: rotate(180deg);
+  color: var(--color-primary);
+}
+
+.faq-item__body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+
+.faq-item.is-open .faq-item__body {
+  max-height: 300px;
+}
+
+.faq-item__answer {
+  padding: 0 var(--space-6) var(--space-6) var(--space-6);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: 1.7;
+}
+
+.faq-item__answer code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  color: var(--color-primary);
+  background: var(--color-primary-highlight);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.faq-item__answer a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* === FOOTER (multi-column upgrade) === */
+.footer {
+  border-top: 1px solid var(--color-border);
+  padding-block: var(--space-16);
+}
+
+.footer__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-10);
+  margin-bottom: var(--space-12);
+}
+
+@media (min-width: 768px) {
+  .footer__grid {
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: var(--space-8);
+  }
+}
+
+.footer__brand-col {
+  max-width: 280px;
+}
+
+.footer__brand-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  text-decoration: none;
+  color: var(--color-text);
+}
+
+.footer__brand-logo svg {
+  display: inline-block;
+}
+
+.footer__brand-logo span {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--color-primary);
+}
+
+.footer__tagline {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin-bottom: var(--space-6);
+}
+
+.footer__socials {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.footer__social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  transition: all var(--transition-interactive);
+}
+
+.footer__social-link:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-primary-highlight);
+}
+
+.footer__social-link svg {
+  width: 16px;
+  height: 16px;
+}
+
+.footer__col-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text);
+  margin-bottom: var(--space-5);
+}
+
+.footer__col-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.footer__col-links a {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: color var(--transition-interactive);
+}
+
+.footer__col-links a:hover {
+  color: var(--color-primary);
+}
+
+.footer__bottom {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--color-border);
   text-align: center;
 }
 
 @media (min-width: 640px) {
-  .footer__inner {
+  .footer__bottom {
     flex-direction: row;
     justify-content: space-between;
     text-align: left;
@@ -1344,23 +2047,17 @@ a:hover { color: var(--color-primary-hover); }
   color: var(--color-text-faint);
 }
 
-.footer__links {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-5);
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.footer__attribution {
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
 }
 
-.footer__links a {
-  font-size: var(--text-xs);
+.footer__attribution a {
   color: var(--color-text-muted);
   text-decoration: none;
 }
 
-.footer__links a:hover {
+.footer__attribution a:hover {
   color: var(--color-primary);
 }
 
@@ -1382,8 +2079,8 @@ a:hover { color: var(--color-primary-hover); }
 /* === FADE IN === */
 .fade-in {
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  transform: translateY(16px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
 }
 
 .fade-in.is-visible {
@@ -1421,7 +2118,6 @@ a:hover { color: var(--color-primary-hover); }
 
 /* ==== MOBILE OVERRIDES ==== */
 @media (max-width: 768px) {
-  /* Prevent horizontal overflow */
   html, body {
     overflow-x: hidden;
     max-width: 100vw;
@@ -1432,13 +2128,11 @@ a:hover { color: var(--color-primary-hover); }
     max-width: 100%;
   }
 
-  /* Force all fade-in visible */
   .fade-in, .fade-in.is-visible {
     opacity: 1 !important;
     transform: none !important;
   }
 
-  /* Hero layout — stack vertically */
   .hero__inner {
     grid-template-columns: 1fr !important;
     gap: var(--space-8);
@@ -1452,7 +2146,6 @@ a:hover { color: var(--color-primary-hover); }
     font-size: clamp(1.75rem, 6vw, 2.5rem);
   }
 
-  /* Code block — prevent overflow */
   .hero__code-wrapper,
   .code-block {
     max-width: 100%;
@@ -1470,7 +2163,6 @@ a:hover { color: var(--color-primary-hover); }
     min-width: 0;
   }
 
-  /* Stats bar — wrap on mobile */
   .stats-bar__inner {
     flex-wrap: wrap;
     justify-content: center;
@@ -1482,7 +2174,6 @@ a:hover { color: var(--color-primary-hover); }
     padding: var(--space-2) var(--space-3);
   }
 
-  /* Bento grid single column */
   .bento-grid {
     grid-template-columns: 1fr !important;
   }
@@ -1491,12 +2182,10 @@ a:hover { color: var(--color-primary-hover); }
     grid-column: 1 !important;
   }
 
-  /* Steps grid single column */
   .steps-grid {
     grid-template-columns: 1fr !important;
   }
 
-  /* Pricing grid single column */
   .pricing-grid,
   [style*="grid-template-columns: 1fr 1fr"],
   [style*="grid-template-columns:1fr 1fr"] {
@@ -1512,7 +2201,6 @@ a:hover { color: var(--color-primary-hover); }
     font-size: clamp(2rem, 10vw, 3rem);
   }
 
-  /* Specs grid single column */
   .specs-grid {
     grid-template-columns: 1fr !important;
   }
@@ -1526,17 +2214,14 @@ a:hover { color: var(--color-primary-hover); }
     word-break: break-all;
   }
 
-  /* Section titles */
   .section-title {
     font-size: clamp(1.5rem, 5vw, 2rem);
   }
 
-  /* Step numbers */
   .step__number {
     font-size: clamp(2rem, 8vw, 3rem);
   }
 
-  /* Bottom CTA */
   .bottom-cta__headline {
     font-size: clamp(1.5rem, 5vw, 2rem);
   }
@@ -1546,20 +2231,21 @@ a:hover { color: var(--color-primary-hover); }
     align-items: center;
   }
 
-  /* Footer */
-  .footer__links {
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-3);
+  .footer__grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-8);
   }
 
-  /* Header wordmark */
+  .footer__brand-col {
+    grid-column: 1 / -1;
+    max-width: none;
+  }
+
   .header__wordmark {
     white-space: nowrap;
     font-size: var(--text-base);
   }
 
-  /* Buttons — min tap target 44px */
   .btn {
     min-height: 44px;
     min-width: 44px;
@@ -1572,10 +2258,31 @@ a:hover { color: var(--color-primary-hover); }
     min-height: 44px;
   }
 
-  /* MCP section code blocks */
   .mcp-code-block {
     max-width: 100%;
     overflow-x: auto;
+  }
+
+  /* Live demo full-width on mobile */
+  .live-demo__form {
+    flex-direction: column;
+  }
+
+  .live-demo__btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Error card touch-friendly */
+  .error-card__header {
+    min-height: 52px;
+    padding: var(--space-4) var(--space-5);
+  }
+}
+
+@media (max-width: 480px) {
+  .footer__grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1638,10 +2345,15 @@ a:hover { color: var(--color-primary-hover); }
       <a href="#features" class="header__nav-link">Features</a>
       <a href="#how-it-works" class="header__nav-link">How It Works</a>
       <a href="#pricing" class="header__nav-link">Pricing</a>
+      <a href="#live-demo" class="header__nav-link">Demo</a>
       <a href="#specs" class="header__nav-link">Specs</a>
     </nav>
 
     <div class="header__actions">
+      <a href="https://agentoracle.co/health" class="header__status" id="apiStatus" target="_blank" rel="noopener noreferrer" title="API Health">
+        <span class="header__status-dot header__status-dot--checking" id="statusDot"></span>
+        <span id="statusText">Checking...</span>
+      </a>
       <button class="theme-toggle" data-theme-toggle aria-label="Switch to light mode">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
@@ -1659,6 +2371,7 @@ a:hover { color: var(--color-primary-hover); }
     <a href="#features" class="mobile-nav__link" data-mobile-link>Features</a>
     <a href="#how-it-works" class="mobile-nav__link" data-mobile-link>How It Works</a>
     <a href="#pricing" class="mobile-nav__link" data-mobile-link>Pricing</a>
+    <a href="#live-demo" class="mobile-nav__link" data-mobile-link>Demo</a>
     <a href="#specs" class="mobile-nav__link" data-mobile-link>Specs</a>
     <a href="#mcp" class="mobile-nav__link" data-mobile-link>MCP Server</a>
   </nav>
@@ -1667,6 +2380,23 @@ a:hover { color: var(--color-primary-hover); }
 <!-- ========== HERO ========== -->
 <section class="hero section">
   <div class="hero__glow"></div>
+
+  <!-- Animated floating particles -->
+  <div class="hero__particles">
+    <div class="hero__particle hero__particle--diamond"></div>
+    <div class="hero__particle hero__particle--hexagon"></div>
+    <div class="hero__particle hero__particle--dot"></div>
+    <div class="hero__particle hero__particle--diamond"></div>
+    <div class="hero__particle hero__particle--dot"></div>
+    <div class="hero__particle hero__particle--hexagon"></div>
+    <div class="hero__particle hero__particle--diamond"></div>
+    <div class="hero__particle hero__particle--dot"></div>
+    <div class="hero__particle hero__particle--hexagon"></div>
+    <div class="hero__particle hero__particle--diamond"></div>
+    <div class="hero__particle hero__particle--dot"></div>
+    <div class="hero__particle hero__particle--hexagon"></div>
+  </div>
+
   <div class="container hero__inner">
     <div class="hero__content">
       <div class="hero__badge fade-in">
@@ -1680,9 +2410,9 @@ a:hover { color: var(--color-primary-hover); }
         Give your autonomous agent real-time research capabilities. Pay per query with USDC via the x402 protocol — no API keys, no subscriptions, no auth overhead.
       </p>
       <div class="hero__ctas fade-in">
-        <a href="https://agentoracle.co/.well-known/x402.json" class="btn btn--primary" target="_blank" rel="noopener noreferrer">View x402 Manifest →</a>
+        <a href="#live-demo" class="btn btn--primary">Try Live Demo →</a>
+        <a href="https://agentoracle.co/.well-known/x402.json" class="btn btn--ghost" target="_blank" rel="noopener noreferrer">View x402 Manifest</a>
         <a href="https://agentoracle.co/demo" class="btn btn--ghost" target="_blank" rel="noopener noreferrer">▶ Watch Demo</a>
-        <a href="#how-it-works" class="btn btn--ghost">How It Works</a>
       </div>
     </div>
 
@@ -1756,7 +2486,10 @@ a:hover { color: var(--color-primary-hover); }
 
     <div class="bento-grid fade-in">
       <div class="bento-card bento-card--large">
-        <div class="bento-card__icon">⚡</div>
+        <div class="bento-card__icon">
+          <!-- Bolt/Zap icon -->
+          <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
         <h3 class="bento-card__title">Real-Time Research</h3>
         <p class="bento-card__desc">
           Powered by Perplexity Sonar, your agent gets access to live web data with source citations. No stale training data — every query returns current, verified information with full provenance.
@@ -1765,7 +2498,10 @@ a:hover { color: var(--color-primary-hover); }
       </div>
 
       <div class="bento-card">
-        <div class="bento-card__icon">{ }</div>
+        <div class="bento-card__icon">
+          <!-- Braces icon -->
+          <svg viewBox="0 0 24 24"><path d="M7 4a2 2 0 0 0-2 2v3a2 2 0 0 1-2 2 2 2 0 0 1 2 2v3a2 2 0 0 0 2 2"/><path d="M17 4a2 2 0 0 1 2 2v3a2 2 0 0 0 2 2 2 2 0 0 0-2 2v3a2 2 0 0 1-2 2"/></svg>
+        </div>
         <h3 class="bento-card__title">Structured JSON</h3>
         <p class="bento-card__desc">
           Every response is machine-readable JSON with typed fields. Parse results directly into your agent's reasoning pipeline.
@@ -1773,7 +2509,10 @@ a:hover { color: var(--color-primary-hover); }
       </div>
 
       <div class="bento-card">
-        <div class="bento-card__icon">◈</div>
+        <div class="bento-card__icon">
+          <!-- Diamond icon -->
+          <svg viewBox="0 0 24 24"><path d="M12 2l10 10-10 10L2 12 12 2z"/></svg>
+        </div>
         <h3 class="bento-card__title">x402 Payments</h3>
         <p class="bento-card__desc">
           HTTP-native micropayments. Your agent pays per request with USDC — built into the protocol layer, not bolted on.
@@ -1781,7 +2520,10 @@ a:hover { color: var(--color-primary-hover); }
       </div>
 
       <div class="bento-card">
-        <div class="bento-card__icon">⬡</div>
+        <div class="bento-card__icon">
+          <!-- Chain/link icon -->
+          <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </div>
         <h3 class="bento-card__title">Verifiable On-Chain</h3>
         <p class="bento-card__desc">
           Every payment settles on Base L2. Full transaction transparency via BaseScan. Trustless and auditable.
@@ -1789,7 +2531,10 @@ a:hover { color: var(--color-primary-hover); }
       </div>
 
       <div class="bento-card bento-card--large">
-        <div class="bento-card__icon">⎔</div>
+        <div class="bento-card__icon">
+          <!-- Layout icon -->
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        </div>
         <h3 class="bento-card__title">Agent-Native Interface</h3>
         <p class="bento-card__desc">
           Designed for machines, not humans. One endpoint. One method. One payment header. No OAuth flows, no session management. Your agent discovers pricing via the standard x402 manifest and pays inline with each request.
@@ -1798,7 +2543,10 @@ a:hover { color: var(--color-primary-hover); }
       </div>
 
       <div class="bento-card">
-        <div class="bento-card__icon">↯</div>
+        <div class="bento-card__icon">
+          <!-- Gauge/speedometer icon -->
+          <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" style="stroke-width:2;fill:none;stroke:var(--color-primary)"/><path d="M12 12l4-4" style="stroke-width:2;stroke:var(--color-primary)"/><circle cx="12" cy="12" r="1" style="fill:var(--color-primary);stroke:none"/></svg>
+        </div>
         <h3 class="bento-card__title">Low Latency</h3>
         <p class="bento-card__desc">
           Deployed on Vercel Edge for sub-second responses globally. Your agent doesn't wait.
@@ -1806,15 +2554,21 @@ a:hover { color: var(--color-primary-hover); }
       </div>
 
       <div class="bento-card">
-        <div class="bento-card__icon">🔍</div>
+        <div class="bento-card__icon">
+          <!-- Eye icon -->
+          <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
         <h3 class="bento-card__title">Live Preview <span class="bento-card__badge-new">NEW</span></h3>
         <p class="bento-card__desc">
-          Try before you pay. POST /preview with any query — get truncated results free. 10 requests per hour.
+          Try before you pay. POST /preview with any query — get truncated results free. 20 requests per hour.
         </p>
       </div>
 
       <div class="bento-card">
-        <div class="bento-card__icon">📊</div>
+        <div class="bento-card__icon">
+          <!-- Chart/bar-chart icon -->
+          <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+        </div>
         <h3 class="bento-card__title">Confidence Scoring <span class="bento-card__badge-new">NEW</span></h3>
         <p class="bento-card__desc">
           Every response includes a confidence object with score (0-1), level (high/medium/low), sources found, and facts extracted.
@@ -1822,7 +2576,10 @@ a:hover { color: var(--color-primary-hover); }
       </div>
 
       <div class="bento-card">
-        <div class="bento-card__icon">⚡</div>
+        <div class="bento-card__icon">
+          <!-- Clock icon -->
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
         <h3 class="bento-card__title">Rate Limit Headers <span class="bento-card__badge-new">NEW</span></h3>
         <p class="bento-card__desc">
           X-RateLimit-Limit, Remaining, and Reset headers on every response. Plan agent usage with 100 requests/hour per IP.
@@ -1830,7 +2587,10 @@ a:hover { color: var(--color-primary-hover); }
       </div>
 
       <div class="bento-card">
-        <div class="bento-card__icon">🔀</div>
+        <div class="bento-card__icon">
+          <!-- Layers icon -->
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        </div>
         <h3 class="bento-card__title">Tier Selector <span class="bento-card__badge-new">NEW</span></h3>
         <p class="bento-card__desc">
           Pass tier: 'deep' in the /research body to upgrade to Sonar Pro without switching endpoints. One endpoint, both tiers.
@@ -1874,8 +2634,51 @@ a:hover { color: var(--color-primary-hover); }
   </div>
 </section>
 
-<!-- ========== JSON RESPONSE EXAMPLE ========== -->
-<section class="section section--alt" id="response">
+<!-- ========== LIVE DEMO (NEW) ========== -->
+<section class="section section--alt" id="live-demo">
+  <div class="container section-center">
+    <span class="section-label fade-in">Live Demo</span>
+    <h2 class="section-title fade-in">Try It Now</h2>
+    <p class="section-subtitle fade-in">Send a query to the /preview endpoint and see the response in real time. No payment required.</p>
+
+    <div class="live-demo fade-in">
+      <div class="live-demo__form">
+        <input type="text" class="live-demo__input" id="demoInput" placeholder="Enter a research query..." value="Latest AI agent frameworks 2026" aria-label="Research query">
+        <button class="live-demo__btn" id="demoBtn" type="button">
+          <span class="live-demo__btn-text">Run Query</span>
+          <span class="live-demo__spinner"></span>
+        </button>
+      </div>
+
+      <div class="live-demo__error" id="demoError"></div>
+
+      <div class="live-demo__result" id="demoResult">
+        <div class="code-block">
+          <div class="code-block__header">
+            <div class="code-block__dots">
+              <span class="code-block__dot code-block__dot--red"></span>
+              <span class="code-block__dot code-block__dot--yellow"></span>
+              <span class="code-block__dot code-block__dot--green"></span>
+            </div>
+            <div class="code-block__actions">
+              <span class="code-block__label">response.json</span>
+              <button class="copy-btn" data-copy="demo-result" aria-label="Copy response">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                Copy
+              </button>
+            </div>
+          </div>
+          <div class="code-block__body">
+            <pre id="demoResponseCode"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== JSON RESPONSE EXAMPLE (COLLAPSIBLE) ========== -->
+<section class="section" id="response">
   <div class="container">
     <div class="json-section">
       <div class="json-section__text fade-in">
@@ -1905,22 +2708,27 @@ a:hover { color: var(--color-primary-hover); }
       </div>
 
       <div class="fade-in">
-        <div class="code-block">
-          <div class="code-block__header">
-            <div class="code-block__dots">
-              <span class="code-block__dot code-block__dot--red"></span>
-              <span class="code-block__dot code-block__dot--yellow"></span>
-              <span class="code-block__dot code-block__dot--green"></span>
+        <button class="collapsible-toggle" id="jsonToggle" type="button">
+          Show Example Response <span class="collapsible-toggle__arrow">▼</span>
+        </button>
+
+        <div class="collapsible-content" id="jsonCollapsible">
+          <div class="code-block">
+            <div class="code-block__header">
+              <div class="code-block__dots">
+                <span class="code-block__dot code-block__dot--red"></span>
+                <span class="code-block__dot code-block__dot--yellow"></span>
+                <span class="code-block__dot code-block__dot--green"></span>
+              </div>
+              <div class="code-block__actions">
+                <span class="code-block__label">response.json</span>
+                <button class="copy-btn" data-copy="json" aria-label="Copy JSON response">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                  Copy
+                </button>
+              </div>
             </div>
-            <div class="code-block__actions">
-              <span class="code-block__label">response.json</span>
-              <button class="copy-btn" data-copy="json" aria-label="Copy JSON response">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-                Copy
-              </button>
-            </div>
-          </div>
-          <div class="code-block__body">
+            <div class="code-block__body">
 <pre id="json-code">{
   <span class="cs">"summary"</span>: <span class="cs">"The leading AI agent frameworks in
     2026 include CrewAI, LangGraph, AutoGen,
@@ -1949,6 +2757,7 @@ a:hover { color: var(--color-primary-hover); }
     <span class="cs">"cost_usd"</span>: <span class="cn">0.02</span>
   }
 }</pre>
+            </div>
           </div>
         </div>
       </div>
@@ -1957,7 +2766,7 @@ a:hover { color: var(--color-primary-hover); }
 </section>
 
 <!-- ========== HOW IT WORKS ========== -->
-<section class="section" id="how-it-works">
+<section class="section section--alt" id="how-it-works">
   <div class="container">
     <span class="section-label fade-in">Process</span>
     <h2 class="section-title fade-in">Three Steps. No Setup.</h2>
@@ -1990,7 +2799,7 @@ a:hover { color: var(--color-primary-hover); }
 </section>
 
 <!-- ========== USE CASES ========== -->
-<section class="section section--alt" id="use-cases">
+<section class="section" id="use-cases">
   <div class="container">
     <div class="section-center">
       <span class="section-label fade-in">Use Cases</span>
@@ -2001,7 +2810,7 @@ a:hover { color: var(--color-primary-hover); }
     <div class="usecase-grid fade-in">
       <!-- Use Case 1: Market Intelligence -->
       <div class="usecase-card">
-        <div class="usecase-card__icon">📊</div>
+        <div class="usecase-card__icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C9A96E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16l4-8 4 4 4-6"/></svg></div>
         <h3 class="usecase-card__title">Market Intelligence</h3>
         <p class="usecase-card__desc">Agent researches competitor pricing and market positioning across three dimensions.</p>
         <ul class="usecase-card__queries" role="list">
@@ -2017,7 +2826,7 @@ a:hover { color: var(--color-primary-hover); }
 
       <!-- Use Case 2: Due Diligence -->
       <div class="usecase-card">
-        <div class="usecase-card__icon">🔍</div>
+        <div class="usecase-card__icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C9A96E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg></div>
         <h3 class="usecase-card__title">Due Diligence</h3>
         <p class="usecase-card__desc">Agent verifies a company's claims and cross-references with public records using deep research.</p>
         <ul class="usecase-card__queries" role="list">
@@ -2032,7 +2841,7 @@ a:hover { color: var(--color-primary-hover); }
 
       <!-- Use Case 3: Real-Time News -->
       <div class="usecase-card">
-        <div class="usecase-card__icon">📡</div>
+        <div class="usecase-card__icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C9A96E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.4"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.4"/><path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"/></svg></div>
         <h3 class="usecase-card__title">Real-Time News</h3>
         <p class="usecase-card__desc">Agent monitors breaking developments across multiple topics and synthesizes updates.</p>
         <ul class="usecase-card__queries" role="list">
@@ -2052,7 +2861,7 @@ a:hover { color: var(--color-primary-hover); }
 </section>
 
 <!-- ========== MCP INTEGRATION ========== -->
-<section class="section" id="mcp">
+<section class="section section--alt" id="mcp">
   <div class="container">
     <div class="mcp-grid">
       <div class="mcp-info fade-in">
@@ -2122,7 +2931,7 @@ a:hover { color: var(--color-primary-hover); }
 </section>
 
 <!-- ========== PRICING ========== -->
-<section class="section section--alt" id="pricing">
+<section class="section" id="pricing">
   <div class="container">
     <div class="section-center">
       <span class="section-label fade-in">Pricing</span>
@@ -2131,8 +2940,8 @@ a:hover { color: var(--color-primary-hover); }
     </div>
 
     <div class="pricing-grid fade-in">
-      <!-- /preview -->
-      <div class="pricing-card">
+      <!-- /preview — GREEN accent -->
+      <div class="pricing-card pricing-card--green">
         <div class="pricing-card__endpoint">/preview</div>
         <div class="pricing-card__price gold-gradient">FREE</div>
         <div class="pricing-card__unit">no payment required</div>
@@ -2147,17 +2956,17 @@ a:hover { color: var(--color-primary-hover); }
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-            10 requests/hour
+            20 requests/hour
           </li>
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
             No payment required
           </li>
         </ul>
-        <a href="#try-it" class="btn btn--ghost" style="width: 100%;">Try /preview</a>
+        <a href="#live-demo" class="btn btn--ghost" style="width: 100%;">Try /preview</a>
       </div>
 
-      <!-- /research -->
+      <!-- /research — GOLD accent (featured) -->
       <div class="pricing-card pricing-card--featured">
         <div class="pricing-card__endpoint">/research</div>
         <div class="pricing-card__price gold-gradient">$0.02</div>
@@ -2183,8 +2992,8 @@ a:hover { color: var(--color-primary-hover); }
         <a href="https://agentoracle.co/.well-known/x402.json" class="btn btn--primary" style="width: 100%;" target="_blank" rel="noopener noreferrer">View x402 Manifest →</a>
       </div>
 
-      <!-- /deep-research -->
-      <div class="pricing-card">
+      <!-- /deep-research — PURPLE accent -->
+      <div class="pricing-card pricing-card--purple">
         <div class="pricing-card__endpoint">/deep-research</div>
         <div class="pricing-card__price gold-gradient">$0.10</div>
         <div class="pricing-card__unit">per query · USDC on Base</div>
@@ -2241,6 +3050,62 @@ a:hover { color: var(--color-primary-hover); }
   </div>
 </div>
 
+<!-- ========== ERROR HANDLING (NEW) ========== -->
+<section class="section section--alt" id="error-handling">
+  <div class="container">
+    <span class="section-label fade-in">Developer Reference</span>
+    <h2 class="section-title fade-in">Error Handling</h2>
+    <p class="section-subtitle fade-in">Common error codes and how to handle them in your agent's logic.</p>
+
+    <div class="error-cards fade-in">
+      <div class="error-card" data-error-card>
+        <div class="error-card__header">
+          <div class="error-card__left">
+            <span class="error-card__code">402</span>
+            <span class="error-card__name">Payment Required</span>
+          </div>
+          <svg class="error-card__chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="error-card__body">
+          <div class="error-card__body-inner">
+            Payment header missing or invalid. Include <code style="color:var(--color-primary);background:var(--color-primary-highlight);padding:2px 6px;border-radius:4px;">X-PAYMENT</code> header with valid x402 proof.
+          </div>
+        </div>
+      </div>
+
+      <div class="error-card" data-error-card>
+        <div class="error-card__header">
+          <div class="error-card__left">
+            <span class="error-card__code">429</span>
+            <span class="error-card__name">Too Many Requests</span>
+          </div>
+          <svg class="error-card__chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="error-card__body">
+          <div class="error-card__body-inner">
+            Rate limit exceeded. Check <code style="color:var(--color-primary);background:var(--color-primary-highlight);padding:2px 6px;border-radius:4px;">X-RateLimit-Reset</code> header for cooldown.
+          </div>
+        </div>
+      </div>
+
+      <div class="error-card" data-error-card>
+        <div class="error-card__header">
+          <div class="error-card__left">
+            <span class="error-card__code">500</span>
+            <span class="error-card__name">Internal Server Error</span>
+          </div>
+          <svg class="error-card__chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="error-card__body">
+          <div class="error-card__body-inner">
+            Upstream provider issue. Retry with exponential backoff.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ========== TECH SPECS ========== -->
 <section class="section" id="specs">
   <div class="container">
@@ -2295,7 +3160,7 @@ a:hover { color: var(--color-primary-hover); }
       </div>
       <div class="spec-item">
         <span class="spec-item__label">Rate Limits</span>
-        <span class="spec-item__value">100/hr paid · 10/hr preview</span>
+        <span class="spec-item__value">100/hr paid · 20/hr preview</span>
       </div>
       <div class="spec-item">
         <span class="spec-item__label">Version</span>
@@ -2305,14 +3170,210 @@ a:hover { color: var(--color-primary-hover); }
   </div>
 </section>
 
+<!-- ========== COMPARISON TABLE ========== -->
+<section class="section section--alt" id="compare">
+  <div class="container">
+    <div class="section-center">
+      <span class="section-label fade-in">Why AgentOracle</span>
+      <h2 class="section-title fade-in">How We Compare</h2>
+      <p class="section-subtitle fade-in">AgentOracle is the only research API with native crypto payments and zero auth overhead.</p>
+    </div>
+
+    <div class="compare-section fade-in">
+      <div class="compare-table-wrapper">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th class="compare-highlight">AgentOracle</th>
+              <th>Tavily</th>
+              <th>Exa</th>
+              <th>Brave Search</th>
+              <th>Perplexity API</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Pricing</td>
+              <td class="compare-highlight"><span class="check-yes">$0.02/query</span></td>
+              <td>$0.008/credit</td>
+              <td>Contact sales</td>
+              <td>$5-9/1K requests</td>
+              <td>$5-12/1K requests</td>
+            </tr>
+            <tr>
+              <td>Payment Method</td>
+              <td class="compare-highlight"><span class="check-yes">USDC on-chain</span></td>
+              <td>Credit card</td>
+              <td>Credit card</td>
+              <td>Credit card</td>
+              <td>Credit card</td>
+            </tr>
+            <tr>
+              <td>Auth Required</td>
+              <td class="compare-highlight"><span class="check-yes">None (x402)</span></td>
+              <td>API key</td>
+              <td>API key</td>
+              <td>API key</td>
+              <td>API key</td>
+            </tr>
+            <tr>
+              <td>Agent-Native Protocol</td>
+              <td class="compare-highlight"><span class="check-yes">x402 (HTTP 402)</span></td>
+              <td class="check-no">REST only</td>
+              <td class="check-no">REST only</td>
+              <td class="check-no">REST only</td>
+              <td class="check-no">REST only</td>
+            </tr>
+            <tr>
+              <td>On-Chain Verifiable</td>
+              <td class="compare-highlight"><span class="check-yes">Yes (Base L2)</span></td>
+              <td class="check-no">No</td>
+              <td class="check-no">No</td>
+              <td class="check-no">No</td>
+              <td class="check-no">No</td>
+            </tr>
+            <tr>
+              <td>MCP Server</td>
+              <td class="compare-highlight"><span class="check-yes">Yes</span></td>
+              <td><span class="check-yes">Yes</span></td>
+              <td><span class="check-yes">Yes</span></td>
+              <td class="check-no">No</td>
+              <td class="check-no">No</td>
+            </tr>
+            <tr>
+              <td>Free Tier</td>
+              <td class="compare-highlight"><span class="check-yes">20 req/hr free</span></td>
+              <td>1K credits/mo</td>
+              <td class="check-no">None</td>
+              <td>2K queries/mo</td>
+              <td>100 queries/day</td>
+            </tr>
+            <tr>
+              <td>Confidence Scoring</td>
+              <td class="compare-highlight"><span class="check-yes">Built-in</span></td>
+              <td class="check-no">No</td>
+              <td class="check-no">No</td>
+              <td class="check-no">No</td>
+              <td class="check-no">No</td>
+            </tr>
+            <tr>
+              <td>Gasless Payments</td>
+              <td class="compare-highlight"><span class="check-yes">SKALE (soon)</span></td>
+              <td class="check-no">N/A</td>
+              <td class="check-no">N/A</td>
+              <td class="check-no">N/A</td>
+              <td class="check-no">N/A</td>
+            </tr>
+            <tr>
+              <td>Human Setup</td>
+              <td class="compare-highlight"><span class="check-yes">0 min</span></td>
+              <td>~5 min</td>
+              <td>Contact sales</td>
+              <td>~5 min</td>
+              <td>~5 min</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="compare-note">Comparison based on publicly available pricing and documentation as of March 2026.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========== FAQ ========== -->
+<section class="section" id="faq">
+  <div class="container">
+    <div class="section-center">
+      <span class="section-label fade-in">FAQ</span>
+      <h2 class="section-title fade-in">Common Questions</h2>
+      <p class="section-subtitle fade-in">Everything you need to know before integrating.</p>
+    </div>
+
+    <div class="faq-grid fade-in">
+      <div class="faq-item">
+        <button class="faq-item__trigger" data-faq-toggle>
+          What is the x402 protocol?
+          <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-item__body">
+          <div class="faq-item__answer">
+            x402 is an open protocol by Coinbase that enables HTTP-native payments. Instead of API keys and subscriptions, your agent includes a payment proof in the <code>X-PAYMENT</code> header of each request. The server verifies the on-chain payment and returns the response. Think of it like paying for a vending machine — insert coin, get result.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-item__trigger" data-faq-toggle>
+          Do I need a crypto wallet?
+          <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-item__body">
+          <div class="faq-item__answer">
+            Yes, your agent needs a wallet with USDC on the Base network. Most agent frameworks support wallet integration through Coinbase CDP, Privy, or direct ethers.js. The <code>/preview</code> endpoint is free and requires no wallet — use it to test first.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-item__trigger" data-faq-toggle>
+          What chains and currencies are supported?
+          <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-item__body">
+          <div class="faq-item__answer">
+            Currently we accept USDC and EURC on Base (L2). SKALE gasless payments are coming soon. Payments settle on-chain and are fully verifiable on <a href="https://basescan.org/address/0xdF90200B0031051BbF7a66BB9387d2Ecf599e109" target="_blank" rel="noopener noreferrer">BaseScan</a>.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-item__trigger" data-faq-toggle>
+          How is this different from using Perplexity directly?
+          <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-item__body">
+          <div class="faq-item__answer">
+            Perplexity's API requires API keys, billing setup, and human-managed accounts. AgentOracle wraps the same research engine in an agent-native payment layer — your agent discovers pricing automatically via the x402 manifest, pays per query with USDC, and gets structured JSON responses with confidence scoring. Zero human setup required.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-item__trigger" data-faq-toggle>
+          What's the rate limit?
+          <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-item__body">
+          <div class="faq-item__answer">
+            100 requests per hour for paid endpoints (<code>/research</code> and <code>/deep-research</code>), 20 requests per hour for the free <code>/preview</code> endpoint. Every response includes <code>X-RateLimit-Limit</code>, <code>X-RateLimit-Remaining</code>, and <code>X-RateLimit-Reset</code> headers so your agent can plan usage.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-item__trigger" data-faq-toggle>
+          Can I use this with Claude, GPT, or other LLMs?
+          <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-item__body">
+          <div class="faq-item__answer">
+            Yes. Install the AgentOracle MCP server with <code>npx agentoracle-mcp</code> and any MCP-compatible client (Claude, Cursor, or custom agents) can call it as a tool. For direct integration, just POST to the endpoint from any language or framework.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ========== BOTTOM CTA ========== -->
 <section class="bottom-cta section">
   <div class="container">
     <div class="bottom-cta__glow"></div>
-    <h2 class="bottom-cta__headline fade-in">Give Your Agent a Brain</h2>
-    <p class="bottom-cta__sub fade-in">Start querying the real world in minutes. No setup required.</p>
+    <h2 class="bottom-cta__headline fade-in">Start Querying in Seconds</h2>
+    <p class="bottom-cta__sub fade-in">One endpoint. One payment. Real-time research for your agent. No setup required.</p>
     <div class="bottom-cta__buttons fade-in">
-      <a href="https://agentoracle.co/demo" class="btn btn--primary" target="_blank" rel="noopener noreferrer">▶ Watch Demo</a>
+      <a href="#live-demo" class="btn btn--primary">Try Live Demo →</a>
       <a href="https://agentoracle.co/health" class="btn btn--ghost" target="_blank" rel="noopener noreferrer">Check Health Status →</a>
       <a href="https://github.com/TKCollective/agentoracle-mcp" class="btn btn--ghost" target="_blank" rel="noopener noreferrer">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:inline;margin-right:4px;vertical-align:middle;"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
@@ -2323,17 +3384,68 @@ a:hover { color: var(--color-primary-hover); }
   </div>
 </section>
 
-<!-- ========== FOOTER ========== -->
+<!-- ========== FOOTER (Multi-column upgrade) ========== -->
 <footer class="footer">
-  <div class="container footer__inner">
-    <span class="footer__copy">&copy; 2026 AgentOracle. All rights reserved.</span>
-    <ul class="footer__links" role="list">
-      <li><a href="https://agentoracle.co/.well-known/x402.json" target="_blank" rel="noopener noreferrer">x402 Manifest</a></li>
-      <li><a href="https://agentoracle.co/health" target="_blank" rel="noopener noreferrer">API Health</a></li>
-      <li><a href="https://github.com/TKCollective/agentoracle-mcp" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-      <li><a href="https://basescan.org/address/0xdF90200B0031051BbF7a66BB9387d2Ecf599e109" target="_blank" rel="noopener noreferrer">BaseScan</a></li>
-      <li><a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">Created with Perplexity Computer</a></li>
-    </ul>
+  <div class="container">
+    <div class="footer__grid">
+      <!-- Column 1: Brand -->
+      <div class="footer__brand-col">
+        <a href="#" class="footer__brand-logo">
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="AgentOracle logo" style="display:inline-block">
+            <circle cx="16" cy="16" r="15" fill="#0D0D0D" stroke="#C9A96E" stroke-width="1.5"/>
+            <path d="M16 8L10 20h4l-1 4 7-10h-4l1-6z" fill="#C9A96E"/>
+          </svg>
+          <span>AgentOracle</span>
+        </a>
+        <p class="footer__tagline">Pay-per-query research for AI agents</p>
+        <div class="footer__socials">
+          <!-- X / Twitter -->
+          <a href="https://x.com/AgentOracle_AI" class="footer__social-link" target="_blank" rel="noopener noreferrer" aria-label="Follow on X">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+          <!-- GitHub -->
+          <a href="https://github.com/TKCollective" class="footer__social-link" target="_blank" rel="noopener noreferrer" aria-label="View on GitHub">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Column 2: Product -->
+      <div>
+        <h4 class="footer__col-title">Product</h4>
+        <ul class="footer__col-links" role="list">
+          <li><a href="#features">Features</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="https://agentoracle.co/.well-known/x402.json" target="_blank" rel="noopener noreferrer">Docs</a></li>
+          <li><a href="#live-demo">Demo</a></li>
+        </ul>
+      </div>
+
+      <!-- Column 3: Community -->
+      <div>
+        <h4 class="footer__col-title">Community</h4>
+        <ul class="footer__col-links" role="list">
+          <li><a href="https://x.com/AgentOracle_AI" target="_blank" rel="noopener noreferrer">X / Twitter</a></li>
+          <li><a href="https://github.com/TKCollective" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+          <li><a href="https://moltbook.com" target="_blank" rel="noopener noreferrer">Moltbook</a></li>
+        </ul>
+      </div>
+
+      <!-- Column 4: Built With -->
+      <div>
+        <h4 class="footer__col-title">Built With</h4>
+        <ul class="footer__col-links" role="list">
+          <li><a href="https://www.coinbase.com/developer-platform" target="_blank" rel="noopener noreferrer">x402 Protocol</a></li>
+          <li><a href="https://base.org" target="_blank" rel="noopener noreferrer">Base Network</a></li>
+
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer__bottom">
+      <span class="footer__copy">&copy; 2026 TK Collective LLC. All rights reserved.</span>
+
+    </div>
   </div>
 </footer>
 
@@ -2418,7 +3530,13 @@ a:hover { color: var(--color-primary-hover); }
   document.querySelectorAll(".copy-btn").forEach(function (btn) {
     btn.addEventListener("click", function () {
       var key = btn.getAttribute("data-copy");
-      var text = copyTexts[key] || "";
+      var text;
+      if (key === "demo-result") {
+        var el = document.getElementById("demoResponseCode");
+        text = el ? el.textContent : "";
+      } else {
+        text = copyTexts[key] || "";
+      }
       navigator.clipboard.writeText(text).then(function () {
         btn.classList.add("copied");
         btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> Copied!';
@@ -2465,6 +3583,145 @@ a:hover { color: var(--color-primary-hover); }
         e.preventDefault();
         target.scrollIntoView({ behavior: "smooth", block: "start" });
       }
+    });
+  });
+
+  /* ---- Collapsible JSON Response ---- */
+  var jsonToggle = document.getElementById("jsonToggle");
+  var jsonCollapsible = document.getElementById("jsonCollapsible");
+
+  if (jsonToggle && jsonCollapsible) {
+    jsonToggle.addEventListener("click", function () {
+      var isOpen = jsonCollapsible.classList.toggle("is-open");
+      jsonToggle.classList.toggle("is-open", isOpen);
+      jsonToggle.innerHTML = isOpen
+        ? 'Hide Response <span class="collapsible-toggle__arrow" style="display:inline-block;transform:rotate(180deg)">▼</span>'
+        : 'Show Example Response <span class="collapsible-toggle__arrow">▼</span>';
+    });
+  }
+
+  /* ---- Error Cards (collapsible) ---- */
+  document.querySelectorAll("[data-error-card]").forEach(function (card) {
+    var header = card.querySelector(".error-card__header");
+    if (header) {
+      header.addEventListener("click", function () {
+        card.classList.toggle("is-open");
+      });
+    }
+  });
+
+  /* ---- Live Demo ---- */
+  var demoInput = document.getElementById("demoInput");
+  var demoBtn = document.getElementById("demoBtn");
+  var demoResult = document.getElementById("demoResult");
+  var demoError = document.getElementById("demoError");
+  var demoResponseCode = document.getElementById("demoResponseCode");
+
+  if (demoBtn && demoInput) {
+    demoBtn.addEventListener("click", function () {
+      var query = demoInput.value.trim();
+      if (!query) {
+        demoError.textContent = "Please enter a query.";
+        demoError.classList.add("is-visible");
+        demoResult.classList.remove("is-visible");
+        return;
+      }
+
+      // Reset states
+      demoError.classList.remove("is-visible");
+      demoResult.classList.remove("is-visible");
+      demoBtn.classList.add("is-loading");
+      demoBtn.disabled = true;
+
+      fetch("https://agentoracle.co/preview", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ query: query })
+      })
+        .then(function (res) {
+          if (!res.ok) {
+            return res.text().then(function (text) {
+              var errMsg;
+              try {
+                var errJson = JSON.parse(text);
+                errMsg = errJson.error || errJson.message || res.status + " " + res.statusText;
+              } catch (e) {
+                errMsg = res.status + " " + res.statusText;
+              }
+              throw new Error(errMsg);
+            });
+          }
+          return res.json();
+        })
+        .then(function (data) {
+          demoResponseCode.textContent = JSON.stringify(data, null, 2);
+          demoResult.classList.add("is-visible");
+        })
+        .catch(function (err) {
+          var msg = err.message || "Unknown error";
+          if (msg.indexOf("Upstream") !== -1 || msg.indexOf("API key") !== -1 || msg.indexOf("Preview Unavailable") !== -1) {
+            msg = "Preview endpoint is temporarily unavailable (upstream key refresh in progress). The API is live — paid endpoints (/research, /deep-research) work with x402 payment.";
+          }
+          demoError.textContent = msg;
+          demoError.classList.add("is-visible");
+        })
+        .finally(function () {
+          demoBtn.classList.remove("is-loading");
+          demoBtn.disabled = false;
+        });
+    });
+
+    // Allow Enter key to submit
+    demoInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        demoBtn.click();
+      }
+    });
+  }
+
+  /* ---- Live API Status Check ---- */
+  (function checkApiStatus() {
+    var dot = document.getElementById("statusDot");
+    var text = document.getElementById("statusText");
+    if (!dot || !text) return;
+
+    fetch("https://agentoracle.co/health", { mode: "cors" })
+      .then(function (res) {
+        if (res.ok) {
+          dot.className = "header__status-dot";
+          text.textContent = "Online";
+        } else {
+          dot.className = "header__status-dot header__status-dot--offline";
+          text.textContent = "Degraded";
+        }
+      })
+      .catch(function () {
+        dot.className = "header__status-dot header__status-dot--offline";
+        text.textContent = "Offline";
+      });
+
+    // Re-check every 60 seconds
+    setTimeout(checkApiStatus, 60000);
+  })();
+
+  /* ---- FAQ Toggles ---- */
+  var faqTriggers = document.querySelectorAll("[data-faq-toggle]");
+  faqTriggers.forEach(function (trigger) {
+    trigger.addEventListener("click", function () {
+      var item = trigger.closest(".faq-item");
+      if (!item) return;
+      var isOpen = item.classList.contains("is-open");
+
+      // Close all others
+      document.querySelectorAll(".faq-item.is-open").forEach(function (openItem) {
+        if (openItem !== item) openItem.classList.remove("is-open");
+      });
+
+      // Toggle current
+      item.classList.toggle("is-open", !isOpen);
     });
   });
 })();
