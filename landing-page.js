@@ -1820,6 +1820,10 @@ a:hover { color: var(--color-primary-hover); }
   margin: 0;
 }
 
+.compare-mobile-cards {
+  display: none;
+}
+
 .compare-note {
   text-align: center;
   font-size: var(--text-xs);
@@ -2278,6 +2282,61 @@ a:hover { color: var(--color-primary-hover); }
     min-height: 52px;
     padding: var(--space-4) var(--space-5);
   }
+
+  /* Mobile comparison: card layout */
+  .compare-table-wrapper {
+    overflow: hidden;
+  }
+  .compare-table {
+    display: none !important;
+  }
+  .compare-mobile-cards {
+    display: flex !important;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-4);
+  }
+  .compare-mobile-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-5);
+  }
+  .compare-mobile-card.is-highlight {
+    border-color: var(--color-primary);
+    background: var(--color-primary-highlight, rgba(201,169,110,0.06));
+  }
+  .compare-mobile-card__name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--text-base);
+    color: var(--color-text);
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--color-border-subtle);
+  }
+  .compare-mobile-card.is-highlight .compare-mobile-card__name {
+    color: var(--color-primary);
+  }
+  .compare-mobile-card__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: var(--space-2) 0;
+    font-size: var(--text-sm);
+  }
+  .compare-mobile-card__label {
+    color: var(--color-text-muted);
+    font-weight: 500;
+  }
+  .compare-mobile-card__value {
+    color: var(--color-text);
+    font-weight: 600;
+    text-align: right;
+    max-width: 55%;
+  }
+  .compare-mobile-card__value .check-yes { color: var(--color-primary); }
+  .compare-mobile-card__value .check-no { color: var(--color-text-faint); }
 }
 
 @media (max-width: 480px) {
@@ -2401,7 +2460,7 @@ a:hover { color: var(--color-primary-hover); }
     <div class="hero__content">
       <div class="hero__badge fade-in">
         <span class="hero__badge-dot"></span>
-        v1.1.0 — Live on Base + SKALE
+        v1.2.0 — Live on Base + SKALE
       </div>
       <h1 class="hero__headline fade-in">
         Research API<br>for <span class="gold-text">AI Agents</span>
@@ -2412,7 +2471,7 @@ a:hover { color: var(--color-primary-hover); }
       <div class="hero__ctas fade-in">
         <a href="#live-demo" class="btn btn--primary">Try Live Demo →</a>
         <a href="https://agentoracle.co/.well-known/x402.json" class="btn btn--ghost" target="_blank" rel="noopener noreferrer">View x402 Manifest</a>
-        <a href="https://agentoracle.co/demo" class="btn btn--ghost" target="_blank" rel="noopener noreferrer">▶ Watch Demo</a>
+        <a href="https://agentoracle.co/demo" class="btn btn--ghost" target="_blank" rel="noopener noreferrer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Watch Demo</a>
       </div>
     </div>
 
@@ -3164,7 +3223,7 @@ a:hover { color: var(--color-primary-hover); }
       </div>
       <div class="spec-item">
         <span class="spec-item__label">Version</span>
-        <span class="spec-item__value">v1.1.0</span>
+        <span class="spec-item__value">v1.2.0</span>
       </div>
     </div>
   </div>
@@ -3275,6 +3334,73 @@ a:hover { color: var(--color-primary-hover); }
             </tr>
           </tbody>
         </table>
+<div class="compare-mobile-cards">
+  <div class="compare-mobile-card is-highlight">
+    <div class="compare-mobile-card__name">AgentOracle</div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Pricing</span><span class="compare-mobile-card__value">$0.02/query</span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Payment</span><span class="compare-mobile-card__value">USDC on-chain</span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Auth Required</span><span class="compare-mobile-card__value">None (x402)</span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Agent-Native</span><span class="compare-mobile-card__value"><span class="check-yes">x402 (HTTP 402)</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">On-Chain</span><span class="compare-mobile-card__value"><span class="check-yes">Yes (Base L2)</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">MCP Server</span><span class="compare-mobile-card__value"><span class="check-yes">Yes</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Free Tier</span><span class="compare-mobile-card__value">20 req/hr free</span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Confidence</span><span class="compare-mobile-card__value"><span class="check-yes">Built-in</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Gasless</span><span class="compare-mobile-card__value">SKALE (soon)</span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Human Setup</span><span class="compare-mobile-card__value">0 min</span></div>
+  </div>
+  <div class="compare-mobile-card">
+    <div class="compare-mobile-card__name">Tavily</div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Pricing</span><span class="compare-mobile-card__value">$0.005/query</span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Payment</span><span class="compare-mobile-card__value">Credit card</span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Auth Required</span><span class="compare-mobile-card__value">API key</span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Agent-Native</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">On-Chain</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">MCP Server</span><span class="compare-mobile-card__value"><span class="check-yes">Yes</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Free Tier</span><span class="compare-mobile-card__value">1,000 req/mo</span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Confidence</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Gasless</span><span class="compare-mobile-card__value"><span class="check-no">N/A</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Human Setup</span><span class="compare-mobile-card__value">~5 min</span></div>
+  </div>
+  <div class="compare-mobile-card">
+    <div class="compare-mobile-card__name">Exa</div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Pricing</span><span class="compare-mobile-card__value">$0.003/query</span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Payment</span><span class="compare-mobile-card__value">Credit card</span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Auth Required</span><span class="compare-mobile-card__value">API key</span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Agent-Native</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">On-Chain</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">MCP Server</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Free Tier</span><span class="compare-mobile-card__value">1,000 req/mo</span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Confidence</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Gasless</span><span class="compare-mobile-card__value"><span class="check-no">N/A</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Human Setup</span><span class="compare-mobile-card__value">~5 min</span></div>
+  </div>
+  <div class="compare-mobile-card">
+    <div class="compare-mobile-card__name">Brave Search</div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Pricing</span><span class="compare-mobile-card__value">$0.003/query</span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Payment</span><span class="compare-mobile-card__value">Credit card</span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Auth Required</span><span class="compare-mobile-card__value">API key</span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Agent-Native</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">On-Chain</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">MCP Server</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Free Tier</span><span class="compare-mobile-card__value">2,000 req/mo</span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Confidence</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Gasless</span><span class="compare-mobile-card__value"><span class="check-no">N/A</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Human Setup</span><span class="compare-mobile-card__value">~3 min</span></div>
+  </div>
+  <div class="compare-mobile-card">
+    <div class="compare-mobile-card__name">Perplexity API</div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Pricing</span><span class="compare-mobile-card__value">$0.005/query</span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Payment</span><span class="compare-mobile-card__value">Credit card</span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Auth Required</span><span class="compare-mobile-card__value">API key + account</span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Agent-Native</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">On-Chain</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">MCP Server</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Free Tier</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Confidence</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Gasless</span><span class="compare-mobile-card__value"><span class="check-no">N/A</span></span></div>
+    <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Human Setup</span><span class="compare-mobile-card__value">~10 min</span></div>
+  </div>
+</div>
       </div>
       <p class="compare-note">Comparison based on publicly available pricing and documentation as of March 2026.</p>
     </div>
