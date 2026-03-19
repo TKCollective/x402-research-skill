@@ -207,65 +207,86 @@ app.get("/og-image.png", (_req, res) => {
 //  x402 Payment Middleware (v2 SDK)
 // ═══════════════════════════════════════════════════════════════════
 
-// 1. Connect to facilitators (Base + SKALE)
+// 1. Connect to facilitators
 const baseFacilitator = new HTTPFacilitatorClient({
   url: FACILITATOR_URL,
 });
-const skaleFacilitator = new HTTPFacilitatorClient({
-  url: SKALE_FACILITATOR_URL,
-});
 
-// 2. Create resource server — register EVM scheme for both networks
-const resourceServer = new x402ResourceServer([baseFacilitator, skaleFacilitator])
-  .register(NETWORK, new ExactEvmScheme())
-  .register(SKALE_NETWORK, new ExactEvmScheme());
+// SKALE facilitator (dirtroad.dev) — initialized but only added when
+// SKALE_FACILITATOR_READY=true, because dirtroad.dev /supported
+// endpoint currently returns 404 which causes SDK init timeouts.
+const SKALE_FACILITATOR_READY = process.env.SKALE_FACILITATOR_READY === "true";
+let skaleFacilitator;
+if (SKALE_FACILITATOR_READY) {
+  skaleFacilitator = new HTTPFacilitatorClient({
+    url: SKALE_FACILITATOR_URL,
+  });
+}
+
+// 2. Create resource server — register EVM scheme
+//    When SKALE facilitator is ready, pass both; otherwise Base only
+const facilitators = SKALE_FACILITATOR_READY && skaleFacilitator
+  ? [baseFacilitator, skaleFacilitator]
+  : baseFacilitator;
+const resourceServer = new x402ResourceServer(facilitators)
+  .register(NETWORK, new ExactEvmScheme());
+if (SKALE_FACILITATOR_READY) {
+  resourceServer.register(SKALE_NETWORK, new ExactEvmScheme());
+}
 
 // ── Bazaar: register discovery extension (uncomment when ready) ──
 // resourceServer.registerExtension(bazaarResourceServerExtension);
 
-// 3. Define route-level payment configuration (Base + SKALE gasless)
-//    Agents can pay via either network — Base (standard) or SKALE (gasless)
+// 3. Define route-level payment configuration
+//    When SKALE facilitator is ready, agents can pay via either network
+const baseAcceptResearch = {
+  scheme: "exact",
+  price: PRICE,
+  network: NETWORK,
+  payTo: PAY_TO,
+};
+const baseAcceptDeep = {
+  scheme: "exact",
+  price: DEEP_PRICE,
+  network: NETWORK,
+  payTo: PAY_TO,
+};
+const skaleAcceptResearch = {
+  scheme: "exact",
+  price: PRICE,
+  network: SKALE_NETWORK,
+  payTo: PAY_TO,
+};
+const skaleAcceptDeep = {
+  scheme: "exact",
+  price: DEEP_PRICE,
+  network: SKALE_NETWORK,
+  payTo: PAY_TO,
+};
+
 const routeConfig = {
   "POST /research": {
-    accepts: [
-      {
-        scheme: "exact",
-        price: PRICE,
-        network: NETWORK,
-        payTo: PAY_TO,
-      },
-      {
-        scheme: "exact",
-        price: PRICE,
-        network: SKALE_NETWORK,
-        payTo: PAY_TO,
-      },
-    ],
+    accepts: SKALE_FACILITATOR_READY
+      ? [baseAcceptResearch, skaleAcceptResearch]
+      : [baseAcceptResearch],
     description:
       "Broad real-time research for any topic — structured JSON " +
-      "with citations, powered by Perplexity Sonar. " +
-      "Accepts payment on Base (eip155:8453) or SKALE Base (eip155:1187947933, gasless).",
+      "with citations, powered by Perplexity Sonar." +
+      (SKALE_FACILITATOR_READY
+        ? " Accepts payment on Base (eip155:8453) or SKALE Base (gasless)."
+        : ""),
     mimeType: "application/json",
   },
   "POST /deep-research": {
-    accepts: [
-      {
-        scheme: "exact",
-        price: DEEP_PRICE,
-        network: NETWORK,
-        payTo: PAY_TO,
-      },
-      {
-        scheme: "exact",
-        price: DEEP_PRICE,
-        network: SKALE_NETWORK,
-        payTo: PAY_TO,
-      },
-    ],
+    accepts: SKALE_FACILITATOR_READY
+      ? [baseAcceptDeep, skaleAcceptDeep]
+      : [baseAcceptDeep],
     description:
       "Deep research with extended analysis — comprehensive JSON " +
-      "with detailed findings, powered by Perplexity Sonar Pro. " +
-      "Accepts payment on Base (eip155:8453) or SKALE Base (eip155:1187947933, gasless).",
+      "with detailed findings, powered by Perplexity Sonar Pro." +
+      (SKALE_FACILITATOR_READY
+        ? " Accepts payment on Base (eip155:8453) or SKALE Base (gasless)."
+        : ""),
     mimeType: "application/json",
   },
 };
@@ -619,8 +640,9 @@ app.get("/health", (_req, res) => {
       confidence_scoring: true,
       rate_limit_headers: true,
       tier_selector: true,
-      skale_gasless: true,
+      skale_gasless: SKALE_FACILITATOR_READY,
       skale_testnet: SKALE_IS_TESTNET,
+      skale_facilitator_ready: SKALE_FACILITATOR_READY,
     },
     rate_limits: {
       paid: `${RATE_LIMIT_MAX}/hour per IP`,
@@ -1001,12 +1023,19 @@ app.post("/deep-research", async (req, res) => {
 
 app.get("/skale", (_req, res) => {
   res.json({
-    status: SKALE_IS_TESTNET ? "live_testnet" : "live",
-    message: SKALE_IS_TESTNET
-      ? "SKALE gasless payments are live on testnet (Sepolia). " +
-        "Mainnet facilitator pending — switch to mainnet by setting SKALE_NETWORK env var."
-      : "SKALE gasless payments are active on mainnet. " +
-        "Agents can now pay with zero gas fees on SKALE Base.",
+    status: SKALE_FACILITATOR_READY
+      ? (SKALE_IS_TESTNET ? "live_testnet" : "live")
+      : "integration_ready",
+    facilitator_active: SKALE_FACILITATOR_READY,
+    message: SKALE_FACILITATOR_READY
+      ? (SKALE_IS_TESTNET
+          ? "SKALE gasless payments are live on testnet (Sepolia). " +
+            "Mainnet facilitator pending."
+          : "SKALE gasless payments are active on mainnet. " +
+            "Agents can now pay with zero gas fees on SKALE Base.")
+      : "SKALE gasless integration is coded and ready. " +
+        "Set SKALE_FACILITATOR_READY=true in Vercel env vars to activate. " +
+        "Requires the dirtroad.dev facilitator to support the /supported endpoint.",
     skale_network: {
       name: SKALE_IS_TESTNET ? "SKALE Base Sepolia" : "SKALE Base",
       chain_id: parseInt(SKALE_NETWORK.split(":")[1]),
@@ -1097,7 +1126,7 @@ app.listen(PORT, () => {
   console.log(`  Discovery:    http://localhost:${PORT}/.well-known/x402`);
   console.log(`  Manifest:     http://localhost:${PORT}/.well-known/x402.json`);
   console.log(`  Chain:        Base mainnet (${NETWORK})`);
-  console.log(`  SKALE:        SKALE Base gasless (${SKALE_NETWORK}) ✔ LIVE`);
+  console.log(`  SKALE:        ${SKALE_NETWORK} ${SKALE_FACILITATOR_READY ? '✔ LIVE' : '⏳ READY (set SKALE_FACILITATOR_READY=true)'}`);
   console.log(`  SKALE Facil:  ${SKALE_FACILITATOR_URL}`);
   console.log(`  Price:        ${PRICE} USDC per query`);
   console.log(`  Pay to:       ${PAY_TO}`);
