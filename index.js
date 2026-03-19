@@ -67,13 +67,17 @@ const FACILITATOR_URL =
 // Base mainnet CAIP-2 identifier
 const NETWORK = "eip155:8453";
 
-// SKALE Base mainnet — gasless agent payments
-const SKALE_NETWORK = "eip155:1187947933";
+// SKALE Base — gasless agent payments
+// Currently using SKALE Base Sepolia (testnet) while mainnet facilitator is pending
+// Mainnet chain ID: 1187947933 | Testnet chain ID: 324705682
+const SKALE_NETWORK = process.env.SKALE_NETWORK || "eip155:324705682";
 const SKALE_FACILITATOR_URL =
   process.env.SKALE_FACILITATOR_URL ||
   "https://facilitator.dirtroad.dev";
-const SKALE_USDC_ADDRESS = "0x2e08028E3C4c2356572E096d8EF835cD5C6030bD";
+const SKALE_USDC_ADDRESS =
+  process.env.SKALE_USDC_ADDRESS || "0x2e08028E3C4c2356572E096d8EF835cD5C6030bD";
 const SKALE_USDC_NAME = "Bridged USDC (SKALE Bridge)";
+const SKALE_IS_TESTNET = SKALE_NETWORK.includes("324705682");
 
 // Price: $0.02 USDC (standard), $0.10 USDC (deep research)
 const PRICE = "$0.02";
@@ -203,21 +207,24 @@ app.get("/og-image.png", (_req, res) => {
 //  x402 Payment Middleware (v2 SDK)
 // ═══════════════════════════════════════════════════════════════════
 
-// 1. Connect to facilitators
-const facilitatorClient = new HTTPFacilitatorClient({
+// 1. Connect to facilitators (Base + SKALE)
+const baseFacilitator = new HTTPFacilitatorClient({
   url: FACILITATOR_URL,
 });
+const skaleFacilitator = new HTTPFacilitatorClient({
+  url: SKALE_FACILITATOR_URL,
+});
 
-// 2. Create resource server — register EVM scheme for all EVM networks
-const resourceServer = new x402ResourceServer(facilitatorClient).register(
-  NETWORK,
-  new ExactEvmScheme()
-);
+// 2. Create resource server — register EVM scheme for both networks
+const resourceServer = new x402ResourceServer([baseFacilitator, skaleFacilitator])
+  .register(NETWORK, new ExactEvmScheme())
+  .register(SKALE_NETWORK, new ExactEvmScheme());
 
 // ── Bazaar: register discovery extension (uncomment when ready) ──
 // resourceServer.registerExtension(bazaarResourceServerExtension);
 
 // 3. Define route-level payment configuration (Base + SKALE gasless)
+//    Agents can pay via either network — Base (standard) or SKALE (gasless)
 const routeConfig = {
   "POST /research": {
     accepts: [
@@ -227,10 +234,17 @@ const routeConfig = {
         network: NETWORK,
         payTo: PAY_TO,
       },
+      {
+        scheme: "exact",
+        price: PRICE,
+        network: SKALE_NETWORK,
+        payTo: PAY_TO,
+      },
     ],
     description:
       "Broad real-time research for any topic — structured JSON " +
-      "with citations, powered by Perplexity Sonar",
+      "with citations, powered by Perplexity Sonar. " +
+      "Accepts payment on Base (eip155:8453) or SKALE Base (eip155:1187947933, gasless).",
     mimeType: "application/json",
   },
   "POST /deep-research": {
@@ -241,10 +255,17 @@ const routeConfig = {
         network: NETWORK,
         payTo: PAY_TO,
       },
+      {
+        scheme: "exact",
+        price: DEEP_PRICE,
+        network: SKALE_NETWORK,
+        payTo: PAY_TO,
+      },
     ],
     description:
       "Deep research with extended analysis — comprehensive JSON " +
-      "with detailed findings, powered by Perplexity Sonar Pro",
+      "with detailed findings, powered by Perplexity Sonar Pro. " +
+      "Accepts payment on Base (eip155:8453) or SKALE Base (eip155:1187947933, gasless).",
     mimeType: "application/json",
   },
 };
@@ -541,8 +562,10 @@ const x402Manifest = {
       },
     },
   ],
-  facilitator: "xpay",
-  facilitator_url: FACILITATOR_URL,
+  facilitators: {
+    base: { name: "xpay", url: FACILITATOR_URL },
+    skale_base: { name: "dirtroad", url: SKALE_FACILITATOR_URL },
+  },
   networks: {
     base: {
       network: NETWORK,
@@ -579,7 +602,7 @@ app.get("/.well-known/x402.json", (_req, res) => {
 app.get("/health", (_req, res) => {
   res.json({
     status: "ok",
-    version: "1.1.0",
+    version: "1.2.0",
     service: "x402-research-api",
     chain: "base + skale",
     networks: {
@@ -596,6 +619,8 @@ app.get("/health", (_req, res) => {
       confidence_scoring: true,
       rate_limit_headers: true,
       tier_selector: true,
+      skale_gasless: true,
+      skale_testnet: SKALE_IS_TESTNET,
     },
     rate_limits: {
       paid: `${RATE_LIMIT_MAX}/hour per IP`,
@@ -976,17 +1001,24 @@ app.post("/deep-research", async (req, res) => {
 
 app.get("/skale", (_req, res) => {
   res.json({
-    status: "integration_in_progress",
-    message: "SKALE gasless payments are being integrated. " +
-      "Agents will be able to pay with zero gas fees on SKALE Base.",
+    status: SKALE_IS_TESTNET ? "live_testnet" : "live",
+    message: SKALE_IS_TESTNET
+      ? "SKALE gasless payments are live on testnet (Sepolia). " +
+        "Mainnet facilitator pending — switch to mainnet by setting SKALE_NETWORK env var."
+      : "SKALE gasless payments are active on mainnet. " +
+        "Agents can now pay with zero gas fees on SKALE Base.",
     skale_network: {
-      name: "SKALE Base",
-      chain_id: 1187947933,
+      name: SKALE_IS_TESTNET ? "SKALE Base Sepolia" : "SKALE Base",
+      chain_id: parseInt(SKALE_NETWORK.split(":")[1]),
       caip2: SKALE_NETWORK,
+      testnet: SKALE_IS_TESTNET,
       rpc: "https://skale-base.skalenodes.com/v1/base",
+      wss: "wss://skale-base.skalenodes.com/v1/ws/base",
       explorer: "https://skale-base-explorer.skalenodes.com/",
+      portal: "https://base.skalenodes.com/chains/base",
       gas_fees: "zero",
       native_token: "CREDIT",
+      instant_finality: true,
     },
     payment_token: {
       name: SKALE_USDC_NAME,
@@ -994,18 +1026,27 @@ app.get("/skale", (_req, res) => {
       decimals: 6,
     },
     facilitator: SKALE_FACILITATOR_URL,
-    current_payments: {
+    accepted_networks: {
       base: {
         network: NETWORK,
         research_price: PRICE,
         deep_research_price: DEEP_PRICE,
+        gas: "~$0.001 per tx",
+      },
+      skale_base: {
+        network: SKALE_NETWORK,
+        research_price: PRICE,
+        deep_research_price: DEEP_PRICE,
+        gas: "zero",
+        note: "Agents pay only the query price, no gas fees",
       },
     },
-    coming_soon: [
-      "Gasless payments via SKALE Base — agents pay $0.02 USDC with zero gas",
-      "Automatic network detection — agents choose Base or SKALE at payment time",
-      "Native SKALE bridge support for USDC transfers",
-    ],
+    how_to_pay: {
+      step_1: "Bridge USDC from Base to SKALE Base via the native bridge at https://base.skalenodes.com/chains/base",
+      step_2: "Send a POST request to /research or /deep-research",
+      step_3: "Receive 402 response with payment requirements for both networks",
+      step_4: "Pay with USDC on SKALE Base (zero gas) and resubmit",
+    },
     docs: "https://docs.skale.space/cookbook/x402/accepting-payments",
     partnership: "Integration in collaboration with SKALE Labs (@SkaleNetwork)",
   });
@@ -1020,10 +1061,10 @@ app.use((_req, res) => {
     error: "Not Found",
     available_endpoints: {
       "POST /preview": "Free live preview (truncated results, 10/hr)",
-      "POST /research": "Standard research ($0.02 USDC on Base, tier selector available)",
-      "POST /deep-research": "Deep research with Sonar Pro ($0.10 USDC on Base)",
+      "POST /research": "Standard research ($0.02 USDC on Base or SKALE gasless)",
+      "POST /deep-research": "Deep research with Sonar Pro ($0.10 USDC on Base or SKALE gasless)",
       "GET /health": "Service health check",
-      "GET /skale": "SKALE gasless integration info (coming soon)",
+      "GET /skale": "SKALE gasless payments info (live — zero gas fees)",
       "GET /.well-known/x402": "x402 discovery document",
       "GET /.well-known/x402.json": "x402 service manifest (alias)",
       "GET /": "AgentOracle landing page",
@@ -1049,14 +1090,14 @@ app.use((err, _req, res, _next) => {
 
 app.listen(PORT, () => {
   console.log("═══════════════════════════════════════════════════");
-  console.log("  x402 Research API — Live");
+  console.log("  x402 Research API v1.2.0 — Live");
   console.log("═══════════════════════════════════════════════════");
   console.log(`  Endpoint:     http://localhost:${PORT}/research`);
   console.log(`  Health:       http://localhost:${PORT}/health`);
   console.log(`  Discovery:    http://localhost:${PORT}/.well-known/x402`);
   console.log(`  Manifest:     http://localhost:${PORT}/.well-known/x402.json`);
   console.log(`  Chain:        Base mainnet (${NETWORK})`);
-  console.log(`  SKALE:        SKALE Base gasless (${SKALE_NETWORK})`);
+  console.log(`  SKALE:        SKALE Base gasless (${SKALE_NETWORK}) ✔ LIVE`);
   console.log(`  SKALE Facil:  ${SKALE_FACILITATOR_URL}`);
   console.log(`  Price:        ${PRICE} USDC per query`);
   console.log(`  Pay to:       ${PAY_TO}`);
