@@ -148,14 +148,6 @@ a:hover { color: var(--color-primary-hover); }
 .section-center { text-align: center; }
 .section-center .section-subtitle { margin-inline: auto; }
 
-/* === PREVIEW BANNER === */
-.preview-banner {
-  background: linear-gradient(90deg, #C9A96E, #D4A850, #E8C878);
-  color: #0D0D0D; text-align: center; padding: 10px var(--space-4);
-  font-family: var(--font-display); font-weight: 800; font-size: var(--text-sm);
-  letter-spacing: 0.05em; z-index: 200; position: relative;
-}
-
 /* === ANNOUNCEMENT BAR (Category 6) === */
 .announcement-bar {
   background: var(--color-surface-2); border-bottom: 1px solid var(--color-border);
@@ -747,8 +739,7 @@ a:hover { color: var(--color-primary-hover); }
 </head>
 <body>
 
-<!-- PREVIEW BANNER -->
-<div class="preview-banner">PREVIEW — Proposed Website Improvements</div>
+
 
 <!-- ANNOUNCEMENT BAR (Cat 6) -->
 <div class="announcement-bar">
