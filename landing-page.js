@@ -2702,7 +2702,7 @@ a:hover { color: var(--color-primary-hover); }
 
     <div class="live-demo fade-in">
       <div class="live-demo__form">
-        <input type="text" class="live-demo__input" id="demoInput" placeholder="Enter a research query..." value="Latest AI agent frameworks 2026" aria-label="Research query">
+        <input type="text" class="live-demo__input" id="demoInput" placeholder="Ask anything..." value="Latest AI agent frameworks 2026" aria-label="Research query">
         <button class="live-demo__btn" id="demoBtn" type="button">
           <span class="live-demo__btn-text">Run Query</span>
           <span class="live-demo__spinner"></span>
@@ -3747,7 +3747,7 @@ a:hover { color: var(--color-primary-hover); }
     demoBtn.addEventListener("click", function () {
       var query = demoInput.value.trim();
       if (!query) {
-        demoError.textContent = "Please enter a query.";
+        demoError.textContent = "Please type a query.";
         demoError.classList.add("is-visible");
         demoResult.classList.remove("is-visible");
         return;
