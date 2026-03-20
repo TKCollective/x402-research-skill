@@ -21,8 +21,8 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AgentOracle — Preview v2 Improvements</title>
-<meta name="description" content="Preview of proposed improvements to AgentOracle landing page.">
+<title>AgentOracle — Pay-Per-Query Research API for AI Agents</title>
+<meta name="description" content="AgentOracle is a pay-per-query research API for AI agents using the x402 payment protocol. Accept USDC and EURC on Base mainnet.">
 
 <style>
 /* === FONTS === */
@@ -1582,7 +1582,14 @@ a:hover { color: var(--color-primary-hover); }
       var targetId = this.getAttribute("href");
       if (targetId === "#") return;
       var target = document.querySelector(targetId);
-      if (target) { e.preventDefault(); target.scrollIntoView({ behavior: "smooth", block: "start" }); }
+      if (target) {
+        e.preventDefault();
+        /* Immediately reveal all fade-in elements in the target section so they're visible when scroll arrives */
+        target.querySelectorAll(".fade-in").forEach(function (el) { el.classList.add("is-visible"); fadeObserver.unobserve(el); });
+        /* Also reveal the target itself if it has fade-in */
+        if (target.classList.contains("fade-in")) { target.classList.add("is-visible"); fadeObserver.unobserve(target); }
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     });
   });
 
