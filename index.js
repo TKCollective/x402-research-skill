@@ -68,12 +68,12 @@ const FACILITATOR_URL =
 const NETWORK = "eip155:8453";
 
 // SKALE Base — gasless agent payments
-// Currently using SKALE Base Sepolia (testnet) while mainnet facilitator is pending
+// PayAI facilitator supports both SKALE mainnet and testnet
 // Mainnet chain ID: 1187947933 | Testnet chain ID: 324705682
-const SKALE_NETWORK = process.env.SKALE_NETWORK || "eip155:324705682";
+const SKALE_NETWORK = process.env.SKALE_NETWORK || "eip155:1187947933";
 const SKALE_FACILITATOR_URL =
   process.env.SKALE_FACILITATOR_URL ||
-  "https://facilitator.dirtroad.dev";
+  "https://facilitator.payai.network";
 const SKALE_USDC_ADDRESS =
   process.env.SKALE_USDC_ADDRESS || "0x2e08028E3C4c2356572E096d8EF835cD5C6030bD";
 const SKALE_USDC_NAME = "Bridged USDC (SKALE Bridge)";
@@ -212,8 +212,8 @@ const baseFacilitator = new HTTPFacilitatorClient({
   url: FACILITATOR_URL,
 });
 
-// SKALE facilitator (dirtroad.dev) — initialized but only added when
-// SKALE_FACILITATOR_READY=true, because dirtroad.dev /supported
+// SKALE facilitator (PayAI) — initialized but only added when
+// SKALE_FACILITATOR_READY=true to allow controlled rollout
 // endpoint currently returns 404 which causes SDK init timeouts.
 const SKALE_FACILITATOR_READY = process.env.SKALE_FACILITATOR_READY === "true";
 let skaleFacilitator;
@@ -585,7 +585,7 @@ const x402Manifest = {
   ],
   facilitators: {
     base: { name: "xpay", url: FACILITATOR_URL },
-    skale_base: { name: "dirtroad", url: SKALE_FACILITATOR_URL },
+    skale_base: { name: "payai", url: SKALE_FACILITATOR_URL },
   },
   networks: {
     base: {
@@ -1034,8 +1034,7 @@ app.get("/skale", (_req, res) => {
           : "SKALE gasless payments are active on mainnet. " +
             "Agents can now pay with zero gas fees on SKALE Base.")
       : "SKALE gasless integration is coded and ready. " +
-        "Set SKALE_FACILITATOR_READY=true in Vercel env vars to activate. " +
-        "Requires the dirtroad.dev facilitator to support the /supported endpoint.",
+        "Set SKALE_FACILITATOR_READY=true to activate SKALE gasless payments via PayAI.",
     skale_network: {
       name: SKALE_IS_TESTNET ? "SKALE Base Sepolia" : "SKALE Base",
       chain_id: parseInt(SKALE_NETWORK.split(":")[1]),
