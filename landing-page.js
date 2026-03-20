@@ -5,9 +5,9 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
 <!--
    ______                            __
   / ____/___  ____ ___  ____  __  __/ /____  _____
- / /   / __ \/ __ \`__ \/ __ \/ / / / __/ _ \/ ___/
+ / /   / __ \\/ __ \`__ \\/ __ \\/ / / / __/ _ \\/ ___/
 / /___/ /_/ / / / / / / /_/ / /_/ / /_/  __/ /
-\____/\____/_/ /_/ /_/ .___/\__,_/\__/\___/_/
+\\____/\\____/_/ /_/ /_/ .___/\\__,_/\\__/\\___/_/
                     /_/
         Created with Perplexity Computer
         https://www.perplexity.ai/computer
@@ -478,7 +478,7 @@ a:hover { color: var(--color-primary-hover); }
 .usecase-card__queries { list-style: none; padding: 0; margin: 0 0 var(--space-5) 0; flex-grow: 1; }
 .usecase-card__queries li { display: flex; align-items: flex-start; gap: var(--space-2); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-text-muted); padding: var(--space-2) 0; border-bottom: 1px solid var(--color-border-subtle); }
 .usecase-card__queries li:last-child { border-bottom: none; }
-.usecase-card__queries li::before { content: '\2192'; color: var(--color-primary); flex-shrink: 0; }
+.usecase-card__queries li::before { content: '\\2192'; color: var(--color-primary); flex-shrink: 0; }
 .usecase-card__cost { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); background: var(--color-primary-highlight); border-radius: var(--radius-lg); margin-top: auto; }
 .usecase-card__cost-label { font-size: var(--text-xs); font-weight: 500; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
 .usecase-card__cost-value { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 800; color: var(--color-primary); }
@@ -952,9 +952,9 @@ a:hover { color: var(--color-primary-hover); }
           </div>
         </div>
         <div class="code-block__body">
-<pre id="curl-code"><span class="cf">curl</span> <span class="ckw">-X</span> POST https://agentoracle.co/research \
-  <span class="ckw">-H</span> <span class="cs">"Content-Type: application/json"</span> \
-  <span class="ckw">-H</span> <span class="cs">"X-PAYMENT: &lt;x402-payment&gt;"</span> \
+<pre id="curl-code"><span class="cf">curl</span> <span class="ckw">-X</span> POST https://agentoracle.co/research \\
+  <span class="ckw">-H</span> <span class="cs">"Content-Type: application/json"</span> \\
+  <span class="ckw">-H</span> <span class="cs">"X-PAYMENT: &lt;x402-payment&gt;"</span> \\
   <span class="ckw">-d</span> <span class="cs">'{"query": "Latest AI agent frameworks 2026"}'</span></pre>
         </div>
       </div>
@@ -1546,7 +1546,7 @@ a:hover { color: var(--color-primary-hover); }
 
   /* ---- Copy Buttons ---- */
   var copyTexts = {
-    curl: "curl -X POST https://agentoracle.co/research \\\n  -H \"Content-Type: application/json\" \\\n  -H \"X-PAYMENT: <x402-payment>\" \\\n  -d '{\"query\": \"Latest AI agent frameworks 2026\"}\'",
+    curl: "curl -X POST https://agentoracle.co/research \\\\\\n  -H \\"Content-Type: application/json\\" \\\\\\n  -H \\"X-PAYMENT: <x402-payment>\\" \\\\\\n  -d '{\\"query\\": \\"Latest AI agent frameworks 2026\\"}\\'",
     mcp: "npx agentoracle-mcp"
   };
   document.querySelectorAll(".copy-btn").forEach(function (btn) {
@@ -1665,7 +1665,7 @@ a:hover { color: var(--color-primary-hover); }
   var heroCode = document.getElementById("heroCode");
   if (heroCode) {
     var lines = [
-      '<span class="ck">// Query AgentOracle \u2014 one endpoint, one payment</span>',
+      '<span class="ck">// Query AgentOracle \\u2014 one endpoint, one payment</span>',
       '<span class="ckw">const</span> response = <span class="ckw">await</span> <span class="cf">fetch</span>(<span class="cs">"https://agentoracle.co/research"</span>, {',
       '  <span class="cp">method:</span> <span class="cs">"POST"</span>,',
       '  <span class="cp">headers:</span> {',
@@ -1678,7 +1678,7 @@ a:hover { color: var(--color-primary-hover); }
       '});',
       '',
       '<span class="ckw">const</span> data = <span class="ckw">await</span> response.<span class="cf">json</span>();',
-      '<span class="ck">// \u2192 structured research with sources</span>'
+      '<span class="ck">// \\u2192 structured research with sources</span>'
     ];
     var currentLine = 0, currentChar = 0, html = "";
     function typeChar() {
@@ -1688,7 +1688,7 @@ a:hover { color: var(--color-primary-hover); }
       }
       var line = lines[currentLine];
       var plainText = line.replace(/<[^>]+>/g, "");
-      if (currentChar === 0 && currentLine > 0) html += "\n";
+      if (currentChar === 0 && currentLine > 0) html += "\\n";
       if (currentChar >= plainText.length) {
         html += line.substring(line.lastIndexOf(">") === -1 ? currentChar : 0);
         if (currentChar === 0) html += line;
@@ -1703,12 +1703,12 @@ a:hover { color: var(--color-primary-hover); }
       setTimeout(typeChar, Math.random() * 30 + 20);
     }
     /* Simplified: show all lines with typing cursor at end */
-    var fullHtml = lines.join("\n");
+    var fullHtml = lines.join("\\n");
     var charIdx = 0;
     var stripped = fullHtml.replace(/<[^>]+>/g, "");
     function showLine(idx) {
-      if (idx >= lines.length) { heroCode.innerHTML = lines.join("\n"); return; }
-      heroCode.innerHTML = lines.slice(0, idx + 1).join("\n") + '<span class="typing-cursor"></span>';
+      if (idx >= lines.length) { heroCode.innerHTML = lines.join("\\n"); return; }
+      heroCode.innerHTML = lines.slice(0, idx + 1).join("\\n") + '<span class="typing-cursor"></span>';
       setTimeout(function () { showLine(idx + 1); }, 60 + Math.random() * 40);
     }
     showLine(0);
