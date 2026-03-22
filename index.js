@@ -550,6 +550,8 @@ const x402Manifest = {
         sources: "array",
         confidence_score: "number",
         confidence_level: "string (high|medium|low)",
+        freshness: "string (real-time|recent|historical)",
+        response_time_ms: "number",
       },
     },
     {
@@ -580,6 +582,8 @@ const x402Manifest = {
         analysis: "string",
         sources: "array",
         confidence_score: "number",
+        freshness: "string (real-time|recent|historical)",
+        response_time_ms: "number",
       },
     },
   ],
@@ -623,7 +627,7 @@ app.get("/.well-known/x402.json", (_req, res) => {
 app.get("/health", (_req, res) => {
   res.json({
     status: "ok",
-    version: "1.2.0",
+    version: "1.3.0",
     service: "x402-research-api",
     chain: "base + skale",
     networks: {
@@ -702,6 +706,8 @@ app.post("/research", async (req, res) => {
     });
   }
 
+  const requestStartTime = Date.now();
+
   try {
     // ── Call Perplexity API ──────────────────────────────────────
     const systemPrompt = useDeep
@@ -775,6 +781,17 @@ app.post("/research", async (req, res) => {
     const confidenceLevel = adjustedScore >= 0.85 ? "high" : adjustedScore >= 0.6 ? "medium" : "low";
     structuredResult.confidence_score = adjustedScore;
 
+    // ── Freshness detection ───────────────────────────────────
+    const summaryText = (structuredResult.summary || "") + " " + (structuredResult.key_facts || []).join(" ");
+    const currentYear = new Date().getFullYear();
+    const hasRecentYear = summaryText.includes(String(currentYear)) || summaryText.includes(String(currentYear - 1));
+    const timeWords = /today|yesterday|this week|this month|hours ago|minutes ago|just announced|breaking/i;
+    const hasTimeWords = timeWords.test(summaryText);
+    const freshness = hasTimeWords ? "real-time" : hasRecentYear ? "recent" : "historical";
+
+    // ── Response time ─────────────────────────────────────────
+    const responseTimeMs = Date.now() - requestStartTime;
+
     // ── Return structured result ────────────────────────────────
     return res.json({
       query: query.trim(),
@@ -783,10 +800,18 @@ app.post("/research", async (req, res) => {
       confidence: {
         score: adjustedScore,
         level: confidenceLevel,
-        sources_found: sourceCount,
-        facts_extracted: factCount,
+        sources_count: sourceCount,
+        facts_count: factCount,
       },
-      model: perplexityResponse.data?.model || selectedModel,
+      freshness,
+      metadata: {
+        model: perplexityResponse.data?.model || selectedModel,
+        api_version: "1.3.0",
+        response_time_ms: responseTimeMs,
+        timestamp: new Date().toISOString(),
+        network: "base",
+        price_paid: useDeep ? DEEP_PRICE : PRICE,
+      },
       usage: perplexityResponse.data?.usage || null,
     });
   } catch (err) {
@@ -890,6 +915,8 @@ app.post("/deep-research", async (req, res) => {
     });
   }
 
+  const requestStartTime = Date.now();
+
   try {
     const perplexityResponse = await axios.post(
       "https://api.perplexity.ai/chat/completions",
@@ -962,6 +989,17 @@ app.post("/deep-research", async (req, res) => {
     const confidenceLevel = adjustedScore >= 0.85 ? "high" : adjustedScore >= 0.6 ? "medium" : "low";
     structuredResult.confidence_score = adjustedScore;
 
+    // ── Freshness detection ───────────────────────────────────
+    const summaryText = (structuredResult.summary || "") + " " + (structuredResult.key_facts || []).join(" ");
+    const currentYear = new Date().getFullYear();
+    const hasRecentYear = summaryText.includes(String(currentYear)) || summaryText.includes(String(currentYear - 1));
+    const timeWords = /today|yesterday|this week|this month|hours ago|minutes ago|just announced|breaking/i;
+    const hasTimeWords = timeWords.test(summaryText);
+    const freshness = hasTimeWords ? "real-time" : hasRecentYear ? "recent" : "historical";
+
+    // ── Response time ─────────────────────────────────────────
+    const responseTimeMs = Date.now() - requestStartTime;
+
     return res.json({
       query: query.trim(),
       tier: "deep",
@@ -969,10 +1007,18 @@ app.post("/deep-research", async (req, res) => {
       confidence: {
         score: adjustedScore,
         level: confidenceLevel,
-        sources_found: sourceCount,
-        facts_extracted: factCount,
+        sources_count: sourceCount,
+        facts_count: factCount,
       },
-      model: perplexityResponse.data?.model || PERPLEXITY_MODEL_PRO,
+      freshness,
+      metadata: {
+        model: perplexityResponse.data?.model || PERPLEXITY_MODEL_PRO,
+        api_version: "1.3.0",
+        response_time_ms: responseTimeMs,
+        timestamp: new Date().toISOString(),
+        network: "base",
+        price_paid: DEEP_PRICE,
+      },
       usage: perplexityResponse.data?.usage || null,
     });
   } catch (err) {
@@ -1118,7 +1164,7 @@ app.use((err, _req, res, _next) => {
 
 app.listen(PORT, () => {
   console.log("═══════════════════════════════════════════════════");
-  console.log("  x402 Research API v1.2.0 — Live");
+  console.log("  x402 Research API v1.3.0 — Live");
   console.log("═══════════════════════════════════════════════════");
   console.log(`  Endpoint:     http://localhost:${PORT}/research`);
   console.log(`  Health:       http://localhost:${PORT}/health`);
