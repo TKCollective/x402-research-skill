@@ -642,8 +642,11 @@ app.get("/health", (_req, res) => {
     features: {
       live_preview: true,
       confidence_scoring: true,
+      freshness_detection: true,
       rate_limit_headers: true,
       tier_selector: true,
+      free_promo: promoQueriesUsed < PROMO_MAX_QUERIES,
+      defi_vertical_beta: true,
       skale_gasless: SKALE_FACILITATOR_READY,
       skale_testnet: SKALE_IS_TESTNET,
       skale_facilitator_ready: SKALE_FACILITATOR_READY,
@@ -857,6 +860,391 @@ app.post("/research", async (req, res) => {
     });
   }
 });
+
+// ═══════════════════════════════════════════════════════════════════
+//  POST /free — Promotional Free Queries (First 100)
+// ═══════════════════════════════════════════════════════════════════
+//
+//  Promo: First 100 full research queries are free.
+//  Agents send a promo code to get full (non-truncated) results.
+//  This gets agents hooked on the quality, then they convert to paid.
+//
+//  Body: { "query": "...", "promo_code": "AGENT100" }
+
+const PROMO_CODE = process.env.PROMO_CODE || "AGENT100";
+const PROMO_MAX_QUERIES = parseInt(process.env.PROMO_MAX_QUERIES, 10) || 100;
+let promoQueriesUsed = 0;
+
+app.post("/free", async (req, res) => {
+  const { query, promo_code } = req.body;
+
+  if (!query || typeof query !== "string" || query.trim().length === 0) {
+    return res.status(400).json({
+      error: "Bad Request",
+      message: 'Request body must include a non-empty "query" string and "promo_code".',
+      example: { query: "What are the top DeFi yields on Base?", promo_code: "AGENT100" },
+    });
+  }
+
+  if (!promo_code || promo_code !== PROMO_CODE) {
+    return res.status(403).json({
+      error: "Invalid Promo Code",
+      message: "Valid promo code required for free queries.",
+      hint: "Follow @AgentOracle_AI on X for promo codes.",
+    });
+  }
+
+  if (promoQueriesUsed >= PROMO_MAX_QUERIES) {
+    return res.status(410).json({
+      error: "Promotion Ended",
+      message: `All ${PROMO_MAX_QUERIES} free queries have been claimed. Use POST /research with x402 payment for full results.`,
+      upgrade: "POST /research — $0.02 USDC per query",
+      queries_used: promoQueriesUsed,
+    });
+  }
+
+  if (query.length > 2000) {
+    return res.status(400).json({
+      error: "Bad Request",
+      message: "Query must be 2000 characters or fewer.",
+    });
+  }
+
+  promoQueriesUsed++;
+  const queryNumber = promoQueriesUsed;
+  const requestStartTime = Date.now();
+
+  try {
+    const perplexityResponse = await axios.post(
+      "https://api.perplexity.ai/chat/completions",
+      {
+        model: PERPLEXITY_MODEL,
+        stream: false,
+        max_tokens: 2000,
+        messages: [
+          {
+            role: "system",
+            content:
+              'Respond only in clean JSON: { "summary": string, "key_facts": array, ' +
+              '"sources": array, "confidence_score": number }. ' +
+              "Keep concise, accurate, real-time.",
+          },
+          { role: "user", content: query.trim() },
+        ],
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${PERPLEXITY_KEY}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        timeout: 30000,
+      }
+    );
+
+    const choice = perplexityResponse.data?.choices?.[0];
+    const rawContent = choice?.message?.content || "";
+
+    let structuredResult;
+    try {
+      const cleaned = rawContent
+        .replace(/^```(?:json)?\s*/i, "")
+        .replace(/\s*```$/i, "")
+        .trim();
+      structuredResult = JSON.parse(cleaned);
+    } catch {
+      structuredResult = {
+        summary: rawContent,
+        key_facts: [],
+        sources: [],
+        confidence_score: 0.5,
+      };
+    }
+
+    const citations = perplexityResponse.data?.citations || [];
+    if (citations.length > 0 && (!structuredResult.sources || structuredResult.sources.length === 0)) {
+      structuredResult.sources = citations;
+    }
+
+    const rawScore = structuredResult.confidence_score || 0.5;
+    const sourceCount = (structuredResult.sources || []).length;
+    const factCount = (structuredResult.key_facts || []).length;
+    let adjustedScore = rawScore;
+    if (sourceCount >= 5) adjustedScore = Math.min(1, adjustedScore + 0.05);
+    if (sourceCount === 0) adjustedScore = Math.max(0.1, adjustedScore - 0.15);
+    if (factCount >= 5) adjustedScore = Math.min(1, adjustedScore + 0.03);
+    adjustedScore = Math.round(adjustedScore * 100) / 100;
+    const confidenceLevel = adjustedScore >= 0.85 ? "high" : adjustedScore >= 0.6 ? "medium" : "low";
+    structuredResult.confidence_score = adjustedScore;
+
+    const summaryText = (structuredResult.summary || "") + " " + (structuredResult.key_facts || []).join(" ");
+    const currentYear = new Date().getFullYear();
+    const hasRecentYear = summaryText.includes(String(currentYear)) || summaryText.includes(String(currentYear - 1));
+    const timeWords = /today|yesterday|this week|this month|hours ago|minutes ago|just announced|breaking/i;
+    const hasTimeWords = timeWords.test(summaryText);
+    const freshness = hasTimeWords ? "real-time" : hasRecentYear ? "recent" : "historical";
+
+    const responseTimeMs = Date.now() - requestStartTime;
+
+    return res.json({
+      query: query.trim(),
+      tier: "standard",
+      promo: {
+        code: PROMO_CODE,
+        query_number: queryNumber,
+        queries_remaining: PROMO_MAX_QUERIES - queryNumber,
+        message: queryNumber <= 10
+          ? "Welcome! Enjoy your free research queries."
+          : `${PROMO_MAX_QUERIES - queryNumber} free queries remaining. Upgrade to x402 paid queries for unlimited access.`,
+      },
+      result: structuredResult,
+      confidence: {
+        score: adjustedScore,
+        level: confidenceLevel,
+        sources_count: sourceCount,
+        facts_count: factCount,
+      },
+      freshness,
+      metadata: {
+        model: perplexityResponse.data?.model || PERPLEXITY_MODEL,
+        api_version: "1.3.0",
+        response_time_ms: responseTimeMs,
+        timestamp: new Date().toISOString(),
+        network: "promo",
+        price_paid: "$0.00 (free promo)",
+      },
+      usage: perplexityResponse.data?.usage || null,
+    });
+  } catch (err) {
+    promoQueriesUsed--; // don't count failed queries
+    console.error("[/free] Perplexity API error:", err.message);
+    return res.status(502).json({
+      error: "Query Failed",
+      message: "Could not process query. Your free query was not consumed. Try again.",
+    });
+  }
+});
+
+// GET /free — promo status
+app.get("/free", (_req, res) => {
+  const remaining = Math.max(0, PROMO_MAX_QUERIES - promoQueriesUsed);
+  res.json({
+    promo: "First 100 Free Queries",
+    code: PROMO_CODE,
+    total: PROMO_MAX_QUERIES,
+    used: promoQueriesUsed,
+    remaining,
+    active: remaining > 0,
+    how_to_use: {
+      method: "POST",
+      url: "/free",
+      body: { query: "your research question", promo_code: PROMO_CODE },
+    },
+    after_promo: {
+      research: "POST /research — $0.02 USDC via x402",
+      deep_research: "POST /deep-research — $0.10 USDC via x402",
+    },
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  POST /defi — DeFi Vertical Research Endpoint (Promo: Free)
+// ═══════════════════════════════════════════════════════════════════
+//
+//  Specialized DeFi research — optimized prompts for TVL, yields,
+//  protocol analysis, token metrics, and market trends.
+//  Currently free during beta. Will be $0.02 USDC after beta.
+
+let defiQueriesCount = 0;
+const DEFI_BETA_LIMIT = 50;
+
+app.post("/defi", async (req, res) => {
+  const { query, protocol, metric } = req.body;
+
+  if (!query || typeof query !== "string" || query.trim().length === 0) {
+    return res.status(400).json({
+      error: "Bad Request",
+      message: 'Request body must include a non-empty "query" string.',
+      example: {
+        query: "What are the current top yield opportunities on Base?",
+        protocol: "aave",
+        metric: "tvl",
+      },
+    });
+  }
+
+  if (query.length > 2000) {
+    return res.status(400).json({
+      error: "Bad Request",
+      message: "Query must be 2000 characters or fewer.",
+    });
+  }
+
+  if (defiQueriesCount >= DEFI_BETA_LIMIT) {
+    return res.status(410).json({
+      error: "Beta Limit Reached",
+      message: "DeFi beta queries exhausted. Use POST /research with x402 payment.",
+    });
+  }
+
+  defiQueriesCount++;
+  const requestStartTime = Date.now();
+
+  // Build enhanced DeFi-specific prompt
+  let enhancedQuery = query.trim();
+  if (protocol) {
+    enhancedQuery = `[Protocol: ${protocol}] ${enhancedQuery}`;
+  }
+  if (metric) {
+    enhancedQuery = `[Metric focus: ${metric}] ${enhancedQuery}`;
+  }
+
+  try {
+    const perplexityResponse = await axios.post(
+      "https://api.perplexity.ai/chat/completions",
+      {
+        model: PERPLEXITY_MODEL,
+        stream: false,
+        max_tokens: 2000,
+        messages: [
+          {
+            role: "system",
+            content:
+              'You are a DeFi research analyst. Respond only in clean JSON: { ' +
+              '"summary": string (DeFi-focused analysis), ' +
+              '"key_facts": array (specific numbers: TVL, APY, volume, price), ' +
+              '"protocols_mentioned": array of protocol names, ' +
+              '"risk_factors": array (risks and considerations), ' +
+              '"sources": array, ' +
+              '"confidence_score": number }. ' +
+              "Focus on current data, specific metrics, and actionable insights. " +
+              "Always include TVL, yields, and volume where relevant.",
+          },
+          { role: "user", content: enhancedQuery },
+        ],
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${PERPLEXITY_KEY}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        timeout: 30000,
+      }
+    );
+
+    const choice = perplexityResponse.data?.choices?.[0];
+    const rawContent = choice?.message?.content || "";
+
+    let structuredResult;
+    try {
+      const cleaned = rawContent
+        .replace(/^```(?:json)?\s*/i, "")
+        .replace(/\s*```$/i, "")
+        .trim();
+      structuredResult = JSON.parse(cleaned);
+    } catch {
+      structuredResult = {
+        summary: rawContent,
+        key_facts: [],
+        protocols_mentioned: [],
+        risk_factors: [],
+        sources: [],
+        confidence_score: 0.5,
+      };
+    }
+
+    const citations = perplexityResponse.data?.citations || [];
+    if (citations.length > 0 && (!structuredResult.sources || structuredResult.sources.length === 0)) {
+      structuredResult.sources = citations;
+    }
+
+    const rawScore = structuredResult.confidence_score || 0.5;
+    const sourceCount = (structuredResult.sources || []).length;
+    const factCount = (structuredResult.key_facts || []).length;
+    let adjustedScore = rawScore;
+    if (sourceCount >= 5) adjustedScore = Math.min(1, adjustedScore + 0.05);
+    if (sourceCount === 0) adjustedScore = Math.max(0.1, adjustedScore - 0.15);
+    if (factCount >= 5) adjustedScore = Math.min(1, adjustedScore + 0.03);
+    adjustedScore = Math.round(adjustedScore * 100) / 100;
+    const confidenceLevel = adjustedScore >= 0.85 ? "high" : adjustedScore >= 0.6 ? "medium" : "low";
+
+    const summaryText = (structuredResult.summary || "") + " " + (structuredResult.key_facts || []).join(" ");
+    const currentYear = new Date().getFullYear();
+    const hasRecentYear = summaryText.includes(String(currentYear)) || summaryText.includes(String(currentYear - 1));
+    const timeWords = /today|yesterday|this week|this month|hours ago|minutes ago|just announced|breaking/i;
+    const hasTimeWords = timeWords.test(summaryText);
+    const freshness = hasTimeWords ? "real-time" : hasRecentYear ? "recent" : "historical";
+
+    const responseTimeMs = Date.now() - requestStartTime;
+
+    return res.json({
+      query: query.trim(),
+      vertical: "defi",
+      beta: true,
+      result: structuredResult,
+      confidence: {
+        score: adjustedScore,
+        level: confidenceLevel,
+        sources_count: sourceCount,
+        facts_count: factCount,
+      },
+      freshness,
+      metadata: {
+        model: perplexityResponse.data?.model || PERPLEXITY_MODEL,
+        api_version: "1.3.0",
+        response_time_ms: responseTimeMs,
+        timestamp: new Date().toISOString(),
+        vertical: "defi",
+        price_paid: "$0.00 (beta)",
+      },
+      defi_beta: {
+        queries_used: defiQueriesCount,
+        queries_remaining: DEFI_BETA_LIMIT - defiQueriesCount,
+      },
+      usage: perplexityResponse.data?.usage || null,
+    });
+  } catch (err) {
+    defiQueriesCount--;
+    console.error("[/defi] Error:", err.message);
+    return res.status(502).json({
+      error: "Query Failed",
+      message: "Could not process DeFi query. Try again.",
+    });
+  }
+});
+
+// GET /defi — DeFi vertical info
+app.get("/defi", (_req, res) => {
+  res.json({
+    vertical: "defi",
+    status: "beta",
+    description: "Specialized DeFi research — optimized for TVL, yields, protocol analysis, and market trends.",
+    beta_queries_remaining: Math.max(0, DEFI_BETA_LIMIT - defiQueriesCount),
+    endpoints: {
+      "POST /defi": {
+        price: "$0.00 (beta)",
+        body: {
+          query: "string (required) — your DeFi research question",
+          protocol: "string (optional) — focus on a specific protocol",
+          metric: "string (optional) — tvl, apy, volume, price",
+        },
+      },
+    },
+    example_queries: [
+      "What are the top yield opportunities on Base right now?",
+      "Compare Aave v3 TVL across all chains",
+      "What's the risk profile of Ethena's sUSDe yield?",
+      "Latest DEX volume rankings and trends",
+    ],
+    output_includes: [
+      "summary", "key_facts", "protocols_mentioned",
+      "risk_factors", "sources", "confidence_score", "freshness"
+    ],
+    after_beta: "POST /defi will be $0.02 USDC via x402 (same as /research)",
+  });
+});
+
 
 //  Landing Page — served inline (no static files needed)
 // ═══════════════════════════════════════════════════════════════════
@@ -1137,6 +1525,8 @@ app.use((_req, res) => {
       "POST /preview": "Free live preview (truncated results, 10/hr)",
       "POST /research": "Standard research ($0.02 USDC on Base or SKALE gasless)",
       "POST /deep-research": "Deep research with Sonar Pro ($0.10 USDC on Base or SKALE gasless)",
+      "POST /free": "Promotional free queries (use code AGENT100)",
+      "POST /defi": "DeFi vertical research (beta — free)",
       "GET /health": "Service health check",
       "GET /skale": "SKALE gasless payments info (live — zero gas fees)",
       "GET /.well-known/x402": "x402 discovery document",
