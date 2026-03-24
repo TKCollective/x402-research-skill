@@ -185,7 +185,19 @@ app.use(
   })
 );
 
-app.use(express.json());
+app.use((req, res, next) => {
+  express.json()(req, res, (err) => {
+    if (err) {
+      // Malformed JSON body — return 400 instead of crashing with 500
+      return res.status(400).json({
+        error: "Bad Request",
+        message: "Invalid JSON in request body.",
+        hint: "Ensure Content-Type is application/json and the body is valid JSON.",
+      });
+    }
+    next();
+  });
+});
 
 // ── Favicon routes (inline data for Vercel compatibility) ────────
 app.get("/favicon.ico", (_req, res) => {
