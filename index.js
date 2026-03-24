@@ -88,6 +88,20 @@ const SKALE_IS_TESTNET = SKALE_NETWORK.includes("324705682");
 const PRICE = "$0.02";
 const DEEP_PRICE = "$0.10";
 
+// SKALE structured prices — PayAI requires { amount, asset, extra } format
+// Amount is in smallest token unit: USDC.e has 6 decimals
+// $0.02 = 20000 units, $0.10 = 100000 units
+const SKALE_PRICE_RESEARCH = {
+  amount: "20000",
+  asset: SKALE_USDC_ADDRESS,
+  extra: { name: SKALE_USDC_NAME, version: "1" },
+};
+const SKALE_PRICE_DEEP = {
+  amount: "100000",
+  asset: SKALE_USDC_ADDRESS,
+  extra: { name: SKALE_USDC_NAME, version: "1" },
+};
+
 // Perplexity models
 const PERPLEXITY_MODEL = "sonar";
 const PERPLEXITY_MODEL_PRO = "sonar-pro";
@@ -218,16 +232,15 @@ const baseFacilitator = new HTTPFacilitatorClient({
 });
 
 // SKALE facilitator (PayAI) — gasless agent payments on SKALE Base
-// SKALE is configured and advertised in the x402 manifest.
-// Payment processing uses Base only for now — PayAI facilitator
-// causes timeouts in the x402 SDK's paymentMiddleware on Vercel
-// serverless. SKALE payment verification will be enabled once we
-// resolve the facilitator integration with Manuel @ SKALE.
+const skaleFacilitator = new HTTPFacilitatorClient({
+  url: SKALE_FACILITATOR_URL,
+});
 const SKALE_FACILITATOR_READY = process.env.SKALE_FACILITATOR_READY !== "false";
 
-// 2. Create resource server — Base only (reliable, tested)
+// 2. Create resource server — wildcard EVM scheme covers both Base + SKALE
+//    Per SKALE docs: use "eip155:*" to handle all EVM chains
 const resourceServer = new x402ResourceServer(baseFacilitator)
-  .register(NETWORK, new ExactEvmScheme());
+  .register("eip155:*", new ExactEvmScheme());
 
 // ── Bazaar: register discovery extension (uncomment when ready) ──
 // resourceServer.registerExtension(bazaarResourceServerExtension);
@@ -248,32 +261,40 @@ const baseAcceptDeep = {
 };
 const skaleAcceptResearch = {
   scheme: "exact",
-  price: PRICE,
+  price: SKALE_PRICE_RESEARCH,
   network: SKALE_NETWORK,
   payTo: PAY_TO,
 };
 const skaleAcceptDeep = {
   scheme: "exact",
-  price: DEEP_PRICE,
+  price: SKALE_PRICE_DEEP,
   network: SKALE_NETWORK,
   payTo: PAY_TO,
 };
 
 const routeConfig = {
   "POST /research": {
-    accepts: [baseAcceptResearch],
+    accepts: SKALE_FACILITATOR_READY
+      ? [baseAcceptResearch, skaleAcceptResearch]
+      : [baseAcceptResearch],
     description:
       "Broad real-time research for any topic — structured JSON " +
       "with citations, powered by Perplexity Sonar." +
-      " Accepts payment on Base (eip155:8453). SKALE gasless coming soon.",
+      (SKALE_FACILITATOR_READY
+        ? " Accepts payment on Base (eip155:8453) or SKALE (gasless, eip155:1187947933)."
+        : " Accepts payment on Base (eip155:8453)."),
     mimeType: "application/json",
   },
   "POST /deep-research": {
-    accepts: [baseAcceptDeep],
+    accepts: SKALE_FACILITATOR_READY
+      ? [baseAcceptDeep, skaleAcceptDeep]
+      : [baseAcceptDeep],
     description:
       "Deep research with extended analysis — comprehensive JSON " +
       "with detailed findings, powered by Perplexity Sonar Pro." +
-      " Accepts payment on Base (eip155:8453). SKALE gasless coming soon.",
+      (SKALE_FACILITATOR_READY
+        ? " Accepts payment on Base (eip155:8453) or SKALE (gasless, eip155:1187947933)."
+        : " Accepts payment on Base (eip155:8453)."),
     mimeType: "application/json",
   },
 };
@@ -614,7 +635,7 @@ app.get("/.well-known/x402.json", (_req, res) => {
 app.get("/health", (_req, res) => {
   res.json({
     status: "ok",
-    version: "1.3.0",
+    version: "1.4.0",
     service: "x402-research-api",
     chain: "base + skale",
     networks: {
@@ -634,7 +655,7 @@ app.get("/health", (_req, res) => {
       tier_selector: true,
       free_promo: promoQueriesUsed < PROMO_MAX_QUERIES,
       defi_vertical_beta: true,
-      skale_gasless: "configured",  // advertised in manifest, payment processing pending
+      skale_gasless: SKALE_FACILITATOR_READY ? "live" : "disabled",
       skale_testnet: SKALE_IS_TESTNET,
       skale_facilitator_ready: SKALE_FACILITATOR_READY,  // config flag
     },
@@ -796,7 +817,7 @@ app.post("/research", async (req, res) => {
       freshness,
       metadata: {
         model: perplexityResponse.data?.model || selectedModel,
-        api_version: "1.3.0",
+        api_version: "1.4.0",
         response_time_ms: responseTimeMs,
         timestamp: new Date().toISOString(),
         network: "base",
@@ -994,7 +1015,7 @@ app.post("/free", async (req, res) => {
       freshness,
       metadata: {
         model: perplexityResponse.data?.model || PERPLEXITY_MODEL,
-        api_version: "1.3.0",
+        api_version: "1.4.0",
         response_time_ms: responseTimeMs,
         timestamp: new Date().toISOString(),
         network: "promo",
@@ -1179,7 +1200,7 @@ app.post("/defi", async (req, res) => {
       freshness,
       metadata: {
         model: perplexityResponse.data?.model || PERPLEXITY_MODEL,
-        api_version: "1.3.0",
+        api_version: "1.4.0",
         response_time_ms: responseTimeMs,
         timestamp: new Date().toISOString(),
         vertical: "defi",
@@ -1388,7 +1409,7 @@ app.post("/deep-research", async (req, res) => {
       freshness,
       metadata: {
         model: perplexityResponse.data?.model || PERPLEXITY_MODEL_PRO,
-        api_version: "1.3.0",
+        api_version: "1.4.0",
         response_time_ms: responseTimeMs,
         timestamp: new Date().toISOString(),
         network: "base",
@@ -1444,18 +1465,16 @@ app.post("/deep-research", async (req, res) => {
 
 app.get("/skale", (_req, res) => {
   res.json({
-    status: SKALE_FACILITATOR_READY ? "configured" : "disabled"
+    status: SKALE_FACILITATOR_READY
       ? (SKALE_IS_TESTNET ? "live_testnet" : "live")
-      : "integration_ready",
-    facilitator_active: false,  // PayAI middleware integration pending
-    message: SKALE_FACILITATOR_READY ? "configured" : "disabled"
+      : "disabled",
+    facilitator_active: SKALE_FACILITATOR_READY,
+    message: SKALE_FACILITATOR_READY
       ? (SKALE_IS_TESTNET
-          ? "SKALE gasless payments are live on testnet (Sepolia). " +
-            "Mainnet facilitator pending."
-          : "SKALE gasless payments are active on mainnet. " +
-            "Agents can now pay with zero gas fees on SKALE Base.")
-      : "SKALE gasless integration is coded and ready. " +
-        "SKALE is disabled via SKALE_FACILITATOR_READY=false.",
+          ? "SKALE gasless payments are live on testnet. "
+          : "SKALE gasless payments are live on mainnet. " +
+            "Agents can pay with zero gas fees on SKALE Base.")
+      : "SKALE gasless integration is disabled via SKALE_FACILITATOR_READY=false.",
     skale_network: {
       name: SKALE_IS_TESTNET ? "SKALE Base Sepolia" : "SKALE Base",
       chain_id: parseInt(SKALE_NETWORK.split(":")[1]),
@@ -1541,14 +1560,14 @@ app.use((err, _req, res, _next) => {
 
 app.listen(PORT, () => {
   console.log("═══════════════════════════════════════════════════");
-  console.log("  x402 Research API v1.3.0 — Live");
+  console.log("  x402 Research API v1.4.0 — Live");
   console.log("═══════════════════════════════════════════════════");
   console.log(`  Endpoint:     http://localhost:${PORT}/research`);
   console.log(`  Health:       http://localhost:${PORT}/health`);
   console.log(`  Discovery:    http://localhost:${PORT}/.well-known/x402`);
   console.log(`  Manifest:     http://localhost:${PORT}/.well-known/x402.json`);
   console.log(`  Chain:        Base mainnet (${NETWORK})`);
-  console.log(`  SKALE:        ${SKALE_NETWORK} ${SKALE_FACILITATOR_READY ? '📋 CONFIGURED (manifest only)' : '⏸ DISABLED'}`);
+  console.log(`  SKALE:        ${SKALE_NETWORK} ${SKALE_FACILITATOR_READY ? '✅ LIVE (PayAI facilitator active)' : '⏸ DISABLED'}`);
   console.log(`  SKALE Facil:  ${SKALE_FACILITATOR_URL}`);
   console.log(`  Price:        ${PRICE} USDC per query`);
   console.log(`  Pay to:       ${PAY_TO}`);
