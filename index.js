@@ -143,6 +143,49 @@ setInterval(() => {
   }
 }, 10 * 60 * 1000);
 
+// ── Research Cache (in-memory, 24hr TTL) ────────────────────────
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const CACHE_DISCOUNT = 0.5; // 50% off for cached results
+const researchCache = new Map();
+
+function normalizeQuery(query) {
+  return query.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function getCacheKey(query, tier) {
+  return `${tier || 'standard'}:${normalizeQuery(query)}`;
+}
+
+function getCachedResult(query, tier) {
+  const key = getCacheKey(query, tier);
+  const entry = researchCache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
+    researchCache.delete(key);
+    return null;
+  }
+  return entry;
+}
+
+function setCacheEntry(query, tier, result) {
+  const key = getCacheKey(query, tier);
+  researchCache.set(key, {
+    result,
+    timestamp: Date.now(),
+    hits: 0,
+  });
+}
+
+// Clean up expired cache entries every hour
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of researchCache) {
+    if (now - entry.timestamp > CACHE_TTL_MS) {
+      researchCache.delete(key);
+    }
+  }
+}, 60 * 60 * 1000);
+
 // ── Validation ───────────────────────────────────────────────────
 if (!PAY_TO || PAY_TO === "0x...") {
   console.error(
@@ -566,7 +609,7 @@ const x402Manifest = {
     "Pay-per-query real-time research powered by Perplexity Sonar. " +
     "Two tiers: standard ($0.02) and deep ($0.10). Structured JSON " +
     "with citations, key facts, and confidence scores. No API keys " +
-    "needed — just pay with USDC on Base.",
+    "needed — just pay with USDC on Base. Repeat queries within 24hrs served from cache at 50% off.",
   endpoints: [
     {
       path: "/preview",
@@ -708,7 +751,7 @@ app.get("/.well-known/x402.json", (_req, res) => {
 app.get("/health", (_req, res) => {
   res.json({
     status: "ok",
-    version: "1.4.0",
+    version: "1.5.0",
     service: "x402-research-api",
     chain: "base + skale",
     networks: {
@@ -728,6 +771,7 @@ app.get("/health", (_req, res) => {
       tier_selector: true,
       free_promo: promoQueriesUsed < PROMO_MAX_QUERIES,
       defi_vertical_beta: true,
+      research_cache: true,
       skale_gasless: "configured",  // manifest-only — middleware uses Base until multi-facilitator support
       skale_testnet: SKALE_IS_TESTNET,
       skale_facilitator_ready: SKALE_FACILITATOR_READY,  // config flag
@@ -791,6 +835,30 @@ app.post("/research", async (req, res) => {
   }
 
   const requestStartTime = Date.now();
+
+  // ── Cache check ──────────────────────────────────────────────────────
+  const cached = getCachedResult(query, tier);
+  if (cached) {
+    cached.hits += 1;
+    const responseTimeMs = Date.now() - requestStartTime;
+    return res.json({
+      query: query.trim(),
+      tier: selectedTier,
+      result: cached.result.result,
+      confidence: cached.result.confidence,
+      freshness: cached.result.freshness,
+      metadata: {
+        ...cached.result.metadata,
+        cached: true,
+        cache_age_seconds: Math.round((Date.now() - cached.timestamp) / 1000),
+        cache_hits: cached.hits,
+        original_response_time_ms: cached.result.metadata.response_time_ms,
+        response_time_ms: responseTimeMs,
+        price_paid: useDeep ? "$0.05 (cached)" : "$0.01 (cached)",
+      },
+      usage: cached.result.usage,
+    });
+  }
 
   try {
     // ── Call Perplexity API ──────────────────────────────────────
@@ -876,10 +944,8 @@ app.post("/research", async (req, res) => {
     // ── Response time ─────────────────────────────────────────
     const responseTimeMs = Date.now() - requestStartTime;
 
-    // ── Return structured result ────────────────────────────────
-    return res.json({
-      query: query.trim(),
-      tier: selectedTier,
+    // ── Store in cache ───────────────────────────────────────────
+    const responsePayload = {
       result: structuredResult,
       confidence: {
         score: adjustedScore,
@@ -890,13 +956,21 @@ app.post("/research", async (req, res) => {
       freshness,
       metadata: {
         model: perplexityResponse.data?.model || selectedModel,
-        api_version: "1.4.0",
+        api_version: "1.5.0",
         response_time_ms: responseTimeMs,
         timestamp: new Date().toISOString(),
         network: "base",
         price_paid: useDeep ? DEEP_PRICE : PRICE,
       },
       usage: perplexityResponse.data?.usage || null,
+    };
+    setCacheEntry(query, tier, responsePayload);
+
+    // ── Return structured result ────────────────────────────────
+    return res.json({
+      query: query.trim(),
+      tier: selectedTier,
+      ...responsePayload,
     });
   } catch (err) {
     // ── Error handling ──────────────────────────────────────────
@@ -1088,7 +1162,7 @@ app.post("/free", async (req, res) => {
       freshness,
       metadata: {
         model: perplexityResponse.data?.model || PERPLEXITY_MODEL,
-        api_version: "1.4.0",
+        api_version: "1.5.0",
         response_time_ms: responseTimeMs,
         timestamp: new Date().toISOString(),
         network: "promo",
@@ -1273,7 +1347,7 @@ app.post("/defi", async (req, res) => {
       freshness,
       metadata: {
         model: perplexityResponse.data?.model || PERPLEXITY_MODEL,
-        api_version: "1.4.0",
+        api_version: "1.5.0",
         response_time_ms: responseTimeMs,
         timestamp: new Date().toISOString(),
         vertical: "defi",
@@ -1482,7 +1556,7 @@ app.post("/deep-research", async (req, res) => {
       freshness,
       metadata: {
         model: perplexityResponse.data?.model || PERPLEXITY_MODEL_PRO,
-        api_version: "1.4.0",
+        api_version: "1.5.0",
         response_time_ms: responseTimeMs,
         timestamp: new Date().toISOString(),
         network: "base",
@@ -1593,6 +1667,26 @@ app.get("/skale", (_req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════
+//  GET /cache/stats — Cache monitoring
+// ═══════════════════════════════════════════════════════════════════
+
+app.get("/cache/stats", (_req, res) => {
+  const entries = [];
+  const now = Date.now();
+  for (const [key, entry] of researchCache) {
+    entries.push({
+      key: key.substring(0, 50) + "...",
+      age_hours: Math.round((now - entry.timestamp) / 3600000 * 10) / 10,
+      hits: entry.hits,
+    });
+  }
+  res.json({
+    total_cached: researchCache.size,
+    entries,
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
 //  404 Catch-All
 // ═══════════════════════════════════════════════════════════════════
 
@@ -1606,6 +1700,7 @@ app.use((_req, res) => {
       "POST /free": "Promotional free queries (use code AGENT100)",
       "POST /defi": "DeFi vertical research (beta — free)",
       "GET /health": "Service health check",
+      "GET /cache/stats": "Research cache monitoring",
       "GET /skale": "SKALE gasless payments info (live — zero gas fees)",
       "GET /.well-known/x402": "x402 discovery document",
       "GET /.well-known/x402.json": "x402 service manifest (alias)",
@@ -1632,7 +1727,7 @@ app.use((err, _req, res, _next) => {
 
 app.listen(PORT, () => {
   console.log("═══════════════════════════════════════════════════");
-  console.log("  x402 Research API v1.4.0 — Live");
+  console.log("  x402 Research API v1.5.0 — Live");
   console.log("═══════════════════════════════════════════════════");
   console.log(`  Endpoint:     http://localhost:${PORT}/research`);
   console.log(`  Health:       http://localhost:${PORT}/health`);
