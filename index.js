@@ -75,8 +75,8 @@ const SKALE_FACILITATOR_URL =
   process.env.SKALE_FACILITATOR_URL ||
   "https://facilitator.payai.network";
 const SKALE_USDC_ADDRESS =
-  process.env.SKALE_USDC_ADDRESS || "0x2e08028E3C4c2356572E096d8EF835cD5C6030bD";
-const SKALE_USDC_NAME = "Bridged USDC (SKALE Bridge)";
+  process.env.SKALE_USDC_ADDRESS || "0x85889c8c714505E0c94b30fcfcF64fE3Ac8FCb20";
+const SKALE_USDC_NAME = "USDC.e (SKALE Base)";
 const SKALE_IS_TESTNET = SKALE_NETWORK.includes("324705682");
 
 // Price: $0.02 USDC (standard), $0.10 USDC (deep research)
