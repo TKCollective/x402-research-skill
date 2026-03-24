@@ -44,14 +44,11 @@ import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 
-// ── Bazaar Discovery Extension (optional) ────────────────────────
-// Uncomment the lines below once @x402/extensions/bazaar is installed
-// and you want your endpoint to appear in the x402 Bazaar registry.
-//
-// import {
-//   bazaarResourceServerExtension,
-//   declareDiscoveryExtension,
-// } from "@x402/extensions/bazaar";
+// ── Bazaar Discovery Extension ──────────────────────────────────
+import {
+  bazaarResourceServerExtension,
+  declareDiscoveryExtension,
+} from "@x402/extensions/bazaar";
 
 // ── Global error handlers (prevent serverless crashes) ─────────────
 process.on("unhandledRejection", (reason) => {
@@ -242,8 +239,8 @@ const SKALE_FACILITATOR_READY = process.env.SKALE_FACILITATOR_READY !== "false";
 const resourceServer = new x402ResourceServer(baseFacilitator)
   .register("eip155:*", new ExactEvmScheme());
 
-// ── Bazaar: register discovery extension (uncomment when ready) ──
-// resourceServer.registerExtension(bazaarResourceServerExtension);
+// ── Bazaar: register discovery extension for x402 marketplace ──
+resourceServer.registerExtension(bazaarResourceServerExtension);
 
 // 3. Define route-level payment configuration
 //    When SKALE facilitator is ready, agents can pay via either network
@@ -282,18 +279,84 @@ const routeConfig = {
   "POST /research": {
     accepts: [baseAcceptResearch],
     description:
-      "Broad real-time research for any topic — structured JSON " +
-      "with citations, powered by Perplexity Sonar." +
-      " Accepts payment on Base (eip155:8453). SKALE gasless configured (see manifest).",
+      "Real-time research API for AI agents. Send any natural-language question, " +
+      "get structured JSON with summary, key facts, sources, and confidence scoring. " +
+      "Powered by Perplexity Sonar. $0.02 USDC per query on Base.",
     mimeType: "application/json",
+    extensions: {
+      ...declareDiscoveryExtension({
+        input: { query: "What is the current price of Bitcoin?" },
+        inputSchema: {
+          properties: {
+            query: { type: "string", maxLength: 2000, description: "Natural-language research question" },
+            tier: { type: "string", enum: ["standard", "deep"], description: "Pass deep to upgrade to Sonar Pro at $0.10" },
+          },
+          required: ["query"],
+        },
+        bodyType: "json",
+        output: {
+          example: {
+            summary: "Bitcoin is currently trading at $67,432 with a 24h volume of $28B...",
+            key_facts: ["BTC price: $67,432", "24h change: +2.3%", "Market cap: $1.33T"],
+            sources: [{ title: "CoinGecko", url: "https://coingecko.com" }],
+            confidence_score: 0.94,
+            confidence_level: "high",
+            freshness: "real-time",
+          },
+          schema: {
+            properties: {
+              summary: { type: "string" },
+              key_facts: { type: "array", items: { type: "string" } },
+              sources: { type: "array", items: { type: "object" } },
+              confidence_score: { type: "number" },
+              confidence_level: { type: "string", enum: ["high", "medium", "low"] },
+              freshness: { type: "string", enum: ["real-time", "recent", "historical"] },
+            },
+            required: ["summary", "key_facts", "sources", "confidence_score"],
+          },
+        },
+      }),
+    },
   },
   "POST /deep-research": {
     accepts: [baseAcceptDeep],
     description:
-      "Deep research with extended analysis — comprehensive JSON " +
-      "with detailed findings, powered by Perplexity Sonar Pro." +
-      " Accepts payment on Base (eip155:8453). SKALE gasless configured (see manifest).",
+      "Deep research with comprehensive multi-step analysis. Returns detailed findings " +
+      "with expert-level synthesis, powered by Perplexity Sonar Pro. $0.10 USDC per query on Base.",
     mimeType: "application/json",
+    extensions: {
+      ...declareDiscoveryExtension({
+        input: { query: "Comprehensive analysis of DeFi yield strategies on Base network" },
+        inputSchema: {
+          properties: {
+            query: { type: "string", maxLength: 4000, description: "Research question for deep analysis" },
+          },
+          required: ["query"],
+        },
+        bodyType: "json",
+        output: {
+          example: {
+            summary: "A comprehensive analysis of DeFi yield strategies on Base...",
+            key_facts: ["Top protocol: Aave with $12B TVL", "Average yield: 4.2% APY"],
+            sources: [{ title: "DefiLlama", url: "https://defillama.com" }],
+            confidence_score: 0.91,
+            confidence_level: "high",
+            freshness: "real-time",
+          },
+          schema: {
+            properties: {
+              summary: { type: "string" },
+              key_facts: { type: "array", items: { type: "string" } },
+              sources: { type: "array", items: { type: "object" } },
+              confidence_score: { type: "number" },
+              confidence_level: { type: "string" },
+              freshness: { type: "string" },
+            },
+            required: ["summary", "key_facts", "sources", "confidence_score"],
+          },
+        },
+      }),
+    },
   },
 };
 
