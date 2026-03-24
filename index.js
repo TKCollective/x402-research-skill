@@ -214,24 +214,40 @@ const baseFacilitator = new HTTPFacilitatorClient({
 
 // SKALE facilitator (PayAI) — gasless agent payments on SKALE Base
 // Enabled by default. Set SKALE_FACILITATOR_READY=false to disable.
-
+// NOTE: PayAI facilitator initialization is async and can be slow on
+// serverless cold starts, so we initialize it in the background and
+// add SKALE support once it's confirmed reachable.
 const SKALE_FACILITATOR_READY = process.env.SKALE_FACILITATOR_READY !== "false";
-let skaleFacilitator;
-if (SKALE_FACILITATOR_READY) {
-  skaleFacilitator = new HTTPFacilitatorClient({
-    url: SKALE_FACILITATOR_URL,
-  });
-}
 
-// 2. Create resource server — register EVM scheme
-//    When SKALE facilitator is ready, pass both; otherwise Base only
-const facilitators = SKALE_FACILITATOR_READY && skaleFacilitator
-  ? [baseFacilitator, skaleFacilitator]
-  : baseFacilitator;
-const resourceServer = new x402ResourceServer(facilitators)
+// 2. Create resource server — start with Base only, add SKALE async
+const resourceServer = new x402ResourceServer(baseFacilitator)
   .register(NETWORK, new ExactEvmScheme());
+
+// Async SKALE facilitator setup (non-blocking)
+let skaleActive = false;
 if (SKALE_FACILITATOR_READY) {
-  resourceServer.register(SKALE_NETWORK, new ExactEvmScheme());
+  (async () => {
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 5000);
+      const resp = await fetch(SKALE_FACILITATOR_URL + "/supported", {
+        signal: ctrl.signal,
+      });
+      clearTimeout(timer);
+      if (resp.ok) {
+        const skaleFacilitator = new HTTPFacilitatorClient({
+          url: SKALE_FACILITATOR_URL,
+        });
+        resourceServer.register(SKALE_NETWORK, new ExactEvmScheme());
+        skaleActive = true;
+        console.log("SKALE facilitator (PayAI) initialized successfully");
+      } else {
+        console.warn("PayAI /supported returned", resp.status, "— SKALE disabled");
+      }
+    } catch (err) {
+      console.warn("PayAI facilitator unreachable — SKALE disabled for this instance:", err.message);
+    }
+  })();
 }
 
 // ── Bazaar: register discovery extension (uncomment when ready) ──
@@ -266,9 +282,11 @@ const skaleAcceptDeep = {
 
 const routeConfig = {
   "POST /research": {
-    accepts: SKALE_FACILITATOR_READY
-      ? [baseAcceptResearch, skaleAcceptResearch]
-      : [baseAcceptResearch],
+    get accepts() {
+      return skaleActive
+        ? [baseAcceptResearch, skaleAcceptResearch]
+        : [baseAcceptResearch];
+    },
     description:
       "Broad real-time research for any topic — structured JSON " +
       "with citations, powered by Perplexity Sonar." +
@@ -278,9 +296,11 @@ const routeConfig = {
     mimeType: "application/json",
   },
   "POST /deep-research": {
-    accepts: SKALE_FACILITATOR_READY
-      ? [baseAcceptDeep, skaleAcceptDeep]
-      : [baseAcceptDeep],
+    get accepts() {
+      return skaleActive
+        ? [baseAcceptDeep, skaleAcceptDeep]
+        : [baseAcceptDeep];
+    },
     description:
       "Deep research with extended analysis — comprehensive JSON " +
       "with detailed findings, powered by Perplexity Sonar Pro." +
@@ -647,9 +667,9 @@ app.get("/health", (_req, res) => {
       tier_selector: true,
       free_promo: promoQueriesUsed < PROMO_MAX_QUERIES,
       defi_vertical_beta: true,
-      skale_gasless: SKALE_FACILITATOR_READY,
+      skale_gasless: skaleActive,
       skale_testnet: SKALE_IS_TESTNET,
-      skale_facilitator_ready: SKALE_FACILITATOR_READY,
+      skale_facilitator_ready: skaleActive,
     },
     rate_limits: {
       paid: `${RATE_LIMIT_MAX}/hour per IP`,
@@ -1457,18 +1477,18 @@ app.post("/deep-research", async (req, res) => {
 
 app.get("/skale", (_req, res) => {
   res.json({
-    status: SKALE_FACILITATOR_READY
+    status: skaleActive
       ? (SKALE_IS_TESTNET ? "live_testnet" : "live")
       : "integration_ready",
-    facilitator_active: SKALE_FACILITATOR_READY,
-    message: SKALE_FACILITATOR_READY
+    facilitator_active: skaleActive,
+    message: skaleActive
       ? (SKALE_IS_TESTNET
           ? "SKALE gasless payments are live on testnet (Sepolia). " +
             "Mainnet facilitator pending."
           : "SKALE gasless payments are active on mainnet. " +
             "Agents can now pay with zero gas fees on SKALE Base.")
       : "SKALE gasless integration is coded and ready. " +
-        "SKALE is disabled. Remove SKALE_FACILITATOR_READY=false to re-enable.",
+        "SKALE facilitator is initializing. Try again in a few seconds, or check /health.",
     skale_network: {
       name: SKALE_IS_TESTNET ? "SKALE Base Sepolia" : "SKALE Base",
       chain_id: parseInt(SKALE_NETWORK.split(":")[1]),
@@ -1561,7 +1581,7 @@ app.listen(PORT, () => {
   console.log(`  Discovery:    http://localhost:${PORT}/.well-known/x402`);
   console.log(`  Manifest:     http://localhost:${PORT}/.well-known/x402.json`);
   console.log(`  Chain:        Base mainnet (${NETWORK})`);
-  console.log(`  SKALE:        ${SKALE_NETWORK} ${SKALE_FACILITATOR_READY ? '✔ LIVE' : '⏸ DISABLED (SKALE_FACILITATOR_READY=false)'}`);
+  console.log(`  SKALE:        ${SKALE_NETWORK} ${SKALE_FACILITATOR_READY ? '⏳ ACTIVATING (async)' : '⏸ DISABLED'}`);
   console.log(`  SKALE Facil:  ${SKALE_FACILITATOR_URL}`);
   console.log(`  Price:        ${PRICE} USDC per query`);
   console.log(`  Pay to:       ${PAY_TO}`);
