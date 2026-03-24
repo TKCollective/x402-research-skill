@@ -1,7 +1,7 @@
 {
   "name": "x402-research-api",
   "version": "1.2.0",
-  "description": "x402 payable real-time research API — AI agents pay 0.02 USDC on Base for structured research powered by Perplexity",
+  "description": "x402 payable real-time research API \u2014 AI agents pay 0.02 USDC on Base for structured research powered by Perplexity",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -26,6 +26,7 @@
     "axios": "^1.13.6",
     "cors": "^2.8.6",
     "dotenv": "^16.6.1",
-    "express": "^4.22.1"
+    "express": "^4.22.1",
+    "@x402/extensions": "^2.6.0"
   }
 }
