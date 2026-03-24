@@ -272,29 +272,27 @@ const skaleAcceptDeep = {
   payTo: PAY_TO,
 };
 
+// NOTE: x402 paymentMiddleware only supports a single facilitator (baseFacilitator).
+// Including SKALE accepts in routeConfig causes the Base facilitator to attempt
+// SKALE payment verification, resulting in unhandled rejections + 504 timeouts.
+// SKALE accepts will be enabled once the x402 SDK supports multi-facilitator routing,
+// or when we implement a custom middleware that routes by network.
+// For now: Base-only in middleware, SKALE advertised in manifest for discovery.
 const routeConfig = {
   "POST /research": {
-    accepts: SKALE_FACILITATOR_READY
-      ? [baseAcceptResearch, skaleAcceptResearch]
-      : [baseAcceptResearch],
+    accepts: [baseAcceptResearch],
     description:
       "Broad real-time research for any topic — structured JSON " +
       "with citations, powered by Perplexity Sonar." +
-      (SKALE_FACILITATOR_READY
-        ? " Accepts payment on Base (eip155:8453) or SKALE (gasless, eip155:1187947933)."
-        : " Accepts payment on Base (eip155:8453)."),
+      " Accepts payment on Base (eip155:8453). SKALE gasless configured (see manifest).",
     mimeType: "application/json",
   },
   "POST /deep-research": {
-    accepts: SKALE_FACILITATOR_READY
-      ? [baseAcceptDeep, skaleAcceptDeep]
-      : [baseAcceptDeep],
+    accepts: [baseAcceptDeep],
     description:
       "Deep research with extended analysis — comprehensive JSON " +
       "with detailed findings, powered by Perplexity Sonar Pro." +
-      (SKALE_FACILITATOR_READY
-        ? " Accepts payment on Base (eip155:8453) or SKALE (gasless, eip155:1187947933)."
-        : " Accepts payment on Base (eip155:8453)."),
+      " Accepts payment on Base (eip155:8453). SKALE gasless configured (see manifest).",
     mimeType: "application/json",
   },
 };
@@ -655,7 +653,7 @@ app.get("/health", (_req, res) => {
       tier_selector: true,
       free_promo: promoQueriesUsed < PROMO_MAX_QUERIES,
       defi_vertical_beta: true,
-      skale_gasless: SKALE_FACILITATOR_READY ? "live" : "disabled",
+      skale_gasless: "configured",  // manifest-only — middleware uses Base until multi-facilitator support
       skale_testnet: SKALE_IS_TESTNET,
       skale_facilitator_ready: SKALE_FACILITATOR_READY,  // config flag
     },
@@ -1468,13 +1466,12 @@ app.get("/skale", (_req, res) => {
     status: SKALE_FACILITATOR_READY
       ? (SKALE_IS_TESTNET ? "live_testnet" : "live")
       : "disabled",
-    facilitator_active: SKALE_FACILITATOR_READY,
-    message: SKALE_FACILITATOR_READY
-      ? (SKALE_IS_TESTNET
-          ? "SKALE gasless payments are live on testnet. "
-          : "SKALE gasless payments are live on mainnet. " +
-            "Agents can pay with zero gas fees on SKALE Base.")
-      : "SKALE gasless integration is disabled via SKALE_FACILITATOR_READY=false.",
+    facilitator_active: false,  // PayAI configured but middleware routes through Base facilitator only
+    facilitator_configured: SKALE_FACILITATOR_READY,
+    message: "SKALE gasless payments configured. PayAI facilitator ready. " +
+      "Middleware currently routes through Base facilitator only — " +
+      "awaiting x402 SDK multi-facilitator support or custom routing middleware. " +
+      "SKALE pricing and network info are advertised in the x402 manifest for agent discovery.",
     skale_network: {
       name: SKALE_IS_TESTNET ? "SKALE Base Sepolia" : "SKALE Base",
       chain_id: parseInt(SKALE_NETWORK.split(":")[1]),
@@ -1567,7 +1564,7 @@ app.listen(PORT, () => {
   console.log(`  Discovery:    http://localhost:${PORT}/.well-known/x402`);
   console.log(`  Manifest:     http://localhost:${PORT}/.well-known/x402.json`);
   console.log(`  Chain:        Base mainnet (${NETWORK})`);
-  console.log(`  SKALE:        ${SKALE_NETWORK} ${SKALE_FACILITATOR_READY ? '✅ LIVE (PayAI facilitator active)' : '⏸ DISABLED'}`);
+  console.log(`  SKALE:        ${SKALE_NETWORK} ${SKALE_FACILITATOR_READY ? '📋 CONFIGURED (manifest + PayAI ready, Base middleware only)' : '⏸ DISABLED'}`);
   console.log(`  SKALE Facil:  ${SKALE_FACILITATOR_URL}`);
   console.log(`  Price:        ${PRICE} USDC per query`);
   console.log(`  Pay to:       ${PAY_TO}`);
