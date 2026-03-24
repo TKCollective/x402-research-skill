@@ -212,10 +212,10 @@ const baseFacilitator = new HTTPFacilitatorClient({
   url: FACILITATOR_URL,
 });
 
-// SKALE facilitator (PayAI) — initialized but only added when
-// SKALE_FACILITATOR_READY=true to allow controlled rollout
-// endpoint currently returns 404 which causes SDK init timeouts.
-const SKALE_FACILITATOR_READY = process.env.SKALE_FACILITATOR_READY === "true";
+// SKALE facilitator (PayAI) — gasless agent payments on SKALE Base
+// Enabled by default. Set SKALE_FACILITATOR_READY=false to disable.
+
+const SKALE_FACILITATOR_READY = process.env.SKALE_FACILITATOR_READY !== "false";
 let skaleFacilitator;
 if (SKALE_FACILITATOR_READY) {
   skaleFacilitator = new HTTPFacilitatorClient({
@@ -1468,7 +1468,7 @@ app.get("/skale", (_req, res) => {
           : "SKALE gasless payments are active on mainnet. " +
             "Agents can now pay with zero gas fees on SKALE Base.")
       : "SKALE gasless integration is coded and ready. " +
-        "Set SKALE_FACILITATOR_READY=true to activate SKALE gasless payments via PayAI.",
+        "SKALE is disabled. Remove SKALE_FACILITATOR_READY=false to re-enable.",
     skale_network: {
       name: SKALE_IS_TESTNET ? "SKALE Base Sepolia" : "SKALE Base",
       chain_id: parseInt(SKALE_NETWORK.split(":")[1]),
@@ -1561,7 +1561,7 @@ app.listen(PORT, () => {
   console.log(`  Discovery:    http://localhost:${PORT}/.well-known/x402`);
   console.log(`  Manifest:     http://localhost:${PORT}/.well-known/x402.json`);
   console.log(`  Chain:        Base mainnet (${NETWORK})`);
-  console.log(`  SKALE:        ${SKALE_NETWORK} ${SKALE_FACILITATOR_READY ? '✔ LIVE' : '⏳ READY (set SKALE_FACILITATOR_READY=true)'}`);
+  console.log(`  SKALE:        ${SKALE_NETWORK} ${SKALE_FACILITATOR_READY ? '✔ LIVE' : '⏸ DISABLED (SKALE_FACILITATOR_READY=false)'}`);
   console.log(`  SKALE Facil:  ${SKALE_FACILITATOR_URL}`);
   console.log(`  Price:        ${PRICE} USDC per query`);
   console.log(`  Pay to:       ${PAY_TO}`);
