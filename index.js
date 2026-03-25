@@ -23,6 +23,8 @@
  *   PAY_TO_ADDRESS=0xYourBaseWalletAddress
  *   PERPLEXITY_API_KEY=pplx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
  *   FACILITATOR_URL=https://facilitator.xpay.sh
+ *   CDP_API_KEY_ID=your-cdp-api-key-id
+ *   CDP_API_KEY_SECRET=your-cdp-api-key-secret
  *
  * ── Protocol ───────────────────────────────────────────────────────
  *   Chain:   Base mainnet (eip155:8453)
@@ -43,6 +45,9 @@ import { FAVICON_ICO, FAVICON_SVG, FAVICON_16, FAVICON_32, APPLE_TOUCH, OG_IMAGE
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { HTTPFacilitatorClient } from "@x402/core/server";
+
+// ── CDP Facilitator (for Bazaar discovery indexing) ──────────────
+import { facilitator as cdpFacilitator } from "@coinbase/x402";
 
 // ── Bazaar Discovery Extension ──────────────────────────────────
 import {
@@ -290,6 +295,21 @@ const skaleFacilitator = new HTTPFacilitatorClient({
 });
 const SKALE_FACILITATOR_READY = process.env.SKALE_FACILITATOR_READY !== "false";
 
+// CDP facilitator — used for Bazaar discovery indexing
+// When agents pay through CDP, our endpoints get cataloged in the x402 Bazaar.
+// Uses CDP_API_KEY_ID and CDP_API_KEY_SECRET env vars for authentication.
+const CDP_ENABLED = !!(process.env.CDP_API_KEY_ID && process.env.CDP_API_KEY_SECRET);
+let cdpResourceServer = null;
+if (CDP_ENABLED) {
+  const cdpFacilitatorClient = new HTTPFacilitatorClient(cdpFacilitator);
+  cdpResourceServer = new x402ResourceServer(cdpFacilitatorClient)
+    .register("eip155:*", new ExactEvmScheme());
+  cdpResourceServer.registerExtension(bazaarResourceServerExtension);
+  console.log("✅ CDP facilitator enabled (Bazaar discovery active)");
+} else {
+  console.log("⚠️  CDP keys not set — Bazaar discovery via CDP disabled");
+}
+
 // 2. Separate resource servers — each facilitator handles ONLY its own chain
 //    This prevents the Base facilitator from trying to verify SKALE payments
 //    (which caused 504 timeouts in the single-server architecture).
@@ -415,6 +435,33 @@ const baseRouteConfig = {
   },
 };
 app.use(paymentMiddleware(baseRouteConfig, baseResourceServer));
+
+// 5b. CDP payment middleware — handles Base payments through Coinbase's facilitator
+//     This is what gets our endpoints indexed in the x402 Bazaar.
+//     Applied AFTER xpay middleware. If xpay doesn't match the payment,
+//     CDP gets a chance to verify/settle it.
+if (CDP_ENABLED && cdpResourceServer) {
+  const cdpRouteConfig = {
+    "POST /research": {
+      accepts: [baseAcceptResearch],
+      description:
+        "Real-time research API for AI agents. $0.02 USDC per query on Base. " +
+        "Structured JSON with citations, confidence scoring, and freshness detection.",
+      mimeType: "application/json",
+      extensions: { ...bazaarResearch },
+    },
+    "POST /deep-research": {
+      accepts: [baseAcceptDeep],
+      description:
+        "Deep research with comprehensive analysis. $0.10 USDC per query on Base. " +
+        "Expert findings powered by Perplexity Sonar Pro.",
+      mimeType: "application/json",
+      extensions: { ...bazaarDeep },
+    },
+  };
+  app.use(paymentMiddleware(cdpRouteConfig, cdpResourceServer));
+  console.log("✅ CDP Base payment middleware active (Bazaar indexing enabled)");
+}
 
 // 6. SKALE payment middleware — handles SKALE Base (eip155:1187947933) payments via PayAI
 //    Applied AFTER Base middleware. If an agent sends a SKALE payment header,
@@ -735,6 +782,7 @@ const x402Manifest = {
   ],
   facilitators: {
     base: { name: "xpay", url: FACILITATOR_URL },
+    base_cdp: { name: "cdp", url: "https://api.cdp.coinbase.com/platform/v2/x402", note: "Coinbase CDP facilitator — Bazaar discovery enabled" },
     skale_base: { name: "payai", url: SKALE_FACILITATOR_URL },
   },
   networks: {
@@ -798,6 +846,7 @@ app.get("/health", (_req, res) => {
       multi_facilitator: true,
       skale_testnet: SKALE_IS_TESTNET,
       skale_facilitator_ready: SKALE_FACILITATOR_READY,  // config flag
+      cdp_bazaar: CDP_ENABLED ? "active" : "disabled",
     },
     rate_limits: {
       paid: `${RATE_LIMIT_MAX}/hour per IP`,
