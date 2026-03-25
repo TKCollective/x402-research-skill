@@ -275,30 +275,34 @@ app.get("/og-image.png", (_req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════
-//  x402 Payment Middleware (v2 SDK)
+//  x402 Payment Middleware (v2 SDK) — Multi-Facilitator Architecture
+//  Inspired by manuelbarbas/facilitator-load-balancer:
+//  Each facilitator gets its own x402ResourceServer to avoid cross-chain
+//  timeout issues. Agents on Base hit xpay, agents on SKALE hit PayAI.
 // ═══════════════════════════════════════════════════════════════════
 
-// 1. Connect to facilitators
+// 1. Separate facilitator clients — one per network
 const baseFacilitator = new HTTPFacilitatorClient({
   url: FACILITATOR_URL,
 });
-
-// SKALE facilitator (PayAI) — gasless agent payments on SKALE Base
 const skaleFacilitator = new HTTPFacilitatorClient({
   url: SKALE_FACILITATOR_URL,
 });
 const SKALE_FACILITATOR_READY = process.env.SKALE_FACILITATOR_READY !== "false";
 
-// 2. Create resource server — wildcard EVM scheme covers both Base + SKALE
-//    Per SKALE docs: use "eip155:*" to handle all EVM chains
-const resourceServer = new x402ResourceServer(baseFacilitator)
+// 2. Separate resource servers — each facilitator handles ONLY its own chain
+//    This prevents the Base facilitator from trying to verify SKALE payments
+//    (which caused 504 timeouts in the single-server architecture).
+const baseResourceServer = new x402ResourceServer(baseFacilitator)
   .register("eip155:*", new ExactEvmScheme());
 
-// ── Bazaar: register discovery extension for x402 marketplace ──
-resourceServer.registerExtension(bazaarResourceServerExtension);
+const skaleResourceServer = new x402ResourceServer(skaleFacilitator)
+  .register("eip155:*", new ExactEvmScheme());
 
-// 3. Define route-level payment configuration
-//    When SKALE facilitator is ready, agents can pay via either network
+// ── Bazaar: register discovery extension on Base resource server ──
+baseResourceServer.registerExtension(bazaarResourceServerExtension);
+
+// 3. Payment accept configs per network
 const baseAcceptResearch = {
   scheme: "exact",
   price: PRICE,
@@ -324,13 +328,74 @@ const skaleAcceptDeep = {
   payTo: PAY_TO,
 };
 
-// NOTE: x402 paymentMiddleware only supports a single facilitator (baseFacilitator).
-// Including SKALE accepts in routeConfig causes the Base facilitator to attempt
-// SKALE payment verification, resulting in unhandled rejections + 504 timeouts.
-// SKALE accepts will be enabled once the x402 SDK supports multi-facilitator routing,
-// or when we implement a custom middleware that routes by network.
-// For now: Base-only in middleware, SKALE advertised in manifest for discovery.
-const routeConfig = {
+// 4. Bazaar discovery extensions for Base routes
+const bazaarResearch = declareDiscoveryExtension({
+  input: { query: "What is the current price of Bitcoin?" },
+  inputSchema: {
+    properties: {
+      query: { type: "string", maxLength: 2000, description: "Natural-language research question" },
+      tier: { type: "string", enum: ["standard", "deep"], description: "Pass deep to upgrade to Sonar Pro at $0.10" },
+    },
+    required: ["query"],
+  },
+  bodyType: "json",
+  output: {
+    example: {
+      summary: "Bitcoin is currently trading at $67,432 with a 24h volume of $28B...",
+      key_facts: ["BTC price: $67,432", "24h change: +2.3%", "Market cap: $1.33T"],
+      sources: [{ title: "CoinGecko", url: "https://coingecko.com" }],
+      confidence_score: 0.94,
+      confidence_level: "high",
+      freshness: "real-time",
+    },
+    schema: {
+      properties: {
+        summary: { type: "string" },
+        key_facts: { type: "array", items: { type: "string" } },
+        sources: { type: "array", items: { type: "object" } },
+        confidence_score: { type: "number" },
+        confidence_level: { type: "string", enum: ["high", "medium", "low"] },
+        freshness: { type: "string", enum: ["real-time", "recent", "historical"] },
+      },
+      required: ["summary", "key_facts", "sources", "confidence_score"],
+    },
+  },
+});
+
+const bazaarDeep = declareDiscoveryExtension({
+  input: { query: "Comprehensive analysis of DeFi yield strategies on Base network" },
+  inputSchema: {
+    properties: {
+      query: { type: "string", maxLength: 4000, description: "Research question for deep analysis" },
+    },
+    required: ["query"],
+  },
+  bodyType: "json",
+  output: {
+    example: {
+      summary: "A comprehensive analysis of DeFi yield strategies on Base...",
+      key_facts: ["Top protocol: Aave with $12B TVL", "Average yield: 4.2% APY"],
+      sources: [{ title: "DefiLlama", url: "https://defillama.com" }],
+      confidence_score: 0.91,
+      confidence_level: "high",
+      freshness: "real-time",
+    },
+    schema: {
+      properties: {
+        summary: { type: "string" },
+        key_facts: { type: "array", items: { type: "string" } },
+        sources: { type: "array", items: { type: "object" } },
+        confidence_score: { type: "number" },
+        confidence_level: { type: "string" },
+        freshness: { type: "string" },
+      },
+      required: ["summary", "key_facts", "sources", "confidence_score"],
+    },
+  },
+});
+
+// 5. BASE payment middleware — handles Base mainnet (eip155:8453) payments via xpay
+const baseRouteConfig = {
   "POST /research": {
     accepts: [baseAcceptResearch],
     description:
@@ -338,40 +403,7 @@ const routeConfig = {
       "get structured JSON with summary, key facts, sources, and confidence scoring. " +
       "Powered by Perplexity Sonar. $0.02 USDC per query on Base.",
     mimeType: "application/json",
-    extensions: {
-      ...declareDiscoveryExtension({
-        input: { query: "What is the current price of Bitcoin?" },
-        inputSchema: {
-          properties: {
-            query: { type: "string", maxLength: 2000, description: "Natural-language research question" },
-            tier: { type: "string", enum: ["standard", "deep"], description: "Pass deep to upgrade to Sonar Pro at $0.10" },
-          },
-          required: ["query"],
-        },
-        bodyType: "json",
-        output: {
-          example: {
-            summary: "Bitcoin is currently trading at $67,432 with a 24h volume of $28B...",
-            key_facts: ["BTC price: $67,432", "24h change: +2.3%", "Market cap: $1.33T"],
-            sources: [{ title: "CoinGecko", url: "https://coingecko.com" }],
-            confidence_score: 0.94,
-            confidence_level: "high",
-            freshness: "real-time",
-          },
-          schema: {
-            properties: {
-              summary: { type: "string" },
-              key_facts: { type: "array", items: { type: "string" } },
-              sources: { type: "array", items: { type: "object" } },
-              confidence_score: { type: "number" },
-              confidence_level: { type: "string", enum: ["high", "medium", "low"] },
-              freshness: { type: "string", enum: ["real-time", "recent", "historical"] },
-            },
-            required: ["summary", "key_facts", "sources", "confidence_score"],
-          },
-        },
-      }),
-    },
+    extensions: { ...bazaarResearch },
   },
   "POST /deep-research": {
     accepts: [baseAcceptDeep],
@@ -379,44 +411,34 @@ const routeConfig = {
       "Deep research with comprehensive multi-step analysis. Returns detailed findings " +
       "with expert-level synthesis, powered by Perplexity Sonar Pro. $0.10 USDC per query on Base.",
     mimeType: "application/json",
-    extensions: {
-      ...declareDiscoveryExtension({
-        input: { query: "Comprehensive analysis of DeFi yield strategies on Base network" },
-        inputSchema: {
-          properties: {
-            query: { type: "string", maxLength: 4000, description: "Research question for deep analysis" },
-          },
-          required: ["query"],
-        },
-        bodyType: "json",
-        output: {
-          example: {
-            summary: "A comprehensive analysis of DeFi yield strategies on Base...",
-            key_facts: ["Top protocol: Aave with $12B TVL", "Average yield: 4.2% APY"],
-            sources: [{ title: "DefiLlama", url: "https://defillama.com" }],
-            confidence_score: 0.91,
-            confidence_level: "high",
-            freshness: "real-time",
-          },
-          schema: {
-            properties: {
-              summary: { type: "string" },
-              key_facts: { type: "array", items: { type: "string" } },
-              sources: { type: "array", items: { type: "object" } },
-              confidence_score: { type: "number" },
-              confidence_level: { type: "string" },
-              freshness: { type: "string" },
-            },
-            required: ["summary", "key_facts", "sources", "confidence_score"],
-          },
-        },
-      }),
-    },
+    extensions: { ...bazaarDeep },
   },
 };
+app.use(paymentMiddleware(baseRouteConfig, baseResourceServer));
 
-// 4. Apply middleware — unpaid requests get HTTP 402 + PAYMENT-REQUIRED header
-app.use(paymentMiddleware(routeConfig, resourceServer));
+// 6. SKALE payment middleware — handles SKALE Base (eip155:1187947933) payments via PayAI
+//    Applied AFTER Base middleware. If an agent sends a SKALE payment header,
+//    the Base middleware passes it through (unrecognized network), and SKALE picks it up.
+if (SKALE_FACILITATOR_READY) {
+  const skaleRouteConfig = {
+    "POST /research": {
+      accepts: [skaleAcceptResearch],
+      description:
+        "Real-time research — gasless SKALE payments. $0.02 USDC.e, zero gas fees.",
+      mimeType: "application/json",
+    },
+    "POST /deep-research": {
+      accepts: [skaleAcceptDeep],
+      description:
+        "Deep research — gasless SKALE payments. $0.10 USDC.e, zero gas fees.",
+      mimeType: "application/json",
+    },
+  };
+  app.use(paymentMiddleware(skaleRouteConfig, skaleResourceServer));
+  console.log("✅ SKALE gasless payment middleware active (PayAI facilitator)");
+} else {
+  console.log("⚠️  SKALE facilitator disabled — Base-only payments");
+}
 
 // ═══════════════════════════════════════════════════════════════════
 //  POST /preview — Live preview (free, truncated results)
@@ -751,7 +773,7 @@ app.get("/.well-known/x402.json", (_req, res) => {
 app.get("/health", (_req, res) => {
   res.json({
     status: "ok",
-    version: "1.5.0",
+    version: "1.6.0",
     service: "x402-research-api",
     chain: "base + skale",
     networks: {
@@ -772,7 +794,8 @@ app.get("/health", (_req, res) => {
       free_promo: promoQueriesUsed < PROMO_MAX_QUERIES,
       defi_vertical_beta: true,
       research_cache: true,
-      skale_gasless: "configured",  // manifest-only — middleware uses Base until multi-facilitator support
+      skale_gasless: SKALE_FACILITATOR_READY ? "active" : "configured",
+      multi_facilitator: true,
       skale_testnet: SKALE_IS_TESTNET,
       skale_facilitator_ready: SKALE_FACILITATOR_READY,  // config flag
     },
