@@ -287,33 +287,29 @@ app.get("/og-image.png", (_req, res) => {
 // ═══════════════════════════════════════════════════════════════════
 
 // 1. Separate facilitator clients — one per network
-const baseFacilitator = new HTTPFacilitatorClient({
-  url: FACILITATOR_URL,
-});
+//    CDP is the primary Base facilitator (enables Bazaar discovery indexing).
+//    xpay is the fallback if CDP keys are not configured.
+const CDP_ENABLED = !!(process.env.CDP_API_KEY_ID && process.env.CDP_API_KEY_SECRET);
+
+const baseFacilitatorClient = CDP_ENABLED
+  ? new HTTPFacilitatorClient(cdpFacilitator)  // CDP: Bazaar indexing + 1000 free tx/month
+  : new HTTPFacilitatorClient({ url: FACILITATOR_URL }); // xpay fallback
+
+if (CDP_ENABLED) {
+  console.log("✅ Base facilitator: CDP (Bazaar discovery active)");
+} else {
+  console.log("⚠️  Base facilitator: xpay (CDP keys not set — no Bazaar indexing)");
+}
+
 const skaleFacilitator = new HTTPFacilitatorClient({
   url: SKALE_FACILITATOR_URL,
 });
 const SKALE_FACILITATOR_READY = process.env.SKALE_FACILITATOR_READY !== "false";
 
-// CDP facilitator — used for Bazaar discovery indexing
-// When agents pay through CDP, our endpoints get cataloged in the x402 Bazaar.
-// Uses CDP_API_KEY_ID and CDP_API_KEY_SECRET env vars for authentication.
-const CDP_ENABLED = !!(process.env.CDP_API_KEY_ID && process.env.CDP_API_KEY_SECRET);
-let cdpResourceServer = null;
-if (CDP_ENABLED) {
-  const cdpFacilitatorClient = new HTTPFacilitatorClient(cdpFacilitator);
-  cdpResourceServer = new x402ResourceServer(cdpFacilitatorClient)
-    .register("eip155:*", new ExactEvmScheme());
-  cdpResourceServer.registerExtension(bazaarResourceServerExtension);
-  console.log("✅ CDP facilitator enabled (Bazaar discovery active)");
-} else {
-  console.log("⚠️  CDP keys not set — Bazaar discovery via CDP disabled");
-}
-
 // 2. Separate resource servers — each facilitator handles ONLY its own chain
 //    This prevents the Base facilitator from trying to verify SKALE payments
 //    (which caused 504 timeouts in the single-server architecture).
-const baseResourceServer = new x402ResourceServer(baseFacilitator)
+const baseResourceServer = new x402ResourceServer(baseFacilitatorClient)
   .register("eip155:*", new ExactEvmScheme());
 
 const skaleResourceServer = new x402ResourceServer(skaleFacilitator)
@@ -434,33 +430,8 @@ const baseRouteConfig = {
     extensions: { ...bazaarDeep },
   },
 };
-// 5a. CDP payment middleware — PRIMARY Base facilitator (Coinbase CDP)
-//     Applied FIRST so payments settle through CDP and trigger Bazaar indexing.
-//     The x402 Bazaar only indexes endpoints after CDP processes a verify+settle.
-if (CDP_ENABLED && cdpResourceServer) {
-  const cdpRouteConfig = {
-    "POST /research": {
-      accepts: [baseAcceptResearch],
-      description:
-        "Real-time research API for AI agents. $0.02 USDC per query on Base. " +
-        "Structured JSON with citations, confidence scoring, and freshness detection.",
-      mimeType: "application/json",
-      extensions: { ...bazaarResearch },
-    },
-    "POST /deep-research": {
-      accepts: [baseAcceptDeep],
-      description:
-        "Deep research with comprehensive analysis. $0.10 USDC per query on Base. " +
-        "Expert findings powered by Perplexity Sonar Pro.",
-      mimeType: "application/json",
-      extensions: { ...bazaarDeep },
-    },
-  };
-  app.use(paymentMiddleware(cdpRouteConfig, cdpResourceServer));
-  console.log("✅ CDP Base payment middleware active (PRIMARY — Bazaar indexing enabled)");
-}
-
-// 5b. xpay fallback — catches Base payments if CDP is unavailable or fails
+// 5. BASE payment middleware — single facilitator (CDP or xpay depending on config)
+//    CDP processes verify+settle which triggers Bazaar indexing automatically.
 app.use(paymentMiddleware(baseRouteConfig, baseResourceServer));
 
 // 6. SKALE payment middleware — handles SKALE Base (eip155:1187947933) payments via PayAI
