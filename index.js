@@ -434,12 +434,9 @@ const baseRouteConfig = {
     extensions: { ...bazaarDeep },
   },
 };
-app.use(paymentMiddleware(baseRouteConfig, baseResourceServer));
-
-// 5b. CDP payment middleware — handles Base payments through Coinbase's facilitator
-//     This is what gets our endpoints indexed in the x402 Bazaar.
-//     Applied AFTER xpay middleware. If xpay doesn't match the payment,
-//     CDP gets a chance to verify/settle it.
+// 5a. CDP payment middleware — PRIMARY Base facilitator (Coinbase CDP)
+//     Applied FIRST so payments settle through CDP and trigger Bazaar indexing.
+//     The x402 Bazaar only indexes endpoints after CDP processes a verify+settle.
 if (CDP_ENABLED && cdpResourceServer) {
   const cdpRouteConfig = {
     "POST /research": {
@@ -460,8 +457,11 @@ if (CDP_ENABLED && cdpResourceServer) {
     },
   };
   app.use(paymentMiddleware(cdpRouteConfig, cdpResourceServer));
-  console.log("✅ CDP Base payment middleware active (Bazaar indexing enabled)");
+  console.log("✅ CDP Base payment middleware active (PRIMARY — Bazaar indexing enabled)");
 }
+
+// 5b. xpay fallback — catches Base payments if CDP is unavailable or fails
+app.use(paymentMiddleware(baseRouteConfig, baseResourceServer));
 
 // 6. SKALE payment middleware — handles SKALE Base (eip155:1187947933) payments via PayAI
 //    Applied AFTER Base middleware. If an agent sends a SKALE payment header,
