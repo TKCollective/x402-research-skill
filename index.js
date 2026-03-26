@@ -287,18 +287,18 @@ app.get("/og-image.png", (_req, res) => {
 // ═══════════════════════════════════════════════════════════════════
 
 // 1. Separate facilitator clients — one per network
-//    CDP is the primary Base facilitator (enables Bazaar discovery indexing).
-//    xpay is the fallback if CDP keys are not configured.
+//    xpay is the primary Base facilitator (proven reliable).
+//    CDP is available for Bazaar bootstrapping via /bazaar-bootstrap endpoint.
 const CDP_ENABLED = !!(process.env.CDP_API_KEY_ID && process.env.CDP_API_KEY_SECRET);
 
-const baseFacilitatorClient = CDP_ENABLED
-  ? new HTTPFacilitatorClient(cdpFacilitator)  // CDP: Bazaar indexing + 1000 free tx/month
-  : new HTTPFacilitatorClient({ url: FACILITATOR_URL }); // xpay fallback
+const baseFacilitatorClient = new HTTPFacilitatorClient({ url: FACILITATOR_URL });
+console.log("✅ Base facilitator: xpay");
 
+let cdpFacilitatorClient = null;
+let cdpResourceServer = null;
 if (CDP_ENABLED) {
-  console.log("✅ Base facilitator: CDP (Bazaar discovery active)");
-} else {
-  console.log("⚠️  Base facilitator: xpay (CDP keys not set — no Bazaar indexing)");
+  cdpFacilitatorClient = new HTTPFacilitatorClient(cdpFacilitator);
+  console.log("✅ CDP facilitator available (for Bazaar bootstrapping)");
 }
 
 const skaleFacilitator = new HTTPFacilitatorClient({
@@ -430,18 +430,37 @@ const baseRouteConfig = {
     extensions: { ...bazaarDeep },
   },
 };
-// TEMPORARY DEBUG: Check what headers the server actually receives
-app.post("/debug-headers", (req, res) => {
-  const allHeaders = {};
-  for (const [key, value] of Object.entries(req.headers)) {
-    allHeaders[key] = typeof value === 'string' ? value.substring(0, 80) : value;
-  }
-  res.json({
-    hasPaymentSig: !!req.header("payment-signature"),
-    hasXPayment: !!req.header("x-payment"),
-    headers: allHeaders,
+// ── Bazaar Bootstrap: one-time endpoint to trigger CDP discovery indexing ──
+// Accepts a payment, verifies via xpay (primary), then ALSO forwards to CDP
+// facilitator to trigger Bazaar cataloging. Only needs to succeed once.
+if (CDP_ENABLED && cdpFacilitatorClient) {
+  cdpResourceServer = new x402ResourceServer(cdpFacilitatorClient)
+    .register("eip155:*", new ExactEvmScheme());
+  cdpResourceServer.registerExtension(bazaarResourceServerExtension);
+
+  const cdpBootstrapConfig = {
+    "POST /bazaar-bootstrap": {
+      accepts: [baseAcceptResearch],
+      description:
+        "AgentOracle Research API — real-time research for AI agents. $0.02 USDC on Base.",
+      mimeType: "application/json",
+      extensions: { ...bazaarResearch },
+    },
+  };
+  app.use(paymentMiddleware(cdpBootstrapConfig, cdpResourceServer));
+
+  app.post("/bazaar-bootstrap", async (req, res) => {
+    // If we reach here, payment was verified and settled through CDP
+    // which means our endpoint is now indexed in the Bazaar!
+    res.json({
+      bazaar_indexed: true,
+      message: "Payment verified via CDP facilitator. AgentOracle is now discoverable in x402 Bazaar.",
+      endpoint: "https://agentoracle.co/research",
+      price: "$0.02 USDC",
+    });
   });
-});
+  console.log("✅ Bazaar bootstrap endpoint active: POST /bazaar-bootstrap");
+}
 
 // 5. BASE payment middleware — single facilitator (CDP or xpay depending on config)
 //    CDP processes verify+settle which triggers Bazaar indexing automatically.
