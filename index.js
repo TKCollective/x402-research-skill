@@ -430,6 +430,19 @@ const baseRouteConfig = {
     extensions: { ...bazaarDeep },
   },
 };
+// TEMPORARY DEBUG: Check what headers the server actually receives
+app.post("/debug-headers", (req, res) => {
+  const allHeaders = {};
+  for (const [key, value] of Object.entries(req.headers)) {
+    allHeaders[key] = typeof value === 'string' ? value.substring(0, 80) : value;
+  }
+  res.json({
+    hasPaymentSig: !!req.header("payment-signature"),
+    hasXPayment: !!req.header("x-payment"),
+    headers: allHeaders,
+  });
+});
+
 // 5. BASE payment middleware — single facilitator (CDP or xpay depending on config)
 //    CDP processes verify+settle which triggers Bazaar indexing automatically.
 app.use(paymentMiddleware(baseRouteConfig, baseResourceServer));
