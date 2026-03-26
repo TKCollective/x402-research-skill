@@ -211,6 +211,9 @@ if (!PERPLEXITY_KEY || PERPLEXITY_KEY === "pplx-api-...") {
 
 const app = express();
 
+// Trust Vercel's proxy so req.protocol returns 'https' (fixes x402 resource URLs)
+app.set("trust proxy", true);
+
 // ── CORS — open for AI agents & cross-origin callers ─────────────
 app.use(
   cors({
@@ -430,40 +433,38 @@ const baseRouteConfig = {
     extensions: { ...bazaarDeep },
   },
 };
-// ── Bazaar Bootstrap: one-time endpoint to trigger CDP discovery indexing ──
-// Accepts a payment, verifies via xpay (primary), then ALSO forwards to CDP
-// facilitator to trigger Bazaar cataloging. Only needs to succeed once.
+// 5. BASE payment middleware with CDP for Bazaar discovery
+//    CDP middleware runs first for /research and /deep-research.
+//    If CDP succeeds → Bazaar indexes our endpoints.
+//    If CDP fails or has no payment header → falls through to xpay.
 if (CDP_ENABLED && cdpFacilitatorClient) {
   cdpResourceServer = new x402ResourceServer(cdpFacilitatorClient)
     .register("eip155:*", new ExactEvmScheme());
   cdpResourceServer.registerExtension(bazaarResourceServerExtension);
 
-  const cdpBootstrapConfig = {
-    "POST /bazaar-bootstrap": {
+  const cdpRouteConfig = {
+    "POST /research": {
       accepts: [baseAcceptResearch],
       description:
-        "AgentOracle Research API — real-time research for AI agents. $0.02 USDC on Base.",
+        "Real-time research API for AI agents. $0.02 USDC per query on Base. " +
+        "Structured JSON with citations, confidence scoring, and freshness detection.",
       mimeType: "application/json",
       extensions: { ...bazaarResearch },
     },
+    "POST /deep-research": {
+      accepts: [baseAcceptDeep],
+      description:
+        "Deep research with comprehensive analysis. $0.10 USDC per query on Base. " +
+        "Expert findings powered by Perplexity Sonar Pro.",
+      mimeType: "application/json",
+      extensions: { ...bazaarDeep },
+    },
   };
-  app.use(paymentMiddleware(cdpBootstrapConfig, cdpResourceServer));
-
-  app.post("/bazaar-bootstrap", async (req, res) => {
-    // If we reach here, payment was verified and settled through CDP
-    // which means our endpoint is now indexed in the Bazaar!
-    res.json({
-      bazaar_indexed: true,
-      message: "Payment verified via CDP facilitator. AgentOracle is now discoverable in x402 Bazaar.",
-      endpoint: "https://agentoracle.co/research",
-      price: "$0.02 USDC",
-    });
-  });
-  console.log("✅ Bazaar bootstrap endpoint active: POST /bazaar-bootstrap");
+  app.use(paymentMiddleware(cdpRouteConfig, cdpResourceServer));
+  console.log("✅ CDP payment middleware active for /research + /deep-research (Bazaar indexing)");
 }
 
-// 5. BASE payment middleware — single facilitator (CDP or xpay depending on config)
-//    CDP processes verify+settle which triggers Bazaar indexing automatically.
+// xpay fallback — handles payments if CDP middleware passes through
 app.use(paymentMiddleware(baseRouteConfig, baseResourceServer));
 
 // 6. SKALE payment middleware — handles SKALE Base (eip155:1187947933) payments via PayAI
