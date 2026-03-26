@@ -433,39 +433,105 @@ const baseRouteConfig = {
     extensions: { ...bazaarDeep },
   },
 };
-// 5. BASE payment middleware with CDP for Bazaar discovery
-//    CDP middleware runs first for /research and /deep-research.
-//    If CDP succeeds → Bazaar indexes our endpoints.
-//    If CDP fails or has no payment header → falls through to xpay.
-if (CDP_ENABLED && cdpFacilitatorClient) {
-  cdpResourceServer = new x402ResourceServer(cdpFacilitatorClient)
-    .register("eip155:*", new ExactEvmScheme());
-  cdpResourceServer.registerExtension(bazaarResourceServerExtension);
-
-  const cdpRouteConfig = {
-    "POST /research": {
-      accepts: [baseAcceptResearch],
-      description:
-        "Real-time research API for AI agents. $0.02 USDC per query on Base. " +
-        "Structured JSON with citations, confidence scoring, and freshness detection.",
-      mimeType: "application/json",
-      extensions: { ...bazaarResearch },
-    },
-    "POST /deep-research": {
-      accepts: [baseAcceptDeep],
-      description:
-        "Deep research with comprehensive analysis. $0.10 USDC per query on Base. " +
-        "Expert findings powered by Perplexity Sonar Pro.",
-      mimeType: "application/json",
-      extensions: { ...bazaarDeep },
-    },
-  };
-  app.use(paymentMiddleware(cdpRouteConfig, cdpResourceServer));
-  console.log("✅ CDP payment middleware active for /research + /deep-research (Bazaar indexing)");
-}
-
-// xpay fallback — handles payments if CDP middleware passes through
+// 5. BASE payment middleware — xpay facilitator (primary, proven reliable)
 app.use(paymentMiddleware(baseRouteConfig, baseResourceServer));
+
+// ── Bazaar Bootstrap: direct CDP verify+settle for discovery indexing ──
+// Bypasses middleware chain entirely. Accepts a payment via x402 headers,
+// then calls CDP facilitator's verify+settle API directly.
+// This triggers Bazaar cataloging for /research endpoint.
+if (CDP_ENABLED && cdpFacilitatorClient) {
+  app.post("/bazaar-bootstrap", async (req, res) => {
+    try {
+      const paymentHeader = req.header("payment-signature") || req.header("x-payment");
+      if (!paymentHeader) {
+        // Return 402 with our /research payment requirements + bazaar extensions
+        const payReq = {
+          x402Version: 2,
+          error: "Payment required",
+          resource: {
+            url: "https://agentoracle.co/research",
+            description: "Real-time research API for AI agents. $0.02 USDC per query on Base.",
+            mimeType: "application/json",
+          },
+          accepts: [{
+            scheme: "exact",
+            network: NETWORK,
+            amount: "20000",
+            asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            payTo: PAY_TO,
+            maxTimeoutSeconds: 300,
+            extra: { name: "USD Coin", version: "2" },
+          }],
+          extensions: bazaarResearch,
+        };
+        const encoded = Buffer.from(JSON.stringify(payReq)).toString("base64");
+        res.setHeader("payment-required", encoded);
+        return res.status(402).json({});
+      }
+
+      // Parse the payment payload
+      let paymentPayload;
+      try {
+        paymentPayload = JSON.parse(Buffer.from(paymentHeader, "base64").toString());
+      } catch {
+        paymentPayload = JSON.parse(paymentHeader);
+      }
+
+      // Call CDP facilitator verify
+      const verifyRes = await cdpFacilitatorClient.verify(
+        paymentPayload,
+        {
+          scheme: "exact",
+          network: NETWORK,
+          amount: "20000",
+          asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          payTo: PAY_TO,
+          maxTimeoutSeconds: 300,
+          extra: { name: "USD Coin", version: "2" },
+        }
+      );
+
+      if (!verifyRes.isValid) {
+        return res.status(402).json({ error: "Payment verification failed", reason: verifyRes.invalidReason });
+      }
+
+      // Call CDP facilitator settle
+      const settleRes = await cdpFacilitatorClient.settle(
+        paymentPayload,
+        {
+          scheme: "exact",
+          network: NETWORK,
+          amount: "20000",
+          asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          payTo: PAY_TO,
+          maxTimeoutSeconds: 300,
+          extra: { name: "USD Coin", version: "2" },
+        }
+      );
+
+      // Return success with settlement info
+      const paymentResponse = {
+        network: NETWORK,
+        payer: paymentPayload.payload?.authorization?.from,
+        success: settleRes.success !== false,
+        transaction: settleRes.transaction || settleRes.txHash,
+      };
+      const prEncoded = Buffer.from(JSON.stringify(paymentResponse)).toString("base64");
+      res.setHeader("payment-response", prEncoded);
+
+      res.json({
+        bazaar_indexed: true,
+        message: "Payment verified and settled via CDP. AgentOracle /research is now discoverable in x402 Bazaar.",
+        transaction: settleRes.transaction || settleRes.txHash,
+      });
+    } catch (err) {
+      console.error("Bazaar bootstrap error:", err.message);
+      res.status(500).json({ error: "Bootstrap failed", message: err.message });
+    }
+  });
+  console.log("✅ Bazaar bootstrap endpoint: POST /bazaar-bootstrap (direct CDP verify+settle)");
+}
 
 // 6. SKALE payment middleware — handles SKALE Base (eip155:1187947933) payments via PayAI
 //    Applied AFTER Base middleware. If an agent sends a SKALE payment header,
