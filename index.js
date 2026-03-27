@@ -433,19 +433,62 @@ const baseRouteConfig = {
     extensions: { ...bazaarDeep },
   },
 };
-// 5. BASE payment middleware — xpay facilitator (primary, proven reliable)
-app.use(paymentMiddleware(baseRouteConfig, baseResourceServer));
+// 5. SMART PAYMENT ROUTER — inspects payment header network and routes
+//    to the correct facilitator. Solves the Vercel middleware stacking issue
+//    where the first middleware would block the second from processing.
+const baseMw = paymentMiddleware(baseRouteConfig, baseResourceServer);
+const skaleMw = SKALE_FACILITATOR_READY
+  ? paymentMiddleware({
+      "POST /research": {
+        accepts: [skaleAcceptResearch],
+        description: "Real-time research — gasless SKALE payments. $0.02 USDC.e, zero gas fees.",
+        mimeType: "application/json",
+      },
+      "POST /deep-research": {
+        accepts: [skaleAcceptDeep],
+        description: "Deep research — gasless SKALE payments. $0.10 USDC.e, zero gas fees.",
+        mimeType: "application/json",
+      },
+    }, skaleResourceServer)
+  : null;
+
+app.use((req, res, next) => {
+  const paymentHeader = req.header("payment-signature") || req.header("x-payment");
+
+  // No payment header → let Base middleware return its 402 (default)
+  if (!paymentHeader) {
+    return baseMw(req, res, next);
+  }
+
+  // Peek at the payment to detect network
+  try {
+    let decoded;
+    try {
+      decoded = JSON.parse(Buffer.from(paymentHeader, "base64").toString());
+    } catch {
+      decoded = JSON.parse(paymentHeader);
+    }
+    const network = decoded?.accepted?.network || "";
+
+    if (network.includes("1187947933") && skaleMw) {
+      // SKALE payment → route to PayAI facilitator
+      return skaleMw(req, res, next);
+    }
+  } catch {
+    // Can't parse → fall through to Base
+  }
+
+  // Default: Base payment → xpay facilitator
+  return baseMw(req, res, next);
+});
+console.log("✅ Smart payment router active: Base (xpay) + SKALE (PayAI)");
 
 // ── Bazaar Bootstrap: direct CDP verify+settle for discovery indexing ──
-// Bypasses middleware chain entirely. Accepts a payment via x402 headers,
-// then calls CDP facilitator's verify+settle API directly.
-// This triggers Bazaar cataloging for /research endpoint.
 if (CDP_ENABLED && cdpFacilitatorClient) {
   app.post("/bazaar-bootstrap", async (req, res) => {
     try {
       const paymentHeader = req.header("payment-signature") || req.header("x-payment");
       if (!paymentHeader) {
-        // Return 402 with our /research payment requirements + bazaar extensions
         const payReq = {
           x402Version: 2,
           error: "Payment required",
@@ -455,106 +498,41 @@ if (CDP_ENABLED && cdpFacilitatorClient) {
             mimeType: "application/json",
           },
           accepts: [{
-            scheme: "exact",
-            network: NETWORK,
-            amount: "20000",
+            scheme: "exact", network: NETWORK, amount: "20000",
             asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-            payTo: PAY_TO,
-            maxTimeoutSeconds: 300,
+            payTo: PAY_TO, maxTimeoutSeconds: 300,
             extra: { name: "USD Coin", version: "2" },
           }],
           extensions: bazaarResearch,
         };
-        const encoded = Buffer.from(JSON.stringify(payReq)).toString("base64");
-        res.setHeader("payment-required", encoded);
+        res.setHeader("payment-required", Buffer.from(JSON.stringify(payReq)).toString("base64"));
         return res.status(402).json({});
       }
-
-      // Parse the payment payload
       let paymentPayload;
-      try {
-        paymentPayload = JSON.parse(Buffer.from(paymentHeader, "base64").toString());
-      } catch {
-        paymentPayload = JSON.parse(paymentHeader);
-      }
+      try { paymentPayload = JSON.parse(Buffer.from(paymentHeader, "base64").toString()); }
+      catch { paymentPayload = JSON.parse(paymentHeader); }
 
-      // Call CDP facilitator verify
-      const verifyRes = await cdpFacilitatorClient.verify(
-        paymentPayload,
-        {
-          scheme: "exact",
-          network: NETWORK,
-          amount: "20000",
-          asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-          payTo: PAY_TO,
-          maxTimeoutSeconds: 300,
-          extra: { name: "USD Coin", version: "2" },
-        }
-      );
-
-      if (!verifyRes.isValid) {
-        return res.status(402).json({ error: "Payment verification failed", reason: verifyRes.invalidReason });
-      }
-
-      // Call CDP facilitator settle
-      const settleRes = await cdpFacilitatorClient.settle(
-        paymentPayload,
-        {
-          scheme: "exact",
-          network: NETWORK,
-          amount: "20000",
-          asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-          payTo: PAY_TO,
-          maxTimeoutSeconds: 300,
-          extra: { name: "USD Coin", version: "2" },
-        }
-      );
-
-      // Return success with settlement info
-      const paymentResponse = {
-        network: NETWORK,
-        payer: paymentPayload.payload?.authorization?.from,
-        success: settleRes.success !== false,
-        transaction: settleRes.transaction || settleRes.txHash,
+      const requirements = {
+        scheme: "exact", network: NETWORK, amount: "20000",
+        asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        payTo: PAY_TO, maxTimeoutSeconds: 300,
+        extra: { name: "USD Coin", version: "2" },
       };
-      const prEncoded = Buffer.from(JSON.stringify(paymentResponse)).toString("base64");
+      const verifyRes = await cdpFacilitatorClient.verify(paymentPayload, requirements);
+      if (!verifyRes.isValid) return res.status(402).json({ error: "Verification failed", reason: verifyRes.invalidReason });
+      const settleRes = await cdpFacilitatorClient.settle(paymentPayload, requirements);
+      const prEncoded = Buffer.from(JSON.stringify({
+        network: NETWORK, payer: paymentPayload.payload?.authorization?.from,
+        success: settleRes.success !== false, transaction: settleRes.transaction || settleRes.txHash,
+      })).toString("base64");
       res.setHeader("payment-response", prEncoded);
-
-      res.json({
-        bazaar_indexed: true,
-        message: "Payment verified and settled via CDP. AgentOracle /research is now discoverable in x402 Bazaar.",
-        transaction: settleRes.transaction || settleRes.txHash,
-      });
+      res.json({ bazaar_indexed: true, transaction: settleRes.transaction || settleRes.txHash });
     } catch (err) {
       console.error("Bazaar bootstrap error:", err.message);
       res.status(500).json({ error: "Bootstrap failed", message: err.message });
     }
   });
-  console.log("✅ Bazaar bootstrap endpoint: POST /bazaar-bootstrap (direct CDP verify+settle)");
-}
-
-// 6. SKALE payment middleware — handles SKALE Base (eip155:1187947933) payments via PayAI
-//    Applied AFTER Base middleware. If an agent sends a SKALE payment header,
-//    the Base middleware passes it through (unrecognized network), and SKALE picks it up.
-if (SKALE_FACILITATOR_READY) {
-  const skaleRouteConfig = {
-    "POST /research": {
-      accepts: [skaleAcceptResearch],
-      description:
-        "Real-time research — gasless SKALE payments. $0.02 USDC.e, zero gas fees.",
-      mimeType: "application/json",
-    },
-    "POST /deep-research": {
-      accepts: [skaleAcceptDeep],
-      description:
-        "Deep research — gasless SKALE payments. $0.10 USDC.e, zero gas fees.",
-      mimeType: "application/json",
-    },
-  };
-  app.use(paymentMiddleware(skaleRouteConfig, skaleResourceServer));
-  console.log("✅ SKALE gasless payment middleware active (PayAI facilitator)");
-} else {
-  console.log("⚠️  SKALE facilitator disabled — Base-only payments");
+  console.log("✅ Bazaar bootstrap endpoint active");
 }
 
 // ═══════════════════════════════════════════════════════════════════
