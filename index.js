@@ -83,7 +83,7 @@ const SKALE_FACILITATOR_URL =
   "https://facilitator.payai.network";
 const SKALE_USDC_ADDRESS =
   process.env.SKALE_USDC_ADDRESS || "0x85889c8c714505E0c94b30fcfcF64fE3Ac8FCb20";
-const SKALE_USDC_NAME = "USDC.e (SKALE Base)";
+const SKALE_USDC_NAME = "Bridged USDC (SKALE Bridge)";
 const SKALE_IS_TESTNET = SKALE_NETWORK.includes("324705682");
 
 // Price: $0.02 USDC (standard), $0.10 USDC (deep research)
@@ -96,12 +96,12 @@ const DEEP_PRICE = "$0.10";
 const SKALE_PRICE_RESEARCH = {
   amount: "20000",
   asset: SKALE_USDC_ADDRESS,
-  extra: { name: SKALE_USDC_NAME, version: "1" },
+  extra: { name: SKALE_USDC_NAME, version: "2" },
 };
 const SKALE_PRICE_DEEP = {
   amount: "100000",
   asset: SKALE_USDC_ADDRESS,
-  extra: { name: SKALE_USDC_NAME, version: "1" },
+  extra: { name: SKALE_USDC_NAME, version: "2" },
 };
 
 // Perplexity models
