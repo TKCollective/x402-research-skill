@@ -413,75 +413,38 @@ const bazaarDeep = declareDiscoveryExtension({
   },
 });
 
-// 5. BASE payment middleware — handles Base mainnet (eip155:8453) payments via xpay
-const baseRouteConfig = {
+// 5. UNIFIED PAYMENT MIDDLEWARE — Sawyer's accepts-array pattern
+//    Both Base and SKALE accepts in the same array. The x402 SDK
+//    matches the payment to whichever network the agent pays on.
+//    Cleaner than the smart router, and the standard x402 approach.
+const researchAccepts = [baseAcceptResearch];
+const deepAccepts = [baseAcceptDeep];
+if (SKALE_FACILITATOR_READY) {
+  researchAccepts.push(skaleAcceptResearch);
+  deepAccepts.push(skaleAcceptDeep);
+}
+
+const routeConfig = {
   "POST /research": {
-    accepts: [baseAcceptResearch],
+    accepts: researchAccepts,
     description:
       "Real-time research API for AI agents. Send any natural-language question, " +
       "get structured JSON with summary, key facts, sources, and confidence scoring. " +
-      "Powered by Perplexity Sonar. $0.02 USDC per query on Base.",
+      "Powered by Perplexity Sonar. $0.02 USDC per query. Base + SKALE (zero gas).",
     mimeType: "application/json",
     extensions: { ...bazaarResearch },
   },
   "POST /deep-research": {
-    accepts: [baseAcceptDeep],
+    accepts: deepAccepts,
     description:
       "Deep research with comprehensive multi-step analysis. Returns detailed findings " +
-      "with expert-level synthesis, powered by Perplexity Sonar Pro. $0.10 USDC per query on Base.",
+      "with expert-level synthesis, powered by Perplexity Sonar Pro. $0.10 USDC per query. Base + SKALE.",
     mimeType: "application/json",
     extensions: { ...bazaarDeep },
   },
 };
-// 5. SMART PAYMENT ROUTER — inspects payment header network and routes
-//    to the correct facilitator. Solves the Vercel middleware stacking issue
-//    where the first middleware would block the second from processing.
-const baseMw = paymentMiddleware(baseRouteConfig, baseResourceServer);
-const skaleMw = SKALE_FACILITATOR_READY
-  ? paymentMiddleware({
-      "POST /research": {
-        accepts: [skaleAcceptResearch],
-        description: "Real-time research — gasless SKALE payments. $0.02 USDC.e, zero gas fees.",
-        mimeType: "application/json",
-      },
-      "POST /deep-research": {
-        accepts: [skaleAcceptDeep],
-        description: "Deep research — gasless SKALE payments. $0.10 USDC.e, zero gas fees.",
-        mimeType: "application/json",
-      },
-    }, skaleResourceServer)
-  : null;
-
-app.use((req, res, next) => {
-  const paymentHeader = req.header("payment-signature") || req.header("x-payment");
-
-  // No payment header → let Base middleware return its 402 (default)
-  if (!paymentHeader) {
-    return baseMw(req, res, next);
-  }
-
-  // Peek at the payment to detect network
-  try {
-    let decoded;
-    try {
-      decoded = JSON.parse(Buffer.from(paymentHeader, "base64").toString());
-    } catch {
-      decoded = JSON.parse(paymentHeader);
-    }
-    const network = decoded?.accepted?.network || "";
-
-    if (network.includes("1187947933") && skaleMw) {
-      // SKALE payment → route to PayAI facilitator
-      return skaleMw(req, res, next);
-    }
-  } catch {
-    // Can't parse → fall through to Base
-  }
-
-  // Default: Base payment → xpay facilitator
-  return baseMw(req, res, next);
-});
-console.log("✅ Smart payment router active: Base (xpay) + SKALE (PayAI)");
+app.use(paymentMiddleware(routeConfig, baseResourceServer));
+console.log(`✅ Unified payment middleware: Base${SKALE_FACILITATOR_READY ? " + SKALE (gasless)" : ""}`);
 
 // ── Bazaar Bootstrap: direct CDP verify+settle for discovery indexing ──
 if (CDP_ENABLED && cdpFacilitatorClient) {
