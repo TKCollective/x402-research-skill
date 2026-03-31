@@ -303,13 +303,14 @@ a:hover { color: var(--color-primary-hover); }
 .hero__content { text-align: left; }
 .hero__badge {
   display: inline-flex; align-items: center; gap: var(--space-2);
-  padding: var(--space-1) var(--space-4); background: var(--color-primary-highlight);
-  border: 1px solid rgba(201, 169, 110, 0.2); border-radius: var(--radius-full);
-  font-size: var(--text-xs); font-weight: 600; color: var(--color-primary); margin-bottom: var(--space-8);
+  padding: var(--space-2) var(--space-5); background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.25); border-radius: var(--radius-full);
+  font-size: var(--text-xs); font-weight: 600; color: #4ADE80; margin-bottom: var(--space-8);
+  font-family: var(--font-mono); letter-spacing: 0.02em;
 }
-.hero__badge-dot { width: 8px; height: 8px; background: var(--color-primary); border-radius: 50%; animation: pulse-dot 2s ease-in-out infinite; }
+.hero__badge-dot { width: 8px; height: 8px; background: #4ADE80; border-radius: 50%; animation: pulse-dot 2s ease-in-out infinite; }
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(201, 169, 110, 0.4); }
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4); }
   50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(201, 169, 110, 0); }
 }
 .hero__headline {
@@ -743,7 +744,7 @@ a:hover { color: var(--color-primary-hover); }
 
 <!-- ANNOUNCEMENT BAR (Cat 6) -->
 <div class="announcement-bar">
-  &#127881; SKALE integration coming soon — zero gas fees for agents. <a href="#specs">Learn more</a>
+  &#127881; SKALE gasless payments LIVE — zero gas fees for agents. <a href="#specs">Learn more</a> · 50% off repeat queries with Research Cache
 </div>
 
 <!-- HEADER -->
@@ -787,7 +788,8 @@ a:hover { color: var(--color-primary-hover); }
 </header>
 
 <!-- HERO -->
-<section class="hero section">
+<section class="hero section" style="position:relative;overflow:hidden;">
+<canvas id="sparkle-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
   <div class="hero__glow"></div>
   <!-- Enhanced particles (Cat 2) -->
   <div class="hero__particles">
@@ -809,12 +811,14 @@ a:hover { color: var(--color-primary-hover); }
     <div class="hero__particle hero__particle--ring"></div>
   </div>
 
+  <div class="container" style="text-align:center;margin-bottom:var(--space-6);">
+    <div class="hero__badge fade-in" style="display:inline-flex;">
+      <span class="hero__badge-dot"></span>
+      v1.9.0 — Live on Base + SKALE Gasless · Multi-Chain
+    </div>
+  </div>
   <div class="container hero__inner">
     <div class="hero__content">
-      <div class="hero__badge fade-in">
-        <span class="hero__badge-dot"></span>
-        v1.2.0 — Live on Base · SKALE Coming Soon
-      </div>
       <h1 class="hero__headline fade-in">
         Research API<br>for <span class="gold-text">AI Agents</span>
       </h1>
@@ -854,7 +858,7 @@ a:hover { color: var(--color-primary-hover); }
     <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Structured JSON</span>
     <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Zero API Keys</span>
     <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> MCP Server</span>
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> SKALE Coming Soon</span>
+    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> SKALE Gasless Live</span>
   </div>
 </div>
 
@@ -921,8 +925,19 @@ a:hover { color: var(--color-primary-hover); }
       </div>
       <div class="bento-card">
         <div class="bento-card__icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
-        <h3 class="bento-card__title">Tier Selector <span class="bento-card__badge-new">NEW</span></h3>
+        <h3 class="bento-card__title">Tier Selector</h3>
         <p class="bento-card__desc">Pass tier: &apos;deep&apos; in the /research body to upgrade to Sonar Pro without switching endpoints. One endpoint, both tiers.</p>
+      </div>
+      <div class="bento-card bento-card--large">
+        <div class="bento-card__icon"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9" style="stroke-width:2;fill:none;stroke:var(--color-primary)"/><path d="M21 3v6h-6" style="stroke-width:2;fill:none;stroke:var(--color-primary)"/></svg></div>
+        <h3 class="bento-card__title">Research Cache <span class="bento-card__badge-new">NEW</span></h3>
+        <p class="bento-card__desc">Same query within 24 hours? Pay half. Repeat queries cost $0.01 instead of $0.02 — a 50% discount served automatically. Agents save money, you save API calls. Designed for the reality that agents researching trending topics will overlap.</p>
+        <span class="bento-card__tag">50% Off Repeat Queries</span>
+      </div>
+      <div class="bento-card">
+        <div class="bento-card__icon"><svg viewBox="0 0 24 24"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5" style="stroke-width:2;fill:none;stroke:var(--color-primary)"/><line x1="12" y1="22" x2="12" y2="8.5" style="stroke-width:2;stroke:var(--color-primary)"/></svg></div>
+        <h3 class="bento-card__title">SKALE Gasless <span style="font-size:0.6rem;font-weight:700;color:#0D0D0D;background:var(--color-green);padding:2px 6px;border-radius:4px;margin-left:4px;">LIVE</span></h3>
+        <p class="bento-card__desc">Zero gas fees on SKALE Base. Agents pay only the query price — $0.02 USDC.e with no gas overhead. PayAI facilitator handles settlement. Same endpoint, agent picks the cheapest chain.</p>
       </div>
     </div>
   </div>
@@ -1261,7 +1276,7 @@ a:hover { color: var(--color-primary-hover); }
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg> GitHub
       </a>
       <a href="https://skale.space" class="trust-item" target="_blank" rel="noopener noreferrer" style="position:relative;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="22" x2="12" y2="8.5"/><polyline points="22 8.5 12 15 2 8.5"/></svg> SKALE <span style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#0D0D0D;background:var(--color-primary);padding:2px 6px;border-radius:4px;margin-left:4px;">Coming Soon Gasless</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="22" x2="12" y2="8.5"/><polyline points="22 8.5 12 15 2 8.5"/></svg> SKALE <span style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#0D0D0D;background:var(--color-green);padding:2px 6px;border-radius:4px;margin-left:4px;">Live — Zero Gas</span>
       </a>
     </div>
   </div>
@@ -1312,9 +1327,9 @@ a:hover { color: var(--color-primary-hover); }
       <div class="spec-item"><span class="spec-item__label">Wallet</span><span class="spec-item__value">0xdF902...e109</span></div>
       <div class="spec-item"><span class="spec-item__label">MCP Server</span><span class="spec-item__value">npx agentoracle-mcp</span></div>
       <div class="spec-item"><span class="spec-item__label">Response Format</span><span class="spec-item__value">JSON</span></div>
-      <div class="spec-item"><span class="spec-item__label">Gasless Payments</span><span class="spec-item__value">SKALE (coming soon)</span></div>
+      <div class="spec-item"><span class="spec-item__label">Gasless Payments</span><span class="spec-item__value">SKALE Base (Live via PayAI)</span></div>
       <div class="spec-item"><span class="spec-item__label">Rate Limits</span><span class="spec-item__value">100/hr paid &middot; 20/hr preview</span></div>
-      <div class="spec-item"><span class="spec-item__label">Version</span><span class="spec-item__value">v1.2.0</span></div>
+      <div class="spec-item"><span class="spec-item__label">Version</span><span class="spec-item__value">v1.9.0</span></div>
     </div>
   </div>
 </section>
@@ -1424,7 +1439,7 @@ a:hover { color: var(--color-primary-hover); }
 
       <div class="faq-item"><button class="faq-item__trigger" data-faq-toggle>Do I need a crypto wallet?<svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-item__body"><div class="faq-item__answer">Yes, your agent needs a wallet with USDC on the Base network. Most agent frameworks support wallet integration through Coinbase CDP, Privy, or direct ethers.js. The <code>/preview</code> endpoint is free and requires no wallet — use it to test first.</div></div></div>
 
-      <div class="faq-item"><button class="faq-item__trigger" data-faq-toggle>What chains and currencies are supported?<svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-item__body"><div class="faq-item__answer">Currently we accept USDC and EURC on Base (L2). SKALE gasless payments are coming soon. Payments settle on-chain and are fully verifiable on <a href="https://basescan.org/address/0xdF90200B0031051BbF7a66BB9387d2Ecf599e109" target="_blank" rel="noopener noreferrer">BaseScan</a>.</div></div></div>
+      <div class="faq-item"><button class="faq-item__trigger" data-faq-toggle>What chains and currencies are supported?<svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-item__body"><div class="faq-item__answer">We accept USDC on Base (L2) and USDC.e on SKALE Base (zero gas fees via PayAI facilitator). Same endpoint, agent picks the cheapest chain. Repeat queries within 24hrs cost 50% less via Research Cache. Payments settle on-chain — <a href="https://basescan.org/address/0xdF90200B0031051BbF7a66BB9387d2Ecf599e109" target="_blank" rel="noopener noreferrer">BaseScan</a> · <a href="https://skale-base-explorer.skalenodes.com/" target="_blank" rel="noopener noreferrer">SKALE Explorer</a>.</div></div></div>
 
       <div class="faq-item"><button class="faq-item__trigger" data-faq-toggle>How is this different from using Perplexity directly?<svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-item__body"><div class="faq-item__answer">Perplexity's API requires API keys, billing setup, and human-managed accounts. AgentOracle wraps the same research engine in an agent-native payment layer — your agent discovers pricing automatically via the x402 manifest, pays per query with USDC, and gets structured JSON responses with confidence scoring. Zero human setup required.</div></div></div>
 
@@ -1711,6 +1726,26 @@ a:hover { color: var(--color-primary-hover); }
     }
     showLine(0);
   }
+})();
+// Sparkle canvas animation
+(function(){
+const c=document.getElementById('sparkle-canvas');
+if(!c)return;
+const ctx=c.getContext('2d');
+let w,h,particles=[];
+function resize(){w=c.width=c.offsetWidth;h=c.height=c.offsetHeight;}
+window.addEventListener('resize',resize);resize();
+for(let i=0;i<40;i++)particles.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*2+0.5,dx:(Math.random()-0.5)*0.3,dy:(Math.random()-0.5)*0.3,o:Math.random()*0.5+0.1});
+function draw(){
+ctx.clearRect(0,0,w,h);
+particles.forEach(p=>{
+p.x+=p.dx;p.y+=p.dy;
+if(p.x<0)p.x=w;if(p.x>w)p.x=0;if(p.y<0)p.y=h;if(p.y>h)p.y=0;
+ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+ctx.fillStyle='rgba(201,169,110,'+p.o+')';ctx.fill();
+});
+requestAnimationFrame(draw);}
+draw();
 })();
 </script>
 </body>
