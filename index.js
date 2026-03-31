@@ -1801,6 +1801,8 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({
     error: "Internal Server Error",
     message: "Something went wrong.",
+    debug: err.message,
+    stack: (err.stack || "").split("\n").slice(0, 5),
   });
 });
 
