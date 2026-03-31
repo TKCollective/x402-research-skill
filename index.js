@@ -443,8 +443,18 @@ const routeConfig = {
     extensions: { ...bazaarDeep },
   },
 };
-app.use(paymentMiddleware(routeConfig, baseResourceServer));
-console.log(`✅ Unified payment middleware: Base${SKALE_FACILITATOR_READY ? " + SKALE (gasless)" : ""}`);
+// Pass both facilitator-backed resource servers — v2.8 validates supported networks on init.
+// Using a combined resource server with both facilitators to avoid RouteConfigurationError
+// when SKALE network is in the accepts array but only Base facilitator is registered.
+const combinedResourceServer = new x402ResourceServer([baseFacilitatorClient, skaleFacilitator])
+  .register("eip155:*", new ExactEvmScheme());
+baseResourceServer.registeredExtensions?.forEach?.(ext => combinedResourceServer.registerExtension?.(ext));
+
+// Register Bazaar discovery extension on the combined server too
+try { combinedResourceServer.registerExtension(bazaarResourceServerExtension); } catch (e) { /* already registered */ }
+
+app.use(paymentMiddleware(routeConfig, combinedResourceServer, undefined, undefined, false));
+console.log(`✅ Unified payment middleware: Base${SKALE_FACILITATOR_READY ? " + SKALE (gasless)" : ""} (syncFacilitatorOnStart: false)`);
 
 // ── Bazaar Bootstrap: direct CDP verify+settle for discovery indexing ──
 if (CDP_ENABLED && cdpFacilitatorClient) {
