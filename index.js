@@ -442,6 +442,18 @@ if (SKALE_FACILITATOR_READY) {
   deepAccepts.push(skaleAcceptDeep);
 }
 
+// Batch pricing: $0.10 for up to 5 queries (same price structure as deep)
+const BATCH_PRICE = "$0.10";
+const SKALE_PRICE_BATCH = {
+  amount: "100000",
+  asset: SKALE_USDC_ADDRESS,
+  extra: { name: SKALE_USDC_NAME, version: "2" },
+};
+const baseAcceptBatch = { scheme: "exact", price: BATCH_PRICE, network: NETWORK, payTo: PAY_TO };
+const skaleAcceptBatch = { scheme: "exact", price: SKALE_PRICE_BATCH, network: SKALE_NETWORK, payTo: PAY_TO };
+const batchAccepts = [baseAcceptBatch];
+if (SKALE_FACILITATOR_READY) batchAccepts.push(skaleAcceptBatch);
+
 const routeConfig = {
   "POST /research": {
     accepts: researchAccepts,
@@ -459,6 +471,13 @@ const routeConfig = {
       "with expert-level synthesis, powered by Perplexity Sonar Pro. $0.10 USDC per query. Base + SKALE.",
     mimeType: "application/json",
     extensions: { ...bazaarDeep },
+  },
+  "POST /research/batch": {
+    accepts: batchAccepts,
+    description:
+      "Batch research endpoint. Submit up to 5 queries in a single request, processed in parallel. " +
+      "$0.10 USDC per batch (up to 5 queries). Returns an array of structured results. Base + SKALE (zero gas).",
+    mimeType: "application/json",
   },
 };
 // v2.8 fix: PayAI facilitator supports BOTH Base (eip155:8453) AND SKALE (eip155:1187947933).
@@ -815,6 +834,41 @@ const x402Manifest = {
         response_time_ms: "number",
       },
     },
+    {
+      path: "/research/batch",
+      method: "POST",
+      price: "0.10",
+      currency: "USDC",
+      chain: "base",
+      network: NETWORK,
+      scheme: "exact",
+      model: "sonar",
+      description:
+        "Batch research — submit up to 5 queries in one request, processed in parallel. " +
+        "$0.10 USDC per batch. Returns array of structured results.",
+      input: {
+        body: {
+          queries: {
+            type: "array",
+            required: true,
+            maxItems: 5,
+            items: { type: "string", maxLength: 2000 },
+            description: "Array of natural-language research questions (max 5)",
+          },
+          tier: {
+            type: "string",
+            required: false,
+            enum: ["standard", "deep"],
+            default: "standard",
+            description: "Pass 'deep' to use Sonar Pro for all queries",
+          },
+        },
+      },
+      output: {
+        batch: { total_queries: "number", successful: "number", failed: "number", batch_time_ms: "number" },
+        results: "array of research results",
+      },
+    },
   ],
   facilitators: {
     base: { name: "xpay", url: FACILITATOR_URL },
@@ -1122,6 +1176,129 @@ app.post("/research", async (req, res) => {
       message: "An unexpected error occurred while processing your research query.",
     });
   }
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  POST /research/batch — Batch Research Endpoint
+// ═══════════════════════════════════════════════════════════════════
+//
+//  Body: { "queries": ["q1", "q2", ...], "tier": "standard"|"deep" }
+//  Max 5 queries per batch. $0.10 USDC per batch.
+//  Queries processed in parallel. Returns array of results.
+
+const BATCH_MAX = 5;
+
+app.post("/research/batch", async (req, res) => {
+  const { queries, tier } = req.body;
+
+  if (!queries || !Array.isArray(queries) || queries.length === 0) {
+    return res.status(400).json({
+      error: "Bad Request",
+      message: 'Request body must include a non-empty "queries" array of strings.',
+      example: { queries: ["What is x402?", "Latest AI agent frameworks 2026"], tier: "standard" },
+    });
+  }
+
+  if (queries.length > BATCH_MAX) {
+    return res.status(400).json({
+      error: "Bad Request",
+      message: `Maximum ${BATCH_MAX} queries per batch. You sent ${queries.length}.`,
+      max_queries: BATCH_MAX,
+    });
+  }
+
+  for (let i = 0; i < queries.length; i++) {
+    if (!queries[i] || typeof queries[i] !== "string" || queries[i].trim().length === 0) {
+      return res.status(400).json({ error: "Bad Request", message: `Query at index ${i} must be a non-empty string.` });
+    }
+  }
+
+  const useDeep = tier === "deep";
+  const selectedModel = useDeep ? PERPLEXITY_MODEL_PRO : PERPLEXITY_MODEL;
+  const maxLen = useDeep ? 4000 : 2000;
+  const selectedTier = useDeep ? "deep" : "standard";
+
+  const ip = req.ip || req.headers["x-forwarded-for"] || "unknown";
+  const rlEntry = consumeRateLimit(ip);
+  setRateLimitHeaders(res, rlEntry);
+  if (rlEntry.count > RATE_LIMIT_MAX) {
+    return res.status(429).json({ error: "Rate Limited", message: `Maximum ${RATE_LIMIT_MAX} requests per hour.` });
+  }
+
+  const batchStart = Date.now();
+
+  const systemPrompt = useDeep
+    ? 'Respond only in clean JSON: { "summary": string (detailed 2-3 paragraph summary), "key_facts": array (10-15 detailed facts), "analysis": string (expert analysis paragraph), "sources": array, "confidence_score": number }. Be thorough, detailed, and cite all sources.'
+    : 'Respond only in clean JSON: { "summary": string, "key_facts": array, "sources": array, "confidence_score": number }. Keep concise, accurate, real-time.';
+
+  const processQuery = async (query) => {
+    const qStart = Date.now();
+    const trimmed = query.trim();
+
+    const cached = getCachedResult(trimmed, tier);
+    if (cached) {
+      cached.hits += 1;
+      return {
+        query: trimmed, tier: selectedTier,
+        result: cached.result.result, confidence: cached.result.confidence,
+        freshness: cached.result.freshness,
+        metadata: { ...cached.result.metadata, cached: true, cache_age_seconds: Math.round((Date.now() - cached.timestamp) / 1000), response_time_ms: Date.now() - qStart },
+        status: "success",
+      };
+    }
+
+    try {
+      const pResp = await axios.post("https://api.perplexity.ai/chat/completions", {
+        model: selectedModel, stream: false, max_tokens: maxLen,
+        messages: [{ role: "system", content: systemPrompt }, { role: "user", content: trimmed }],
+      }, {
+        headers: { Authorization: `Bearer ${PERPLEXITY_KEY}`, "Content-Type": "application/json", Accept: "application/json" },
+        timeout: useDeep ? 60000 : 30000,
+      });
+
+      const rawContent = pResp.data?.choices?.[0]?.message?.content || "";
+      let sr;
+      try { sr = JSON.parse(rawContent.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim()); }
+      catch { sr = { summary: rawContent, key_facts: [], sources: [], confidence_score: 0.5 }; }
+
+      const citations = pResp.data?.citations || [];
+      if (citations.length > 0 && (!sr.sources || sr.sources.length === 0)) sr.sources = citations;
+
+      const raw = sr.confidence_score || 0.5;
+      const sc = (sr.sources || []).length;
+      const fc = (sr.key_facts || []).length;
+      let adj = raw;
+      if (sc >= 5) adj = Math.min(1, adj + 0.05);
+      if (sc === 0) adj = Math.max(0.1, adj - 0.15);
+      if (fc >= 5) adj = Math.min(1, adj + 0.03);
+      adj = Math.round(adj * 100) / 100;
+      sr.confidence_score = adj;
+      const level = adj >= 0.85 ? "high" : adj >= 0.6 ? "medium" : "low";
+
+      const txt = (sr.summary || "") + " " + (sr.key_facts || []).join(" ");
+      const yr = new Date().getFullYear();
+      const fresh = /today|yesterday|this week|this month|hours ago|minutes ago|just announced|breaking/i.test(txt) ? "real-time" : (txt.includes(String(yr)) || txt.includes(String(yr - 1))) ? "recent" : "historical";
+
+      const payload = {
+        result: sr,
+        confidence: { score: adj, level, sources_count: sc, facts_count: fc },
+        freshness: fresh,
+        metadata: { model: pResp.data?.model || selectedModel, api_version: "1.5.0", response_time_ms: Date.now() - qStart, timestamp: new Date().toISOString(), cached: false },
+      };
+      setCacheEntry(trimmed, tier, payload);
+      return { query: trimmed, tier: selectedTier, ...payload, status: "success" };
+    } catch (err) {
+      return { query: trimmed, tier: selectedTier, status: "error", error: err.message || "Query failed" };
+    }
+  };
+
+  const results = await Promise.all(queries.map(processQuery));
+  const ok = results.filter((r) => r.status === "success").length;
+
+  return res.json({
+    batch: { total_queries: queries.length, successful: ok, failed: queries.length - ok, tier: selectedTier, batch_time_ms: Date.now() - batchStart, price_paid: BATCH_PRICE },
+    results,
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════
