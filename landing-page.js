@@ -395,7 +395,7 @@ a:hover { color: var(--color-primary-hover); }
 
 /* === BENTO GRID === */
 .bento-grid { display: grid; grid-template-columns: 1fr; gap: var(--space-6); }
-@media (min-width: 768px) { .bento-grid { grid-template-columns: repeat(3, 1fr); grid-template-rows: auto auto; gap: var(--space-8); } }
+@media (min-width: 768px) { .bento-grid { grid-template-columns: repeat(3, 1fr); gap: var(--space-6); } }
 .bento-card {
   background: var(--color-surface); border: 1px solid var(--color-border);
   border-radius: var(--radius-xl); padding: var(--space-10); position: relative; overflow: hidden;
@@ -404,7 +404,7 @@ a:hover { color: var(--color-primary-hover); }
 .bento-card:hover { border-color: rgba(201, 169, 110, 0.3); box-shadow: var(--shadow-card-hover), 0 0 30px rgba(201, 169, 110, 0.08); transform: translateY(-2px) scale(1.01); }
 [data-theme="light"] .bento-card:hover { border-color: rgba(160, 136, 64, 0.3); box-shadow: var(--shadow-card-hover), 0 0 30px rgba(160, 136, 64, 0.06); }
 .bento-card--large { grid-column: 1; }
-@media (min-width: 768px) { .bento-card--large { grid-column: 1 / 3; } }
+@media (min-width: 768px) { .bento-card--large { grid-column: 1; } }
 .bento-card__icon {
   margin-bottom: var(--space-5); line-height: 1; display: flex; align-items: center; justify-content: center;
   width: 44px; height: 44px; border-radius: var(--radius-lg); background: var(--color-primary-highlight);
@@ -699,6 +699,7 @@ a:hover { color: var(--color-primary-hover); }
   .stat-pill { font-size: var(--text-xs); padding: var(--space-2) var(--space-3); }
   .bento-grid { grid-template-columns: 1fr !important; }
   .bento-card--large { grid-column: 1 !important; }
+  .bento-card { min-height: auto; }
   .steps-grid { grid-template-columns: 1fr !important; }
   .pricing-grid { grid-template-columns: 1fr !important; }
   .pricing-card { max-width: 100% !important; padding: var(--space-8) var(--space-5); }
@@ -1353,6 +1354,7 @@ a:hover { color: var(--color-primary-hover); }
             <tr><td>Auth Required</td><td class="compare-highlight"><span class="check-yes">None (x402)</span></td><td>API key</td><td>API key</td><td>API key</td><td>API key</td></tr>
             <tr><td>Agent-Native</td><td class="compare-highlight"><span class="check-yes">x402 (HTTP 402)</span></td><td class="check-no">REST only</td><td class="check-no">REST only</td><td class="check-no">REST only</td><td class="check-no">REST only</td></tr>
             <tr><td>On-Chain Verifiable</td><td class="compare-highlight"><span class="check-yes">Yes (Base L2)</span></td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td></tr>
+            <tr><td>Multi-Chain</td><td class="compare-highlight"><span class="check-yes">Base + SKALE (gasless)</span></td><td class="check-no">N/A</td><td class="check-no">N/A</td><td class="check-no">N/A</td><td class="check-no">N/A</td></tr>
             <tr><td>MCP Server</td><td class="compare-highlight"><span class="check-yes">Yes</span></td><td><span class="check-yes">Yes</span></td><td><span class="check-yes">Yes</span></td><td class="check-no">No</td><td class="check-no">No</td></tr>
             <tr><td>Free Tier</td><td class="compare-highlight"><span class="check-yes">20 req/hr</span></td><td>1K/mo</td><td class="check-no">None</td><td>2K/mo</td><td>100/day</td></tr>
             <tr><td>Confidence Scoring</td><td class="compare-highlight"><span class="check-yes">Built-in</span></td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td></tr>
@@ -1367,6 +1369,7 @@ a:hover { color: var(--color-primary-hover); }
             <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Auth</span><span class="compare-mobile-card__value"><span class="check-yes">None (x402)</span></span></div>
             <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Agent-Native</span><span class="compare-mobile-card__value"><span class="check-yes">x402 (HTTP 402)</span></span></div>
             <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">On-Chain</span><span class="compare-mobile-card__value"><span class="check-yes">Yes (Base L2)</span></span></div>
+            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Multi-Chain</span><span class="compare-mobile-card__value"><span class="check-yes">Base + SKALE (gasless)</span></span></div>
             <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">MCP Server</span><span class="compare-mobile-card__value"><span class="check-yes">Yes</span></span></div>
             <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Free Tier</span><span class="compare-mobile-card__value"><span class="check-yes">20 req/hr</span></span></div>
             <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Confidence Scoring</span><span class="compare-mobile-card__value"><span class="check-yes">Built-in</span></span></div>
