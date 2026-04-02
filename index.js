@@ -251,6 +251,24 @@ app.use((req, res, next) => {
 });
 
 // ── Favicon routes (inline data for Vercel compatibility) ────────
+// Google Search Console verification
+app.get("/googlea59d56c6359397c8.html", (_req, res) => {
+  res.setHeader("Content-Type", "text/html");
+  res.send("google-site-verification: googlea59d56c6359397c8.html");
+});
+
+// SEO: robots.txt
+app.get("/robots.txt", (_req, res) => {
+  res.setHeader("Content-Type", "text/plain");
+  res.send(`User-agent: *\nAllow: /\nDisallow: /health\nDisallow: /cache/stats\n\nSitemap: https://agentoracle.co/sitemap.xml`);
+});
+
+// SEO: sitemap.xml
+app.get("/sitemap.xml", (_req, res) => {
+  res.setHeader("Content-Type", "application/xml");
+  res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://agentoracle.co/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/x402.json</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://agentoracle.co/demo</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>\n</urlset>`);
+});
+
 app.get("/favicon.ico", (_req, res) => {
   res.setHeader("Content-Type", "image/x-icon");
   res.setHeader("Cache-Control", "public, max-age=604800, immutable");
