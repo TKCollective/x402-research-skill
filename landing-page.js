@@ -400,22 +400,22 @@ a:hover { color: var(--color-primary-hover); }
 @media (min-width: 768px) { .feature-list__divider { display: block; background: var(--color-border-subtle); width: 1px; } }
 .feature-col { display: flex; flex-direction: column; }
 .feature-row {
-  display: flex; align-items: flex-start; gap: var(--space-5); padding: var(--space-8) var(--space-6);
-  transition: background 0.25s ease;
+  display: flex; align-items: flex-start; gap: var(--space-6); padding: var(--space-8) var(--space-7);
+  transition: background 0.3s ease;
   border-radius: var(--radius-lg); margin: 0 var(--space-2);
 }
-.feature-row:hover { background: rgba(201, 169, 110, 0.035); }
+.feature-row:hover { background: rgba(201, 169, 110, 0.03); }
 .feature-row__icon {
-  flex-shrink: 0; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
-  border-radius: 10px; background: transparent;
-  border: 1px solid rgba(201, 169, 110, 0.12); margin-top: 1px;
-  transition: box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+  flex-shrink: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+  border-radius: 12px; background: transparent;
+  border: 1px solid rgba(201, 169, 110, 0.08); margin-top: 0;
+  transition: box-shadow 0.4s ease, border-color 0.4s ease, background 0.4s ease;
 }
-.feature-row:hover .feature-row__icon { box-shadow: 0 0 16px rgba(201, 169, 110, 0.12); border-color: rgba(201, 169, 110, 0.3); background: rgba(201, 169, 110, 0.05); }
-.feature-row__icon svg { width: 17px; height: 17px; stroke: var(--color-primary); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.feature-row__content { flex: 1; }
-.feature-row__title { font-family: var(--font-display); font-size: 0.95rem; font-weight: 600; color: var(--color-text); margin-bottom: 4px; letter-spacing: -0.01em; }
-.feature-row__desc { font-size: var(--text-sm); color: var(--color-text-muted); line-height: 1.6; }
+.feature-row:hover .feature-row__icon { box-shadow: 0 0 20px rgba(201, 169, 110, 0.1); border-color: rgba(201, 169, 110, 0.2); background: rgba(201, 169, 110, 0.04); }
+.feature-row__icon svg { width: 18px; height: 18px; stroke: var(--color-primary); fill: none; stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; }
+.feature-row__content { flex: 1; padding-top: 2px; }
+.feature-row__title { font-family: var(--font-display); font-size: 0.95rem; font-weight: 600; color: var(--color-text); margin-bottom: 6px; letter-spacing: -0.01em; }
+.feature-row__desc { font-size: 0.84rem; color: var(--color-text-muted); line-height: 1.65; letter-spacing: 0.005em; }
 .feature-row__badge { display: inline-block; font-size: 0.55rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #0D0D0D; background: var(--color-green); padding: 2px 7px; border-radius: 4px; margin-left: 6px; vertical-align: middle; position: relative; top: -1px; }
 .feature-row__badge--new { background: #C9A96E; }
 /* Keep old bento classes hidden */
@@ -885,35 +885,35 @@ a:hover { color: var(--color-primary-hover); }
     <div class="feature-list fade-in">
       <div class="feature-col">
         <div class="feature-row">
-          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
           <div class="feature-row__content">
             <div class="feature-row__title">Real-Time Research</div>
             <div class="feature-row__desc">Agents get fresh web data on demand with structured JSON output. Powered by Perplexity Sonar.</div>
           </div>
         </div>
         <div class="feature-row">
-          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M9 17H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M15 3h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-4"/><line x1="12" y1="21" x2="12" y2="13"/><polyline points="8 17 12 21 16 17"/></svg></div>
           <div class="feature-row__content">
             <div class="feature-row__title">Source Attribution</div>
             <div class="feature-row__desc">Full URLs and domain transparency. Every fact is traceable \u2014 no black-box answers.</div>
           </div>
         </div>
         <div class="feature-row">
-          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
           <div class="feature-row__content">
             <div class="feature-row__title">No API Keys</div>
             <div class="feature-row__desc">Pure x402 micropayments. Agents simply pay and receive data. No OAuth, no accounts.</div>
           </div>
         </div>
         <div class="feature-row">
-          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M7 4a2 2 0 0 0-2 2v3a2 3 0 0 1-2 2 2 2 0 0 1 2 2v3a2 2 0 0 0 2 2"/><path d="M17 4a2 2 0 0 1 2 2v3a2 2 0 0 0 2 2 2 2 0 0 0-2 2v3a2 2 0 0 1-2 2"/></svg></div>
+          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="14" y1="4" x2="10" y2="20"/></svg></div>
           <div class="feature-row__content">
             <div class="feature-row__title">Structured JSON</div>
             <div class="feature-row__desc">Machine-readable output with typed fields. Parse results directly into your agent\u2019s pipeline.</div>
           </div>
         </div>
         <div class="feature-row">
-          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
           <div class="feature-row__content">
             <div class="feature-row__title">Agent-Native Interface</div>
             <div class="feature-row__desc">One endpoint. One payment header. Agents discover pricing via the x402 manifest.</div>
@@ -923,35 +923,35 @@ a:hover { color: var(--color-primary-hover); }
       <div class="feature-list__divider"></div>
       <div class="feature-col">
         <div class="feature-row">
-          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div>
+          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></div>
           <div class="feature-row__content">
             <div class="feature-row__title">Confidence Scoring</div>
             <div class="feature-row__desc">Every response includes a 0.0\u20131.0 trust score so agents know exactly how much to rely on it.</div>
           </div>
         </div>
         <div class="feature-row">
-          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/></svg></div>
+          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
           <div class="feature-row__content">
             <div class="feature-row__title">Gasless on SKALE <span class="feature-row__badge">LIVE</span></div>
             <div class="feature-row__desc">Zero gas fees for x402 payments on SKALE. Same $0.02 price. Agent picks the cheapest chain.</div>
           </div>
         </div>
         <div class="feature-row">
-          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></div>
           <div class="feature-row__content">
             <div class="feature-row__title">Free Preview Endpoint</div>
-            <div class="feature-row__desc">Test queries without any wallet or payment. 20 requests per hour, no wallet required.</div>
+            <div class="feature-row__desc">Test queries without any wallet or payment. 20 requests per hour, no setup required.</div>
           </div>
         </div>
         <div class="feature-row">
-          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9" style="stroke-width:1.5;fill:none"/><path d="M21 3v6h-6" style="stroke-width:1.5;fill:none"/></svg></div>
+          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></div>
           <div class="feature-row__content">
             <div class="feature-row__title">Research Cache <span class="feature-row__badge feature-row__badge--new">NEW</span></div>
             <div class="feature-row__desc">Repeat queries within 24 hours cost 50% less ($0.01). Automatic savings for trending topics.</div>
           </div>
         </div>
         <div class="feature-row">
-          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" style="stroke-width:1.5;fill:none"/><polyline points="12 6 12 12 16 14" style="stroke-width:1.5;fill:none"/></svg></div>
+          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
           <div class="feature-row__content">
             <div class="feature-row__title">Low Latency</div>
             <div class="feature-row__desc">Deployed on Vercel Edge for fast global responses. Your agent doesn\u2019t wait.</div>
