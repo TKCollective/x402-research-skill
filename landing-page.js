@@ -394,34 +394,33 @@ a:hover { color: var(--color-primary-hover); }
 .social-proof strong { color: var(--color-primary); font-weight: 700; font-size: var(--text-base); }
 
 /* === FEATURE LIST (Two-Column) === */
-.feature-list { display: grid; grid-template-columns: 1fr; gap: 0; max-width: 1000px; margin: 0 auto; }
-@media (min-width: 768px) { .feature-list { grid-template-columns: 1fr 1fr; } }
+.feature-list { display: grid; grid-template-columns: 1fr; gap: 0; max-width: 960px; margin: 0 auto; }
+@media (min-width: 768px) { .feature-list { grid-template-columns: 1fr 1px 1fr; } }
+.feature-list__divider { display: none; }
+@media (min-width: 768px) { .feature-list__divider { display: block; background: var(--color-border-subtle); width: 1px; } }
+.feature-col { display: flex; flex-direction: column; }
 .feature-row {
-  display: flex; align-items: flex-start; gap: var(--space-5); padding: var(--space-7) var(--space-6);
-  border-bottom: 1px solid var(--color-border-subtle);
-  transition: background var(--transition-interactive);
+  display: flex; align-items: flex-start; gap: var(--space-5); padding: var(--space-8) var(--space-6);
+  transition: background 0.25s ease;
+  border-radius: var(--radius-lg); margin: 0 var(--space-2);
 }
-.feature-row:hover { background: rgba(201, 169, 110, 0.03); }
-@media (min-width: 768px) {
-  .feature-row:nth-child(odd) { border-right: 1px solid var(--color-border-subtle); padding-right: var(--space-10); }
-  .feature-row:nth-child(even) { padding-left: var(--space-10); }
-}
+.feature-row:hover { background: rgba(201, 169, 110, 0.035); }
 .feature-row__icon {
-  flex-shrink: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
-  border-radius: var(--radius-md); background: var(--color-primary-highlight);
-  border: 1px solid rgba(201, 169, 110, 0.10); margin-top: 2px;
-  transition: box-shadow var(--transition-interactive), border-color var(--transition-interactive);
+  flex-shrink: 0; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  border-radius: 10px; background: transparent;
+  border: 1px solid rgba(201, 169, 110, 0.12); margin-top: 1px;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease;
 }
-.feature-row:hover .feature-row__icon { box-shadow: 0 0 12px rgba(201, 169, 110, 0.15); border-color: rgba(201, 169, 110, 0.25); }
-.feature-row__icon svg { width: 16px; height: 16px; stroke: var(--color-primary); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.feature-row:hover .feature-row__icon { box-shadow: 0 0 16px rgba(201, 169, 110, 0.12); border-color: rgba(201, 169, 110, 0.3); background: rgba(201, 169, 110, 0.05); }
+.feature-row__icon svg { width: 17px; height: 17px; stroke: var(--color-primary); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .feature-row__content { flex: 1; }
-.feature-row__title { font-family: var(--font-display); font-size: var(--text-base); font-weight: 700; color: var(--color-text); margin-bottom: var(--space-1); }
-.feature-row__desc { font-size: var(--text-sm); color: var(--color-text-muted); line-height: 1.55; }
-.feature-row__badge { display: inline-block; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #0D0D0D; background: var(--color-green); padding: 2px 6px; border-radius: var(--radius-sm); margin-left: var(--space-2); vertical-align: middle; }
+.feature-row__title { font-family: var(--font-display); font-size: 0.95rem; font-weight: 600; color: var(--color-text); margin-bottom: 4px; letter-spacing: -0.01em; }
+.feature-row__desc { font-size: var(--text-sm); color: var(--color-text-muted); line-height: 1.6; }
+.feature-row__badge { display: inline-block; font-size: 0.55rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #0D0D0D; background: var(--color-green); padding: 2px 7px; border-radius: 4px; margin-left: 6px; vertical-align: middle; position: relative; top: -1px; }
 .feature-row__badge--new { background: #C9A96E; }
-/* Keep old bento classes for backward compat but hide */
-.bento-grid { display: none; }
-.bento-card, .bento-card--large, .bento-card__icon, .bento-card__title, .bento-card__desc, .bento-card__tag, .bento-card__badge-new { display: none; }
+/* Keep old bento classes hidden */
+.bento-grid { display: none !important; }
+.bento-card, .bento-card--large, .bento-card__icon, .bento-card__title, .bento-card__desc, .bento-card__tag, .bento-card__badge-new { display: none !important; }
 
 /* === FLOW DIAGRAM (Cat 2) === */
 .flow-diagram { display: flex; flex-direction: column; align-items: center; gap: var(--space-6); margin-top: var(--space-12); }
@@ -882,76 +881,81 @@ a:hover { color: var(--color-primary-hover); }
   <div class="container">
     <span class="section-label fade-in">Capabilities</span>
     <h2 class="section-title fade-in">Built for Autonomous Agents</h2>
-    <p class="section-subtitle fade-in">Everything your agent needs to research, verify, and reason with confidence in the real world.</p>
+    <p class="section-subtitle fade-in">Everything your agent needs to research, verify, and reason with confidence \u2014 without human intervention.</p>
     <div class="feature-list fade-in">
-      <div class="feature-row">
-        <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
-        <div class="feature-row__content">
-          <div class="feature-row__title">Real-Time Research</div>
-          <div class="feature-row__desc">Agents get fresh web data on demand with structured JSON output. Powered by Perplexity Sonar.</div>
+      <div class="feature-col">
+        <div class="feature-row">
+          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+          <div class="feature-row__content">
+            <div class="feature-row__title">Real-Time Research</div>
+            <div class="feature-row__desc">Agents get fresh web data on demand with structured JSON output. Powered by Perplexity Sonar.</div>
+          </div>
+        </div>
+        <div class="feature-row">
+          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+          <div class="feature-row__content">
+            <div class="feature-row__title">Source Attribution</div>
+            <div class="feature-row__desc">Full URLs and domain transparency. Every fact is traceable \u2014 no black-box answers.</div>
+          </div>
+        </div>
+        <div class="feature-row">
+          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <div class="feature-row__content">
+            <div class="feature-row__title">No API Keys</div>
+            <div class="feature-row__desc">Pure x402 micropayments. Agents simply pay and receive data. No OAuth, no accounts.</div>
+          </div>
+        </div>
+        <div class="feature-row">
+          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M7 4a2 2 0 0 0-2 2v3a2 3 0 0 1-2 2 2 2 0 0 1 2 2v3a2 2 0 0 0 2 2"/><path d="M17 4a2 2 0 0 1 2 2v3a2 2 0 0 0 2 2 2 2 0 0 0-2 2v3a2 2 0 0 1-2 2"/></svg></div>
+          <div class="feature-row__content">
+            <div class="feature-row__title">Structured JSON</div>
+            <div class="feature-row__desc">Machine-readable output with typed fields. Parse results directly into your agent\u2019s pipeline.</div>
+          </div>
+        </div>
+        <div class="feature-row">
+          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+          <div class="feature-row__content">
+            <div class="feature-row__title">Agent-Native Interface</div>
+            <div class="feature-row__desc">One endpoint. One payment header. Agents discover pricing via the x402 manifest.</div>
+          </div>
         </div>
       </div>
-      <div class="feature-row">
-        <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div>
-        <div class="feature-row__content">
-          <div class="feature-row__title">Confidence Scoring</div>
-          <div class="feature-row__desc">Every response includes a 0.0\u20131.0 trust score so agents know exactly how much to rely on it.</div>
+      <div class="feature-list__divider"></div>
+      <div class="feature-col">
+        <div class="feature-row">
+          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div>
+          <div class="feature-row__content">
+            <div class="feature-row__title">Confidence Scoring</div>
+            <div class="feature-row__desc">Every response includes a 0.0\u20131.0 trust score so agents know exactly how much to rely on it.</div>
+          </div>
         </div>
-      </div>
-      <div class="feature-row">
-        <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
-        <div class="feature-row__content">
-          <div class="feature-row__title">Source Attribution</div>
-          <div class="feature-row__desc">Full URLs and domain transparency. Every fact is traceable \u2014 no black-box answers.</div>
+        <div class="feature-row">
+          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/></svg></div>
+          <div class="feature-row__content">
+            <div class="feature-row__title">Gasless on SKALE <span class="feature-row__badge">LIVE</span></div>
+            <div class="feature-row__desc">Zero gas fees for x402 payments on SKALE. Same $0.02 price. Agent picks the cheapest chain.</div>
+          </div>
         </div>
-      </div>
-      <div class="feature-row">
-        <div class="feature-row__icon"><svg viewBox="0 0 24 24"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/></svg></div>
-        <div class="feature-row__content">
-          <div class="feature-row__title">Gasless on SKALE <span class="feature-row__badge">LIVE</span></div>
-          <div class="feature-row__desc">Zero gas fees for x402 payments on SKALE. Same $0.02 price. Agent picks the cheapest chain.</div>
+        <div class="feature-row">
+          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <div class="feature-row__content">
+            <div class="feature-row__title">Free Preview Endpoint</div>
+            <div class="feature-row__desc">Test queries without any wallet or payment. 20 requests per hour, no wallet required.</div>
+          </div>
         </div>
-      </div>
-      <div class="feature-row">
-        <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M12 2l10 10-10 10L2 12 12 2z"/></svg></div>
-        <div class="feature-row__content">
-          <div class="feature-row__title">No API Keys</div>
-          <div class="feature-row__desc">Pure x402 micropayments. Agents just pay and receive data. No OAuth, no accounts.</div>
+        <div class="feature-row">
+          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9" style="stroke-width:1.5;fill:none"/><path d="M21 3v6h-6" style="stroke-width:1.5;fill:none"/></svg></div>
+          <div class="feature-row__content">
+            <div class="feature-row__title">Research Cache <span class="feature-row__badge feature-row__badge--new">NEW</span></div>
+            <div class="feature-row__desc">Repeat queries within 24 hours cost 50% less ($0.01). Automatic savings for trending topics.</div>
+          </div>
         </div>
-      </div>
-      <div class="feature-row">
-        <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
-        <div class="feature-row__content">
-          <div class="feature-row__title">Free Preview Endpoint</div>
-          <div class="feature-row__desc">Test queries without any wallet or payment. 20 requests per hour.</div>
-        </div>
-      </div>
-      <div class="feature-row">
-        <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M7 4a2 2 0 0 0-2 2v3a2 2 0 0 1-2 2 2 2 0 0 1 2 2v3a2 2 0 0 0 2 2"/><path d="M17 4a2 2 0 0 1 2 2v3a2 2 0 0 0 2 2 2 2 0 0 0-2 2v3a2 2 0 0 1-2 2"/></svg></div>
-        <div class="feature-row__content">
-          <div class="feature-row__title">Structured JSON</div>
-          <div class="feature-row__desc">Machine-readable output with typed fields. Parse results directly into your agent\u2019s reasoning pipeline.</div>
-        </div>
-      </div>
-      <div class="feature-row">
-        <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9" style="stroke-width:2;fill:none;stroke:var(--color-primary)"/><path d="M21 3v6h-6" style="stroke-width:2;fill:none;stroke:var(--color-primary)"/></svg></div>
-        <div class="feature-row__content">
-          <div class="feature-row__title">Research Cache <span class="feature-row__badge feature-row__badge--new">NEW</span></div>
-          <div class="feature-row__desc">Repeat queries within 24 hours cost 50% less ($0.01). Automatic savings for trending topics.</div>
-        </div>
-      </div>
-      <div class="feature-row">
-        <div class="feature-row__icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
-        <div class="feature-row__content">
-          <div class="feature-row__title">Agent-Native Interface</div>
-          <div class="feature-row__desc">One endpoint. One payment header. Agents discover pricing via the x402 manifest.</div>
-        </div>
-      </div>
-      <div class="feature-row">
-        <div class="feature-row__icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" style="stroke-width:2;fill:none;stroke:var(--color-primary)"/><path d="M12 12l4-4" style="stroke-width:2;stroke:var(--color-primary)"/><circle cx="12" cy="12" r="1" style="fill:var(--color-primary);stroke:none"/></svg></div>
-        <div class="feature-row__content">
-          <div class="feature-row__title">Low Latency</div>
-          <div class="feature-row__desc">Deployed on Vercel Edge for fast global responses. Your agent doesn\u2019t wait.</div>
+        <div class="feature-row">
+          <div class="feature-row__icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" style="stroke-width:1.5;fill:none"/><polyline points="12 6 12 12 16 14" style="stroke-width:1.5;fill:none"/></svg></div>
+          <div class="feature-row__content">
+            <div class="feature-row__title">Low Latency</div>
+            <div class="feature-row__desc">Deployed on Vercel Edge for fast global responses. Your agent doesn\u2019t wait.</div>
+          </div>
         </div>
       </div>
     </div>
