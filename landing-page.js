@@ -394,29 +394,32 @@ a:hover { color: var(--color-primary-hover); }
 .social-proof strong { color: var(--color-primary); font-weight: 700; font-size: var(--text-base); }
 
 /* === FEATURE LIST (Two-Column) === */
-.feature-list { display: grid; grid-template-columns: 1fr; gap: 0; max-width: 960px; margin: 0 auto; }
-@media (min-width: 768px) { .feature-list { grid-template-columns: 1fr 1px 1fr; } }
+.feature-list { display: grid; grid-template-columns: 1fr; gap: 0; max-width: 1060px; margin: 0 auto; padding: 2rem 0 0; }
+@media (min-width: 768px) { .feature-list { grid-template-columns: 1fr 1px 1fr; padding: 3rem 0 0; } }
 .feature-list__divider { display: none; }
-@media (min-width: 768px) { .feature-list__divider { display: block; background: var(--color-border-subtle); width: 1px; } }
-.feature-col { display: flex; flex-direction: column; }
+@media (min-width: 768px) { .feature-list__divider { display: block; background: linear-gradient(to bottom, transparent, rgba(201,169,110,0.12) 20%, rgba(201,169,110,0.12) 80%, transparent); width: 1px; } }
+.feature-col { display: flex; flex-direction: column; gap: 0.5rem; }
+@media (min-width: 768px) { .feature-col { gap: 0.75rem; } }
 .feature-row {
-  display: flex; align-items: flex-start; gap: var(--space-6); padding: var(--space-8) var(--space-7);
-  transition: background 0.3s ease;
-  border-radius: var(--radius-lg); margin: 0 var(--space-2);
+  display: flex; align-items: flex-start; gap: 1.25rem; padding: 1.75rem 1.5rem;
+  transition: background 0.35s ease;
+  border-radius: 14px; margin: 0 0.25rem;
 }
-.feature-row:hover { background: rgba(201, 169, 110, 0.03); }
+@media (min-width: 768px) { .feature-row { padding: 2rem 1.75rem; } }
+.feature-row:hover { background: rgba(201, 169, 110, 0.025); }
 .feature-row__icon {
-  flex-shrink: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
-  border-radius: 12px; background: transparent;
-  border: 1px solid rgba(201, 169, 110, 0.08); margin-top: 0;
+  flex-shrink: 0; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center;
+  border-radius: 13px; background: transparent;
+  border: 1px solid rgba(201, 169, 110, 0.07);
   transition: box-shadow 0.4s ease, border-color 0.4s ease, background 0.4s ease;
 }
-.feature-row:hover .feature-row__icon { box-shadow: 0 0 20px rgba(201, 169, 110, 0.1); border-color: rgba(201, 169, 110, 0.2); background: rgba(201, 169, 110, 0.04); }
-.feature-row__icon svg { width: 18px; height: 18px; stroke: var(--color-primary); fill: none; stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; }
-.feature-row__content { flex: 1; padding-top: 2px; }
-.feature-row__title { font-family: var(--font-display); font-size: 0.95rem; font-weight: 600; color: var(--color-text); margin-bottom: 6px; letter-spacing: -0.01em; }
-.feature-row__desc { font-size: 0.84rem; color: var(--color-text-muted); line-height: 1.65; letter-spacing: 0.005em; }
-.feature-row__badge { display: inline-block; font-size: 0.55rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #0D0D0D; background: var(--color-green); padding: 2px 7px; border-radius: 4px; margin-left: 6px; vertical-align: middle; position: relative; top: -1px; }
+.feature-row:hover .feature-row__icon { box-shadow: 0 0 24px rgba(201, 169, 110, 0.08); border-color: rgba(201, 169, 110, 0.18); background: rgba(201, 169, 110, 0.03); }
+.feature-row__icon svg { width: 22px; height: 22px; stroke: var(--color-primary); fill: none; stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; opacity: 0.85; }
+.feature-row:hover .feature-row__icon svg { opacity: 1; }
+.feature-row__content { flex: 1; padding-top: 4px; }
+.feature-row__title { font-family: var(--font-display); font-size: 1rem; font-weight: 600; color: var(--color-text); margin-bottom: 8px; letter-spacing: -0.01em; }
+.feature-row__desc { font-size: 0.855rem; color: var(--color-text-muted); line-height: 1.7; letter-spacing: 0.005em; }
+.feature-row__badge { display: inline-block; font-size: 0.5rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #0D0D0D; background: var(--color-green); padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; position: relative; top: -1px; }
 .feature-row__badge--new { background: #C9A96E; }
 /* Keep old bento classes hidden */
 .bento-grid { display: none !important; }
