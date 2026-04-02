@@ -393,28 +393,33 @@ a:hover { color: var(--color-primary-hover); }
 }
 .social-proof strong { color: var(--color-primary); font-weight: 700; font-size: var(--text-base); }
 
-/* === BENTO GRID === */
-.bento-grid { display: grid; grid-template-columns: 1fr; gap: var(--space-6); }
-@media (min-width: 768px) { .bento-grid { grid-template-columns: repeat(3, 1fr); gap: var(--space-6); } }
-.bento-card {
-  background: var(--color-surface); border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl); padding: var(--space-10); position: relative; overflow: hidden;
-  transition: border-color var(--transition-interactive), box-shadow var(--transition-slow), transform var(--transition-slow);
+/* === FEATURE LIST (Two-Column) === */
+.feature-list { display: grid; grid-template-columns: 1fr; gap: 0; max-width: 1000px; margin: 0 auto; }
+@media (min-width: 768px) { .feature-list { grid-template-columns: 1fr 1fr; } }
+.feature-row {
+  display: flex; align-items: flex-start; gap: var(--space-5); padding: var(--space-7) var(--space-6);
+  border-bottom: 1px solid var(--color-border-subtle);
+  transition: background var(--transition-interactive);
 }
-.bento-card:hover { border-color: rgba(201, 169, 110, 0.3); box-shadow: var(--shadow-card-hover), 0 0 30px rgba(201, 169, 110, 0.08); transform: translateY(-2px) scale(1.01); }
-[data-theme="light"] .bento-card:hover { border-color: rgba(160, 136, 64, 0.3); box-shadow: var(--shadow-card-hover), 0 0 30px rgba(160, 136, 64, 0.06); }
-.bento-card--large { grid-column: 1; }
-@media (min-width: 768px) { .bento-card--large { grid-column: 1; } }
-.bento-card__icon {
-  margin-bottom: var(--space-5); line-height: 1; display: flex; align-items: center; justify-content: center;
-  width: 44px; height: 44px; border-radius: var(--radius-lg); background: var(--color-primary-highlight);
-  border: 1px solid rgba(201, 169, 110, 0.15);
+.feature-row:hover { background: rgba(201, 169, 110, 0.03); }
+@media (min-width: 768px) {
+  .feature-row:nth-child(odd) { border-right: 1px solid var(--color-border-subtle); padding-right: var(--space-10); }
+  .feature-row:nth-child(even) { padding-left: var(--space-10); }
 }
-.bento-card__icon svg { width: 22px; height: 22px; stroke: var(--color-primary); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.bento-card__title { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; color: var(--color-text); margin-bottom: var(--space-3); }
-.bento-card__desc { font-size: var(--text-sm); color: var(--color-text-muted); line-height: 1.6; }
-.bento-card__tag { display: inline-block; margin-top: var(--space-4); font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-primary); padding: var(--space-1) var(--space-3); background: var(--color-primary-highlight); border-radius: var(--radius-sm); }
-.bento-card__badge-new { display: inline-block; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #0D0D0D; background: #C9A96E; padding: 2px 8px; border-radius: var(--radius-sm); margin-left: var(--space-2); vertical-align: middle; }
+.feature-row__icon {
+  flex-shrink: 0; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md); background: var(--color-primary-highlight);
+  border: 1px solid rgba(201, 169, 110, 0.12); margin-top: 2px;
+}
+.feature-row__icon svg { width: 18px; height: 18px; stroke: var(--color-primary); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.feature-row__content { flex: 1; }
+.feature-row__title { font-family: var(--font-display); font-size: var(--text-base); font-weight: 700; color: var(--color-text); margin-bottom: var(--space-1); }
+.feature-row__desc { font-size: var(--text-sm); color: var(--color-text-muted); line-height: 1.55; }
+.feature-row__badge { display: inline-block; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #0D0D0D; background: var(--color-green); padding: 2px 6px; border-radius: var(--radius-sm); margin-left: var(--space-2); vertical-align: middle; }
+.feature-row__badge--new { background: #C9A96E; }
+/* Keep old bento classes for backward compat but hide */
+.bento-grid { display: none; }
+.bento-card, .bento-card--large, .bento-card__icon, .bento-card__title, .bento-card__desc, .bento-card__tag, .bento-card__badge-new { display: none; }
 
 /* === FLOW DIAGRAM (Cat 2) === */
 .flow-diagram { display: flex; flex-direction: column; align-items: center; gap: var(--space-6); margin-top: var(--space-12); }
@@ -876,7 +881,79 @@ a:hover { color: var(--color-primary-hover); }
     <span class="section-label fade-in">Capabilities</span>
     <h2 class="section-title fade-in">Built for Autonomous Agents</h2>
     <p class="section-subtitle fade-in">Everything your agent needs to research, verify, and reason about the real world.</p>
-    <div class="bento-grid fade-in">
+    <div class="feature-list fade-in">
+      <div class="feature-row">
+        <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+        <div class="feature-row__content">
+          <div class="feature-row__title">Real-Time Research</div>
+          <div class="feature-row__desc">Agents get fresh web data on demand with structured JSON output. Powered by Perplexity Sonar with full source citations.</div>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div>
+        <div class="feature-row__content">
+          <div class="feature-row__title">Confidence Scoring</div>
+          <div class="feature-row__desc">Every response includes a 0.0\u20131.0 trust score so agents know how much to rely on it. Score, level, sources found, and facts extracted.</div>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+        <div class="feature-row__content">
+          <div class="feature-row__title">Source Attribution</div>
+          <div class="feature-row__desc">Full URLs and domain transparency \u2014 no black-box answers. Every fact is traceable to its origin.</div>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-row__icon"><svg viewBox="0 0 24 24"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/></svg></div>
+        <div class="feature-row__content">
+          <div class="feature-row__title">Gasless on SKALE <span class="feature-row__badge">LIVE</span></div>
+          <div class="feature-row__desc">Zero gas fees for x402 payments on SKALE. Same $0.02 query price, no gas overhead. Agent picks the cheapest chain.</div>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M12 2l10 10-10 10L2 12 12 2z"/></svg></div>
+        <div class="feature-row__content">
+          <div class="feature-row__title">No API Keys</div>
+          <div class="feature-row__desc">Pure x402 micropayments \u2014 agents just pay and receive data. No OAuth, no accounts, no human in the loop.</div>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <div class="feature-row__content">
+          <div class="feature-row__title">Free Preview Endpoint</div>
+          <div class="feature-row__desc">Test queries without any wallet or payment. POST /preview returns truncated results free \u2014 20 requests per hour.</div>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M7 4a2 2 0 0 0-2 2v3a2 2 0 0 1-2 2 2 2 0 0 1 2 2v3a2 2 0 0 0 2 2"/><path d="M17 4a2 2 0 0 1 2 2v3a2 2 0 0 0 2 2 2 2 0 0 0-2 2v3a2 2 0 0 1-2 2"/></svg></div>
+        <div class="feature-row__content">
+          <div class="feature-row__title">Structured JSON</div>
+          <div class="feature-row__desc">Every response is machine-readable with typed fields. Parse results directly into your agent\u2019s reasoning pipeline.</div>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-row__icon"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9" style="stroke-width:2;fill:none;stroke:var(--color-primary)"/><path d="M21 3v6h-6" style="stroke-width:2;fill:none;stroke:var(--color-primary)"/></svg></div>
+        <div class="feature-row__content">
+          <div class="feature-row__title">Research Cache <span class="feature-row__badge feature-row__badge--new">NEW</span></div>
+          <div class="feature-row__desc">Repeat queries within 24 hours cost 50% less. $0.01 instead of $0.02 \u2014 automatic savings for trending topics.</div>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-row__icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+        <div class="feature-row__content">
+          <div class="feature-row__title">Agent-Native Interface</div>
+          <div class="feature-row__desc">One endpoint. One method. One payment header. Agents discover pricing via x402 manifest and pay inline.</div>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-row__icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" style="stroke-width:2;fill:none;stroke:var(--color-primary)"/><path d="M12 12l4-4" style="stroke-width:2;stroke:var(--color-primary)"/><circle cx="12" cy="12" r="1" style="fill:var(--color-primary);stroke:none"/></svg></div>
+        <div class="feature-row__content">
+          <div class="feature-row__title">Low Latency</div>
+          <div class="feature-row__desc">Deployed on Vercel Edge for fast responses globally. Your agent doesn\u2019t wait.</div>
+        </div>
+      </div>
+    </div>
+    <div class="bento-grid fade-in" style="display:none;">
       <div class="bento-card bento-card--large">
         <div class="bento-card__icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
         <h3 class="bento-card__title">Real-Time Research</h3>
