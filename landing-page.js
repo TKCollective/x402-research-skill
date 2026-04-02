@@ -21,7 +21,7 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AgentOracle — Pay-Per-Query Research API for AI Agents</title>
+<title>AgentOracle — Live Research API for AI Agents | Gasless on SKALE, Paid via x402</title>
 <meta name="description" content="AgentOracle is a pay-per-query research API for AI agents using the x402 payment protocol. Accept USDC and EURC on Base mainnet.">
 
 <style>
@@ -823,7 +823,7 @@ a:hover { color: var(--color-primary-hover); }
         Research API<br>for <span class="gold-text">AI Agents</span>
       </h1>
       <p class="hero__subtitle fade-in">
-        Real-time research for autonomous agents. One HTTP request, one USDC micropayment, structured JSON back — no API keys, no subscriptions, no human in the loop.
+        Live research API for agents — gasless on SKALE, paid via x402. One HTTP request, one USDC micropayment, structured JSON back — no API keys, no subscriptions, no human in the loop.
       </p>
       <p class="hero__secondary-tagline fade-in">Get Started in 60 Seconds</p>
       <div class="hero__ctas fade-in">
@@ -1212,6 +1212,7 @@ a:hover { color: var(--color-primary-hover); }
       <span class="section-label fade-in">Pricing</span>
       <h2 class="section-title fade-in">Pay Only for What You Use</h2>
       <p class="section-subtitle fade-in">No subscriptions. No minimums. No API keys. Just pay per query with USDC on Base.</p>
+      <p class="section-subtitle fade-in" style="font-size:var(--text-sm);color:var(--color-green);margin-top:var(--space-3);display:flex;align-items:center;justify-content:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/></svg> Gasless on SKALE Network — zero gas cost for your agent queries</p>
     </div>
     <div class="pricing-grid fade-in">
       <div class="pricing-card pricing-card--green">
