@@ -266,7 +266,7 @@ app.get("/robots.txt", (_req, res) => {
 // SEO: sitemap.xml
 app.get("/sitemap.xml", (_req, res) => {
   res.setHeader("Content-Type", "application/xml");
-  res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://agentoracle.co/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/x402.json</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://agentoracle.co/demo</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>\n</urlset>`);
+  res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://agentoracle.co/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/x402.json</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/x402-manifest.json</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://agentoracle.co/demo</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>\n</urlset>`);
 });
 
 app.get("/favicon.ico", (_req, res) => {
@@ -904,6 +904,14 @@ app.get("/.well-known/x402.json", (_req, res) => {
   res.json(x402Manifest);
 });
 
+// Standard x402-manifest.json path — expected by x402 discovery tools, OWS SDK,
+// and x402scan. Mirrors the same manifest for maximum discoverability.
+app.get("/.well-known/x402-manifest.json", (_req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.setHeader("Cache-Control", "public, max-age=3600");
+  res.json(x402Manifest);
+});
+
 // ═══════════════════════════════════════════════════════════════════
 //  GET /health — Health check with feature flags
 // ═══════════════════════════════════════════════════════════════════
@@ -911,7 +919,7 @@ app.get("/.well-known/x402.json", (_req, res) => {
 app.get("/health", (_req, res) => {
   res.json({
     status: "ok",
-    version: "1.6.0",
+    version: "1.7.0",
     service: "x402-research-api",
     chain: "base + skale",
     networks: {
@@ -1989,6 +1997,7 @@ app.use((_req, res) => {
       "GET /skale": "SKALE gasless payments info (live — zero gas fees)",
       "GET /.well-known/x402": "x402 discovery document",
       "GET /.well-known/x402.json": "x402 service manifest (alias)",
+      "GET /.well-known/x402-manifest.json": "x402 standard manifest path",
       "GET /": "AgentOracle landing page",
     },
   });
