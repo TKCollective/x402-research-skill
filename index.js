@@ -627,17 +627,25 @@ app.post("/preview", async (req, res) => {
 
     let fullResult;
     try {
-      const cleaned = rawContent
+      // Strip markdown code fences and any leading/trailing whitespace
+      let cleaned = rawContent
         .replace(/^```(?:json)?\s*/i, "")
         .replace(/\s*```$/i, "")
         .trim();
+      // Try to extract JSON object if surrounded by non-JSON text
+      if (!cleaned.startsWith("{")) {
+        const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+        if (jsonMatch) cleaned = jsonMatch[0];
+      }
       fullResult = JSON.parse(cleaned);
     } catch {
+      // Extract what we can from raw text
+      const sentences = rawContent.split(/[.!?]+/).filter(s => s.trim().length > 10);
       fullResult = {
-        summary: rawContent,
-        key_facts: [],
+        summary: rawContent.substring(0, 500),
+        key_facts: sentences.slice(0, 3).map(s => s.trim()),
         sources: [],
-        confidence_score: 0.5,
+        confidence_score: sentences.length >= 3 ? 0.7 : 0.5,
       };
     }
 
@@ -671,6 +679,7 @@ app.post("/preview", async (req, res) => {
         how: "See /.well-known/x402.json for payment details",
       },
       preview_remaining: Math.max(0, PREVIEW_RATE_LIMIT - pEntry.count),
+      preview_limit: `${PREVIEW_RATE_LIMIT}/hour per IP (approximate — serverless instances may vary)`,
     });
   } catch (err) {
     console.error("[/preview] Perplexity API error:", err.message, err.response?.status, JSON.stringify(err.response?.data));
