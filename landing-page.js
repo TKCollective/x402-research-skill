@@ -1548,6 +1548,53 @@ a:hover { color: var(--color-primary-hover); }
   </div>
 </section>
 
+<!-- ========== LIVE & PROVEN ========== -->
+<section class="section section--alt" id="live-proven">
+  <div class="container">
+    <span class="section-label fade-in">Payment Validation</span>
+    <h2 class="section-title fade-in">Live &amp; Proven</h2>
+    <p class="section-subtitle fade-in">Real USDC payments confirmed on Base mainnet.</p>
+
+    <div class="specs-grid fade-in" style="margin-top:2rem;">
+      <div class="spec-item">
+        <span class="spec-item__label">On-Chain Transactions</span>
+        <span class="spec-item__value" style="color:var(--color-green);">10+</span>
+      </div>
+      <div class="spec-item">
+        <span class="spec-item__label">Total USDC Received</span>
+        <span class="spec-item__value" style="color:var(--color-green);">$1.30+</span>
+      </div>
+      <div class="spec-item">
+        <span class="spec-item__label">Avg Round-Trip</span>
+        <span class="spec-item__value">~7 seconds</span>
+      </div>
+      <div class="spec-item">
+        <span class="spec-item__label">Endpoints Validated</span>
+        <span class="spec-item__value" style="font-size:0.85em;">/research &middot; /deep-research &middot; /batch</span>
+      </div>
+      <div class="spec-item">
+        <span class="spec-item__label">Settlement Network</span>
+        <span class="spec-item__value">Base mainnet</span>
+      </div>
+      <div class="spec-item">
+        <span class="spec-item__label">Gasless Option</span>
+        <span class="spec-item__value" style="color:var(--color-green);">SKALE &mdash; Active</span>
+      </div>
+    </div>
+
+    <div class="fade-in" style="margin-top:2rem;padding:1.25rem 1.5rem;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-lg);max-width:680px;margin-left:auto;margin-right:auto;text-align:center;">
+      <p style="font-size:var(--text-xs);color:var(--color-text-muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.08em;">Verified On-Chain</p>
+      <div style="margin-top:0.75rem;">
+        <a href="https://basescan.org/address/0xdF90200B0031051BbF7a66BB9387d2Ecf599e109"
+           target="_blank" rel="noopener noreferrer"
+           style="font-size:var(--text-sm);color:var(--color-primary);text-decoration:underline;">
+          View all transactions on BaseScan &#8594;
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- BOTTOM CTA (Cat 4 - enhanced) -->
 <section class="bottom-cta section">
   <div class="container">
