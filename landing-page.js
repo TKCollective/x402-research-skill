@@ -1570,7 +1570,7 @@ a:hover { color: var(--color-primary-hover); }
       </div>
       <div class="spec-item">
         <span class="spec-item__label">Endpoints Validated</span>
-        <span class="spec-item__value" style="font-size:0.85em;">/research &middot; /deep-research &middot; /batch</span>
+        <span class="spec-item__value" style="font-size:0.8em;white-space:nowrap;">/research &middot; /deep &middot; /batch</span>
       </div>
       <div class="spec-item">
         <span class="spec-item__label">Settlement Network</span>
