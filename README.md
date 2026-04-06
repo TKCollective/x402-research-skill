@@ -1,203 +1,334 @@
-# AgentOracle — Pay-Per-Query Research API
+# AgentOracle — Real-Time Research API for AI Agents
 
-A payable research API that gives AI agents instant, structured web research for **$0.02 USDC** per query. No API keys. No subscriptions. Just HTTP + crypto.
-
-Built on [x402 protocol](https://docs.cdp.coinbase.com/x402/welcome) (Coinbase's open payment standard) and powered by [Perplexity Sonar](https://www.perplexity.ai).
+Pay-per-query research API for autonomous AI agents using the [x402 protocol](https://x402.org). Agents discover pricing, query for free, then pay $0.02 USDC per result. No API keys. No accounts. No subscriptions.
 
 **Live at [agentoracle.co](https://agentoracle.co)**
+
+---
 
 ## How It Works
 
 ```
-Agent → POST /research {"query": "..."} → 402 Payment Required
-Agent → signs $0.02 USDC on Base → retries with payment header
-Server → verifies payment → calls Perplexity → returns structured JSON
+1. Agent discovers pricing
+   GET /.well-known/x402-manifest.json
+
+2. Agent previews for free
+   POST /preview → truncated summary + confidence score
+
+3. Agent pays and gets full results
+   POST /research → HTTP 402 → agent signs $0.02 USDC → retry → full JSON
 ```
+
+The x402 protocol handles all payment logic. No API key management, no billing setup, no human in the loop.
+
+---
 
 ## Endpoints
 
 | Method | Path | Price | Description |
 |--------|------|-------|-------------|
-| `POST` | `/preview` | Free (10/hr) | Live truncated preview — test before paying |
-| `POST` | `/research` | $0.02 USDC | Standard research (Perplexity Sonar) |
-| `POST` | `/deep-research` | $0.10 USDC | Deep research with analysis (Sonar Pro) |
-| `GET` | `/health` | Free | Service health + feature flags |
-| `GET` | `/.well-known/x402.json` | Free | x402 discovery manifest |
-| `GET` | `/skale` | Free | SKALE gasless integration info |
+| `POST` | `/preview` | Free (20/hr) | Truncated summary + confidence score — test before paying |
+| `POST` | `/research` | $0.02 USDC | Full research: summary, key facts, sources, confidence score |
+| `POST` | `/deep-research` | $0.10 USDC | Deep analysis using Sonar Pro — extended context, higher confidence |
+| `POST` | `/research/batch` | $0.10 USDC | Up to 5 queries in parallel for the price of one deep query |
+| `GET` | `/health` | Free | Service status, version, network info |
+| `GET` | `/.well-known/x402-manifest.json` | Free | Standard x402 discovery manifest |
+| `GET` | `/.well-known/x402.json` | Free | x402 manifest (alias) |
 
-## Quick Start — Try the Free Preview
+---
+
+## Supported Networks
+
+| Network | Chain ID | Gas | Currency |
+|---------|----------|-----|----------|
+| **Base** | eip155:8453 | ~$0.001 | USDC |
+| **SKALE** | eip155:1187947933 | **$0.00 (gasless)** | USDC.e |
+| **Stellar** | stellar:testnet | Sponsored | USDC |
+
+Same endpoint. Agent picks the cheapest chain.
+
+---
+
+## Quick Start
+
+### 1. Free Preview (no wallet needed)
 
 ```bash
 curl -X POST https://agentoracle.co/preview \
   -H "Content-Type: application/json" \
-  -d '{"query": "What are the top DeFi protocols by TVL right now?"}'
+  -d '{"query": "What is the x402 payment protocol?"}'
 ```
 
-Response:
 ```json
 {
-  "preview": true,
   "result": {
-    "summary": "As of March 2026, the leading DeFi protocols by TVL are...",
-    "key_facts": ["Aave leads with $28B TVL", "Lido holds $22B in staking"],
-    "confidence_score": 0.88
+    "summary": "The x402 protocol is an open standard...",
+    "key_facts": ["Built by Coinbase", "Uses HTTP 402 status code"],
+    "confidence_score": 0.92
   },
-  "upgrade": {
-    "standard": "POST /research — $0.02 USDC (Sonar)",
-    "deep": "POST /deep-research — $0.10 USDC (Sonar Pro)"
-  }
+  "truncated": { "shown_key_facts": 2, "total_key_facts": 6 },
+  "upgrade": { "standard": "POST /research — $0.02 USDC" }
 }
 ```
 
-## Full Response (v1.3.0)
+### 2. Paid Research — Node.js (Base mainnet)
 
-After x402 payment, you get the complete structured response:
+```javascript
+import { wrapFetchWithPayment, x402Client } from "@x402/fetch";
+import { registerExactEvmScheme } from "@x402/evm/exact/client";
+import { privateKeyToAccount } from "viem/accounts";
+
+const signer = privateKeyToAccount(process.env.EVM_PRIVATE_KEY);
+const client = new x402Client();
+registerExactEvmScheme(client, { signer });
+const paid = wrapFetchWithPayment(fetch, client);
+
+const res = await paid("https://agentoracle.co/research", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ query: "Latest Base ecosystem developments" }),
+});
+
+const data = await res.json();
+console.log(data.result.summary);
+console.log(`Confidence: ${data.result.confidence_score}`);
+console.log(`Sources: ${data.result.sources.length}`);
+```
+
+### 3. Paid Research — Stellar testnet
+
+```javascript
+import { Transaction, TransactionBuilder } from "@stellar/stellar-sdk";
+import { x402Client, x402HTTPClient } from "@x402/fetch";
+import { createEd25519Signer, getNetworkPassphrase } from "@x402/stellar";
+import { ExactStellarScheme } from "@x402/stellar/exact/client";
+
+const signer = createEd25519Signer(process.env.STELLAR_SECRET_KEY, "stellar:testnet");
+const rpcConfig = { url: "https://soroban-testnet.stellar.org" };
+const client = new x402Client().register(
+  "stellar:*",
+  new ExactStellarScheme(signer, rpcConfig)
+);
+const httpClient = new x402HTTPClient(client);
+
+// Step 1: Get 402
+const firstRes = await fetch("https://agentoracle.co/research", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ query: "What is Stellar's role in agent payments?" }),
+});
+
+const paymentRequired = httpClient.getPaymentRequiredResponse(
+  (n) => firstRes.headers.get(n)
+);
+
+// Step 2: Create payment payload (Stellar-only)
+const stellarOnly = { ...paymentRequired, accepts: [paymentRequired.accepts.find(a => a.network?.includes("stellar"))] };
+let paymentPayload = await client.createPaymentPayload(stellarOnly);
+
+// Step 3: Apply testnet fee fix
+const networkPassphrase = getNetworkPassphrase("stellar:testnet");
+const tx = new Transaction(paymentPayload.payload.transaction, networkPassphrase);
+const sorobanData = tx.toEnvelope().v1()?.tx()?.ext()?.sorobanData();
+if (sorobanData) {
+  paymentPayload = {
+    ...paymentPayload,
+    payload: {
+      ...paymentPayload.payload,
+      transaction: TransactionBuilder.cloneFrom(tx, { fee: "1", sorobanData, networkPassphrase }).build().toXDR(),
+    },
+  };
+}
+
+// Step 4: Send paid request
+const paidRes = await fetch("https://agentoracle.co/research", {
+  method: "POST",
+  headers: { "Content-Type": "application/json", ...httpClient.encodePaymentSignatureHeader(paymentPayload) },
+  body: JSON.stringify({ query: "What is Stellar's role in agent payments?" }),
+});
+
+const data = await paidRes.json();
+console.log(data.result.summary);
+```
+
+### 4. Batch Research
+
+```javascript
+// 5 queries for $0.10 total — same as one deep query
+const res = await paid("https://agentoracle.co/research/batch", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    queries: [
+      "Latest ETH price and market cap",
+      "Top DeFi protocols by TVL",
+      "Recent Base ecosystem announcements",
+      "AI agent frameworks comparison 2026",
+      "x402 protocol adoption metrics"
+    ]
+  }),
+});
+```
+
+---
+
+## Response Format
 
 ```json
 {
-  "query": "Latest DeFi protocol TVL rankings and yield trends",
+  "query": "What is the x402 payment protocol?",
   "tier": "standard",
   "result": {
-    "summary": "As of March 2026, DeFi TVL has reached...",
+    "summary": "The x402 protocol is an open standard...",
     "key_facts": [
-      "Aave leads with $28B TVL across 12 chains",
-      "Lido maintains $22B in liquid staking deposits",
-      "Uniswap v4 holds $15B across L2 deployments",
-      "Restaking protocols have grown 340% YoY",
-      "Base L2 DeFi TVL surpassed $8B"
+      "Built by Coinbase, now under the Linux Foundation",
+      "Uses HTTP 402 to trigger stablecoin micropayments",
+      "Supported on Base, SKALE, Solana, Stellar, and more",
+      "Enables AI agents to pay per API call without API keys"
     ],
     "sources": [
-      "https://defillama.com/...",
-      "https://dune.com/...",
-      "https://l2beat.com/..."
+      "https://x402.org",
+      "https://docs.cdp.coinbase.com/x402/welcome"
     ],
-    "confidence_score": 0.92
+    "confidence_score": 0.94
   },
   "confidence": {
-    "score": 0.92,
+    "score": 0.94,
     "level": "high",
-    "sources_count": 8,
-    "facts_count": 5
+    "sources_count": 6,
+    "facts_count": 4
   },
-  "freshness": "recent",
   "metadata": {
     "model": "sonar",
-    "api_version": "1.3.0",
-    "response_time_ms": 2340,
-    "timestamp": "2026-03-21T06:30:00.000Z",
+    "api_version": "1.9.0",
+    "response_time_ms": 5840,
     "network": "base",
     "price_paid": "$0.02"
   }
 }
 ```
 
-## Code Examples
+---
 
-### Python
+## x402 Discovery Manifest
 
-```python
-import requests
+Agents can auto-discover pricing and payment requirements at the standard path:
 
-# Free preview — no payment needed
-resp = requests.post("https://agentoracle.co/preview", json={
-    "query": "What is the current ETH price and market sentiment?"
-})
-data = resp.json()
-print(data["result"]["summary"])
-print(f"Confidence: {data['result']['confidence_score']}")
+```bash
+curl https://agentoracle.co/.well-known/x402-manifest.json
 ```
 
-### JavaScript / Node.js
-
-```javascript
-const axios = require("axios");
-
-// Free preview
-const { data } = await axios.post("https://agentoracle.co/preview", {
-  query: "What are the latest developments in AI agent frameworks?"
-});
-console.log(data.result.summary);
-console.log(`Confidence: ${data.result.confidence_score}`);
+```json
+{
+  "name": "AgentOracle Research API",
+  "x402Version": 2,
+  "endpoints": [
+    { "method": "POST", "path": "/preview",          "price": "0.00", "currency": "USDC" },
+    { "method": "POST", "path": "/research",          "price": "0.02", "currency": "USDC" },
+    { "method": "POST", "path": "/deep-research",     "price": "0.10", "currency": "USDC" },
+    { "method": "POST", "path": "/research/batch",    "price": "0.10", "currency": "USDC" }
+  ],
+  "networks": {
+    "base":       { "network": "eip155:8453",        "payTo": "0xdF90200B0031051BbF7a66BB9387d2Ecf599e109" },
+    "skale_base": { "network": "eip155:1187947933",   "payTo": "0xdF90200B0031051BbF7a66BB9387d2Ecf599e109", "gasless": true },
+    "stellar":    { "network": "stellar:testnet",     "payTo": "GBRA7RJZXA5PE5EFDSSUAFDHLAOBXOGY2X3TKCKJ53CLEBEMV3S23VKO" }
+  }
+}
 ```
 
-### With x402 Payment (full results)
+---
 
-```javascript
-const { withPayment } = require("@x402/axios");
-const { createWalletClient, http } = require("viem");
-const { base } = require("viem/chains");
-const { privateKeyToAccount } = require("viem/accounts");
+## MCP Server
 
-const walletClient = createWalletClient({
-  account: privateKeyToAccount("0xYOUR_KEY"),
-  chain: base,
-  transport: http(),
-});
+Use AgentOracle directly in Claude, Cursor, or any MCP client:
 
-// Wrap axios — handles 402 → pay → retry automatically
-const client = withPayment(axios, walletClient);
-
-const { data } = await client.post("https://agentoracle.co/research", {
-  query: "Top DeFi yields on Base right now"
-});
-
-console.log(data.result.summary);
-console.log(`Sources: ${data.confidence.sources_count}`);
-console.log(`Freshness: ${data.freshness}`);
+```bash
+npx agentoracle-mcp
 ```
 
-See [`examples/`](./examples/) for complete Python and JavaScript examples.
+**Claude Desktop config:**
+```json
+{
+  "mcpServers": {
+    "agentoracle": {
+      "command": "npx",
+      "args": ["agentoracle-mcp"],
+      "env": {
+        "AGENTORACLE_WALLET_PRIVATE_KEY": "0x..."
+      }
+    }
+  }
+}
+```
+
+When `AGENTORACLE_WALLET_PRIVATE_KEY` is set, the MCP server handles x402 payments automatically. Your agent calls the `research` tool and results come back — payment happens transparently.
+
+Available tools: `preview` (free), `research` ($0.02), `deep-research` ($0.10), `batch-research` ($0.10), `check-health`, `get-manifest`.
+
+---
+
+## On-Chain Payment Proof
+
+All payments settle on Base mainnet. Fully transparent and verifiable:
+
+**Receiving wallet:** `0xdF90200B0031051BbF7a66BB9387d2Ecf599e109`
+
+[View all transactions on BaseScan](https://basescan.org/address/0xdF90200B0031051BbF7a66BB9387d2Ecf599e109)
+
+---
 
 ## Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `PAY_TO_ADDRESS` | Yes | Your Base mainnet wallet (0x...) |
-| `PERPLEXITY_API_KEY` | Yes | Perplexity API key (pplx-...) |
-| `SERVER_PORT` | No | Server port (default: 3000) |
-| `FACILITATOR_URL` | No | x402 facilitator (default: xpay.sh) |
-| `SKALE_FACILITATOR_READY` | No | Set `true` to enable SKALE gasless payments |
+| `PAY_TO_ADDRESS` | Yes | Base mainnet wallet for receiving payments |
+| `PERPLEXITY_API_KEY` | Yes | Perplexity API key (`pplx-...`) |
+| `STELLAR_PAY_TO` | No | Stellar receiving address for Stellar payments |
+| `STELLAR_NETWORK` | No | `stellar:testnet` or `stellar:pubnet` |
+| `SKALE_FACILITATOR_READY` | No | Set `true` to enable SKALE gasless |
+| `STELLAR_ENABLED` | No | Set `false` to disable Stellar middleware |
+
+---
 
 ## Deploy Your Own
 
 ```bash
-# 1. Clone and install
 git clone https://github.com/TKCollective/x402-research-skill.git
 cd x402-research-skill
 npm install
-
-# 2. Configure
 cp .env.example .env
-# Add your wallet address and Perplexity API key
-
-# 3. Run
+# Add PAY_TO_ADDRESS and PERPLEXITY_API_KEY
 node index.js
 ```
 
-Works anywhere Node.js runs: **Vercel**, **Railway**, **Render**, **Cloudflare Workers**, **Docker**.
-
-## SKALE Gasless Payments
-
-AgentOracle supports [SKALE Network](https://skale.space/) for zero-gas-fee payments. Agents pay only the query price ($0.02 / $0.10) with no gas overhead.
-
-Check status: `GET https://agentoracle.co/skale`
-
-## x402 Discovery
-
-The API publishes a standard x402 manifest at `/.well-known/x402.json` so agent frameworks can automatically discover pricing, endpoints, and payment requirements.
-
-## Built With
-
-- [x402 Protocol](https://github.com/coinbase/x402) — HTTP-native payments by Coinbase
-- [Perplexity Sonar](https://docs.perplexity.ai/) — Real-time research AI
-- [Base](https://base.org) — Ethereum L2 by Coinbase
-- [SKALE](https://skale.space/) — Zero-gas L2 network
-
-## License
-
-Business Source License 1.1 (BSL 1.1) — see [LICENSE](./LICENSE).
+Deploys on Vercel, Railway, Render, or any Node.js host.
 
 ---
 
-**AgentOracle** — Real-time research for autonomous AI agents.
-[agentoracle.co](https://agentoracle.co) · [@AgentOracle_AI](https://x.com/AgentOracle_AI)
+## Hackathon Submissions
+
+- **OWS Hackathon** (MoonPay / OpenWallet Standard) — Track 03: Pay-Per-Call Services & API Monetization — *April 3, 2026*
+- **Stellar Hacks: Agents** (Stellar Development Foundation) — x402 on Stellar — *April 2026*
+
+---
+
+## Built With
+
+- [x402 Protocol](https://x402.org) — Open HTTP-native payment standard (Coinbase / Linux Foundation)
+- [Perplexity Sonar](https://docs.perplexity.ai/) — Real-time research AI
+- [Base](https://base.org) — Ethereum L2 (Coinbase)
+- [SKALE](https://skale.space/) — Zero-gas EVM network
+- [Stellar](https://stellar.org) — Fast, low-cost payment blockchain
+- [PayAI](https://payai.network) — x402 facilitator for Base + SKALE
+- [x402.org Facilitator](https://x402.org) — x402 facilitator for Stellar
+
+---
+
+## License
+
+Business Source License 1.1 — see [LICENSE](./LICENSE).
+
+---
+
+**AgentOracle** — The default research layer for the agent economy.
+[agentoracle.co](https://agentoracle.co) · [@AgentOracle_AI](https://x.com/AgentOracle_AI) · [GitHub](https://github.com/TKCollective/x402-research-skill)
