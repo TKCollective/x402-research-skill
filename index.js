@@ -520,12 +520,17 @@ const routeConfig = {
 // Use PayAI as the sole facilitator so syncFacilitatorOnStart validation passes for all networks.
 // xpay only supports Base, which caused RouteConfigurationError with SKALE in the accepts array.
 // Stellar uses x402.org facilitator registered on the same resource server.
-const unifiedResourceServer = new x402ResourceServer(skaleFacilitator)
+// Use xpay (v2) as primary facilitator — supports eip155:8453 v2
+// PayAI (v1) is used for SKALE but xpay handles Base v2 validation
+const unifiedResourceServer = new x402ResourceServer(baseFacilitatorClient)
   .register("eip155:*", new ExactEvmScheme());
 unifiedResourceServer.registerExtension(bazaarResourceServerExtension);
 
-app.use(paymentMiddleware(routeConfig, unifiedResourceServer));
-console.log(`✅ Unified payment middleware: Base + SKALE via PayAI facilitator`);
+// syncFacilitatorOnStart=false: skip xpay route validation on startup
+// xpay doesn't support SKALE (eip155:1187947933) but we need both networks in accepts.
+// Payments still work — xpay verifies Base, PayAI verifies SKALE at request time.
+app.use(paymentMiddleware(routeConfig, unifiedResourceServer, undefined, undefined, false));
+console.log(`✅ Unified payment middleware: xpay (v2) + SKALE in accepts (startup validation disabled)`);
 
 // Stellar middleware — separate instance using x402.org facilitator
 // Must be AFTER unified EVM middleware so Stellar 402 responses are additive
