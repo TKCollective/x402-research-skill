@@ -1559,11 +1559,11 @@ a:hover { color: var(--color-primary-hover); }
     <div class="specs-grid fade-in" style="margin-top:2rem;">
       <div class="spec-item">
         <span class="spec-item__label">On-Chain Transactions</span>
-        <span class="spec-item__value" style="color:var(--color-green);">10+</span>
+        <span class="spec-item__value" style="color:var(--color-green);">20+</span>
       </div>
       <div class="spec-item">
         <span class="spec-item__label">Total USDC Received</span>
-        <span class="spec-item__value" style="color:var(--color-green);">$1.30+</span>
+        <span class="spec-item__value" style="color:var(--color-green);">$3.40+</span>
       </div>
       <div class="spec-item">
         <span class="spec-item__label">Avg Round-Trip</span>
