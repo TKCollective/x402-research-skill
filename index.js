@@ -44,6 +44,7 @@ import { FAVICON_ICO, FAVICON_SVG, FAVICON_16, FAVICON_32, APPLE_TOUCH, OG_IMAGE
 // ── x402 v2 SDK imports ──────────────────────────────────────────
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
+import { ExactStellarScheme } from "@x402/stellar/exact/server";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 
 // ── CDP Facilitator (for Bazaar discovery indexing) ──────────────
@@ -76,6 +77,12 @@ const NETWORK = "eip155:8453";
 
 // SKALE Base — gasless agent payments
 // PayAI facilitator supports both SKALE mainnet and testnet
+
+// Stellar — native stablecoin payments via x402 on Stellar
+const STELLAR_NETWORK = process.env.STELLAR_NETWORK || "stellar:testnet";
+const STELLAR_PAY_TO = process.env.STELLAR_PAY_TO || "GBRA7RJZXA5PE5EFDSSUAFDHLAOBXOGY2X3TKCKJ53CLEBEMV3S23VKO";
+const STELLAR_FACILITATOR_URL = "https://www.x402.org/facilitator";
+const STELLAR_ENABLED = process.env.STELLAR_ENABLED !== "false";
 // Mainnet chain ID: 1187947933 | Testnet chain ID: 324705682
 const SKALE_NETWORK = process.env.SKALE_NETWORK || "eip155:1187947933";
 const SKALE_FACILITATOR_URL =
@@ -336,6 +343,12 @@ const baseResourceServer = new x402ResourceServer(baseFacilitatorClient)
 const skaleResourceServer = new x402ResourceServer(skaleFacilitator)
   .register("eip155:*", new ExactEvmScheme());
 
+// Stellar resource server — x402.org facilitator (supports stellar:testnet + stellar:pubnet)
+const stellarFacilitator = new HTTPFacilitatorClient({ url: STELLAR_FACILITATOR_URL });
+const stellarResourceServer = new x402ResourceServer(stellarFacilitator)
+  .register("stellar:*", new ExactStellarScheme());
+console.log(`${STELLAR_ENABLED ? "✅" : "⏭️"} Stellar facilitator: x402.org (${STELLAR_NETWORK})`);
+
 // ── Bazaar: register discovery extension on Base resource server ──
 baseResourceServer.registerExtension(bazaarResourceServerExtension);
 
@@ -363,6 +376,26 @@ const skaleAcceptDeep = {
   price: SKALE_PRICE_DEEP,
   network: SKALE_NETWORK,
   payTo: PAY_TO,
+};
+
+// Stellar accept configs — USDC on Stellar testnet/pubnet
+const stellarAcceptResearch = {
+  scheme: "exact",
+  price: "$0.02",
+  network: STELLAR_NETWORK,
+  payTo: STELLAR_PAY_TO,
+};
+const stellarAcceptDeep = {
+  scheme: "exact",
+  price: "$0.10",
+  network: STELLAR_NETWORK,
+  payTo: STELLAR_PAY_TO,
+};
+const stellarAcceptBatch = {
+  scheme: "exact",
+  price: "$0.10",
+  network: STELLAR_NETWORK,
+  payTo: STELLAR_PAY_TO,
 };
 
 // 4. Bazaar discovery extensions for Base routes
@@ -441,6 +474,10 @@ if (SKALE_FACILITATOR_READY) {
   researchAccepts.push(skaleAcceptResearch);
   deepAccepts.push(skaleAcceptDeep);
 }
+if (STELLAR_ENABLED) {
+  researchAccepts.push(stellarAcceptResearch);
+  deepAccepts.push(stellarAcceptDeep);
+}
 
 // Batch pricing: $0.10 for up to 5 queries (same price structure as deep)
 const BATCH_PRICE = "$0.10";
@@ -453,6 +490,7 @@ const baseAcceptBatch = { scheme: "exact", price: BATCH_PRICE, network: NETWORK,
 const skaleAcceptBatch = { scheme: "exact", price: SKALE_PRICE_BATCH, network: SKALE_NETWORK, payTo: PAY_TO };
 const batchAccepts = [baseAcceptBatch];
 if (SKALE_FACILITATOR_READY) batchAccepts.push(skaleAcceptBatch);
+if (STELLAR_ENABLED) batchAccepts.push(stellarAcceptBatch);
 
 const routeConfig = {
   "POST /research": {
@@ -483,12 +521,17 @@ const routeConfig = {
 // v2.8 fix: PayAI facilitator supports BOTH Base (eip155:8453) AND SKALE (eip155:1187947933).
 // Use PayAI as the sole facilitator so syncFacilitatorOnStart validation passes for all networks.
 // xpay only supports Base, which caused RouteConfigurationError with SKALE in the accepts array.
+// Stellar uses x402.org facilitator registered on the same resource server.
 const unifiedResourceServer = new x402ResourceServer(skaleFacilitator)
   .register("eip155:*", new ExactEvmScheme());
+if (STELLAR_ENABLED) {
+  unifiedResourceServer.register("stellar:*", new ExactStellarScheme());
+}
 unifiedResourceServer.registerExtension(bazaarResourceServerExtension);
 
 app.use(paymentMiddleware(routeConfig, unifiedResourceServer));
-console.log(`✅ Unified payment middleware: Base + SKALE via PayAI facilitator`);
+console.log(`✅ Unified payment middleware: Base + SKALE + ${STELLAR_ENABLED ? "Stellar" : "(Stellar disabled)"}`);
+// Note: Stellar payments verified via x402.org facilitator (registered on unifiedResourceServer)
 
 // ── Bazaar Bootstrap: direct CDP verify+settle for discovery indexing ──
 if (CDP_ENABLED && cdpFacilitatorClient) {
@@ -897,6 +940,14 @@ const x402Manifest = {
       usdc_address: SKALE_USDC_ADDRESS,
       note: "Zero gas fees — agents pay only the query price",
     },
+    stellar: {
+      network: STELLAR_NETWORK,
+      payTo: STELLAR_PAY_TO,
+      facilitator_url: STELLAR_FACILITATOR_URL,
+      currency: "USDC (native Stellar)",
+      scheme: "exact",
+      note: "Native Stellar USDC — fast settlement via Soroban authorization",
+    },
   },
   pay_to: PAY_TO,
 };
@@ -928,12 +979,13 @@ app.get("/.well-known/x402-manifest.json", (_req, res) => {
 app.get("/health", (_req, res) => {
   res.json({
     status: "ok",
-    version: "1.7.0",
+    version: "1.8.0",
     service: "x402-research-api",
-    chain: "base + skale",
+    chain: "base + skale + stellar",
     networks: {
       base: NETWORK,
       skale_base: SKALE_NETWORK,
+      stellar: STELLAR_NETWORK,
     },
     endpoints: {
       "POST /preview": { price: "free", model: PERPLEXITY_MODEL, note: "Live truncated preview, 10/hr" },
@@ -2006,7 +2058,7 @@ app.use((_req, res) => {
       "GET /skale": "SKALE gasless payments info (live — zero gas fees)",
       "GET /.well-known/x402": "x402 discovery document",
       "GET /.well-known/x402.json": "x402 service manifest (alias)",
-      "GET /.well-known/x402-manifest.json": "x402 standard manifest path",
+      "GET /.well-known/x402-manifest.json": "x402 standard manifest path (Base + SKALE + Stellar)",
       "GET /": "AgentOracle landing page",
     },
   });
