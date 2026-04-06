@@ -474,10 +474,8 @@ if (SKALE_FACILITATOR_READY) {
   researchAccepts.push(skaleAcceptResearch);
   deepAccepts.push(skaleAcceptDeep);
 }
-if (STELLAR_ENABLED) {
-  researchAccepts.push(stellarAcceptResearch);
-  deepAccepts.push(stellarAcceptDeep);
-}
+// Note: Stellar accepts are handled by a SEPARATE middleware below
+// (PayAI facilitator only supports eip155:*, not stellar:*)
 
 // Batch pricing: $0.10 for up to 5 queries (same price structure as deep)
 const BATCH_PRICE = "$0.10";
@@ -490,7 +488,7 @@ const baseAcceptBatch = { scheme: "exact", price: BATCH_PRICE, network: NETWORK,
 const skaleAcceptBatch = { scheme: "exact", price: SKALE_PRICE_BATCH, network: SKALE_NETWORK, payTo: PAY_TO };
 const batchAccepts = [baseAcceptBatch];
 if (SKALE_FACILITATOR_READY) batchAccepts.push(skaleAcceptBatch);
-if (STELLAR_ENABLED) batchAccepts.push(stellarAcceptBatch);
+// Stellar batch handled by separate middleware
 
 const routeConfig = {
   "POST /research": {
@@ -524,14 +522,33 @@ const routeConfig = {
 // Stellar uses x402.org facilitator registered on the same resource server.
 const unifiedResourceServer = new x402ResourceServer(skaleFacilitator)
   .register("eip155:*", new ExactEvmScheme());
-if (STELLAR_ENABLED) {
-  unifiedResourceServer.register("stellar:*", new ExactStellarScheme());
-}
 unifiedResourceServer.registerExtension(bazaarResourceServerExtension);
 
 app.use(paymentMiddleware(routeConfig, unifiedResourceServer));
-console.log(`✅ Unified payment middleware: Base + SKALE + ${STELLAR_ENABLED ? "Stellar" : "(Stellar disabled)"}`);
-// Note: Stellar payments verified via x402.org facilitator (registered on unifiedResourceServer)
+console.log(`✅ Unified payment middleware: Base + SKALE via PayAI facilitator`);
+
+// Stellar middleware — separate instance using x402.org facilitator
+// Must be AFTER unified EVM middleware so Stellar 402 responses are additive
+if (STELLAR_ENABLED) {
+  const stellarRouteConfig = {
+    "POST /research": {
+      accepts: [stellarAcceptResearch],
+      description: "Real-time research API. $0.02 USDC on Stellar.",
+    },
+    "POST /deep-research": {
+      accepts: [stellarAcceptDeep],
+      description: "Deep research. $0.10 USDC on Stellar.",
+    },
+    "POST /research/batch": {
+      accepts: [stellarAcceptBatch],
+      description: "Batch research. $0.10 USDC on Stellar.",
+    },
+  };
+  const stellarResourceServerMiddleware = new x402ResourceServer(stellarFacilitator)
+    .register("stellar:*", new ExactStellarScheme());
+  app.use(paymentMiddleware(stellarRouteConfig, stellarResourceServerMiddleware));
+  console.log(`✅ Stellar payment middleware: stellar:testnet via x402.org facilitator`);
+}
 
 // ── Bazaar Bootstrap: direct CDP verify+settle for discovery indexing ──
 if (CDP_ENABLED && cdpFacilitatorClient) {
