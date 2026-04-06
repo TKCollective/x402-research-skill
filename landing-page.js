@@ -824,7 +824,7 @@ a:hover { color: var(--color-primary-hover); }
   <div class="container" style="text-align:center;margin-bottom:var(--space-6);">
     <div class="hero__badge fade-in" style="display:inline-flex;">
       <span class="hero__badge-dot"></span>
-      v1.9.0 — Live on Base + SKALE Gasless · Multi-Chain
+      v1.8.0 — Live on Base + SKALE + Stellar · Multi-Chain
     </div>
   </div>
   <div class="container hero__inner">
@@ -869,6 +869,7 @@ a:hover { color: var(--color-primary-hover); }
     <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Zero API Keys</span>
     <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> MCP Server</span>
     <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> SKALE Gasless Live</span>
+    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Stellar Testnet Live</span>
   </div>
 </div>
 
@@ -1415,7 +1416,7 @@ a:hover { color: var(--color-primary-hover); }
       <div class="spec-item"><span class="spec-item__label">Wallet</span><span class="spec-item__value">0xdF902...e109</span></div>
       <div class="spec-item"><span class="spec-item__label">MCP Server</span><span class="spec-item__value">npx agentoracle-mcp</span></div>
       <div class="spec-item"><span class="spec-item__label">Response Format</span><span class="spec-item__value">JSON</span></div>
-      <div class="spec-item"><span class="spec-item__label">Gasless Payments</span><span class="spec-item__value">SKALE Base (Live via PayAI)</span></div>
+      <div class="spec-item"><span class="spec-item__label">Networks</span><span class="spec-item__value">Base · SKALE (gasless) · Stellar</span></div>
       <div class="spec-item"><span class="spec-item__label">Rate Limits</span><span class="spec-item__value">100/hr paid &middot; 20/hr preview</span></div>
       <div class="spec-item"><span class="spec-item__label">Version</span><span class="spec-item__value">v1.9.0</span></div>
     </div>
@@ -1440,7 +1441,7 @@ a:hover { color: var(--color-primary-hover); }
             <tr><td>Auth Required</td><td class="compare-highlight"><span class="check-yes">None (x402)</span></td><td>API key</td><td>API key</td><td>API key</td><td>API key</td></tr>
             <tr><td>Agent-Native</td><td class="compare-highlight"><span class="check-yes">x402 (HTTP 402)</span></td><td class="check-no">REST only</td><td class="check-no">REST only</td><td class="check-no">REST only</td><td class="check-no">REST only</td></tr>
             <tr><td>On-Chain Verifiable</td><td class="compare-highlight"><span class="check-yes">Yes (Base L2)</span></td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td></tr>
-            <tr><td>Multi-Chain</td><td class="compare-highlight"><span class="check-yes">Base + SKALE (gasless)</span></td><td class="check-no">N/A</td><td class="check-no">N/A</td><td class="check-no">N/A</td><td class="check-no">N/A</td></tr>
+            <tr><td>Multi-Chain</td><td class="compare-highlight"><span class="check-yes">Base + SKALE + Stellar</span></td><td class="check-no">N/A</td><td class="check-no">N/A</td><td class="check-no">N/A</td><td class="check-no">N/A</td></tr>
             <tr><td>MCP Server</td><td class="compare-highlight"><span class="check-yes">Yes</span></td><td><span class="check-yes">Yes</span></td><td><span class="check-yes">Yes</span></td><td class="check-no">No</td><td class="check-no">No</td></tr>
             <tr><td>Free Tier</td><td class="compare-highlight"><span class="check-yes">20 req/hr</span></td><td>1K/mo</td><td class="check-no">None</td><td>2K/mo</td><td>100/day</td></tr>
             <tr><td>Confidence Scoring</td><td class="compare-highlight"><span class="check-yes">Built-in</span></td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td></tr>
@@ -1455,7 +1456,7 @@ a:hover { color: var(--color-primary-hover); }
             <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Auth</span><span class="compare-mobile-card__value"><span class="check-yes">None (x402)</span></span></div>
             <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Agent-Native</span><span class="compare-mobile-card__value"><span class="check-yes">x402 (HTTP 402)</span></span></div>
             <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">On-Chain</span><span class="compare-mobile-card__value"><span class="check-yes">Yes (Base L2)</span></span></div>
-            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Multi-Chain</span><span class="compare-mobile-card__value"><span class="check-yes">Base + SKALE (gasless)</span></span></div>
+            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Multi-Chain</span><span class="compare-mobile-card__value"><span class="check-yes">Base + SKALE + Stellar</span></span></div>
             <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">MCP Server</span><span class="compare-mobile-card__value"><span class="check-yes">Yes</span></span></div>
             <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Free Tier</span><span class="compare-mobile-card__value"><span class="check-yes">20 req/hr</span></span></div>
             <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Confidence Scoring</span><span class="compare-mobile-card__value"><span class="check-yes">Built-in</span></span></div>
@@ -1529,7 +1530,7 @@ a:hover { color: var(--color-primary-hover); }
 
       <div class="faq-item"><button class="faq-item__trigger" data-faq-toggle>Do I need a crypto wallet?<svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-item__body"><div class="faq-item__answer">Yes, your agent needs a wallet with USDC on the Base network. Most agent frameworks support wallet integration through Coinbase CDP, Privy, or direct ethers.js. The <code>/preview</code> endpoint is free and requires no wallet — use it to test first.</div></div></div>
 
-      <div class="faq-item"><button class="faq-item__trigger" data-faq-toggle>What chains and currencies are supported?<svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-item__body"><div class="faq-item__answer">We accept USDC on Base (L2) and USDC.e on SKALE Base (zero gas fees via PayAI facilitator). Same endpoint, agent picks the cheapest chain. Repeat queries within 24hrs cost 50% less via Research Cache. Payments settle on-chain — <a href="https://basescan.org/address/0xdF90200B0031051BbF7a66BB9387d2Ecf599e109" target="_blank" rel="noopener noreferrer">BaseScan</a> · <a href="https://skale-base-explorer.skalenodes.com/" target="_blank" rel="noopener noreferrer">SKALE Explorer</a>.</div></div></div>
+      <div class="faq-item"><button class="faq-item__trigger" data-faq-toggle>What chains and currencies are supported?<svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-item__body"><div class="faq-item__answer">We accept USDC on Base (L2), USDC.e on SKALE Base (zero gas fees via PayAI facilitator), and native USDC on Stellar (via x402.org facilitator). Same endpoint, agent picks the cheapest chain. Repeat queries within 24hrs cost 50% less via Research Cache. Payments settle on-chain — <a href="https://basescan.org/address/0xdF90200B0031051BbF7a66BB9387d2Ecf599e109" target="_blank" rel="noopener noreferrer">BaseScan</a> · <a href="https://skale-base-explorer.skalenodes.com/" target="_blank" rel="noopener noreferrer">SKALE Explorer</a>.</div></div></div>
 
       <div class="faq-item"><button class="faq-item__trigger" data-faq-toggle>How is this different from using Perplexity directly?<svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-item__body"><div class="faq-item__answer">Perplexity's API requires API keys, billing setup, and human-managed accounts. AgentOracle wraps the same research engine in an agent-native payment layer — your agent discovers pricing automatically via the x402 manifest, pays per query with USDC, and gets structured JSON responses with confidence scoring. Zero human setup required.</div></div></div>
 
