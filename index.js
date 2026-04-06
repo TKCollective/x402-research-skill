@@ -82,9 +82,8 @@ const NETWORK = "eip155:8453";
 const STELLAR_NETWORK = process.env.STELLAR_NETWORK || "stellar:testnet";
 const STELLAR_PAY_TO = process.env.STELLAR_PAY_TO || "GBRA7RJZXA5PE5EFDSSUAFDHLAOBXOGY2X3TKCKJ53CLEBEMV3S23VKO";
 const STELLAR_FACILITATOR_URL = "https://www.x402.org/facilitator";
-// Stellar middleware temporarily disabled — EVM payment conflicts require architectural fix
-// Stellar is listed in manifest/health for discovery, but payments pending architecture update
-const STELLAR_ENABLED = process.env.STELLAR_ENABLED === "true"; // Require explicit opt-in
+// Stellar: now using unified middleware (no conflict) — enabled by default
+const STELLAR_ENABLED = process.env.STELLAR_ENABLED !== "false";
 // Mainnet chain ID: 1187947933 | Testnet chain ID: 324705682
 const SKALE_NETWORK = process.env.SKALE_NETWORK || "eip155:1187947933";
 const SKALE_FACILITATOR_URL =
@@ -470,13 +469,16 @@ const bazaarDeep = declareDiscoveryExtension({
 //    Both Base and SKALE accepts in the same array. The x402 SDK
 //    matches the payment to whichever network the agent pays on.
 //    Cleaner than the smart router, and the standard x402 approach.
-// Unified accepts: Base + SKALE (PayAI supports both v2)
-// Stellar is handled by a SEPARATE middleware instance below
+// All networks in unified accepts: PayAI handles EVM, x402.org handles Stellar
 const researchAccepts = [baseAcceptResearch];
 const deepAccepts = [baseAcceptDeep];
 if (SKALE_FACILITATOR_READY) {
   researchAccepts.push(skaleAcceptResearch);
   deepAccepts.push(skaleAcceptDeep);
+}
+if (STELLAR_ENABLED) {
+  researchAccepts.push(stellarAcceptResearch);
+  deepAccepts.push(stellarAcceptDeep);
 }
 
 // Batch pricing: $0.10 for up to 5 queries (same price structure as deep)
@@ -490,6 +492,7 @@ const baseAcceptBatch = { scheme: "exact", price: BATCH_PRICE, network: NETWORK,
 const skaleAcceptBatch = { scheme: "exact", price: SKALE_PRICE_BATCH, network: SKALE_NETWORK, payTo: PAY_TO };
 const batchAccepts = [baseAcceptBatch];
 if (SKALE_FACILITATOR_READY) batchAccepts.push(skaleAcceptBatch);
+if (STELLAR_ENABLED) batchAccepts.push(stellarAcceptBatch);
 
 const routeConfig = {
   "POST /research": {
@@ -521,29 +524,26 @@ const routeConfig = {
 // Use PayAI as the sole facilitator so syncFacilitatorOnStart validation passes for all networks.
 // xpay only supports Base, which caused RouteConfigurationError with SKALE in the accepts array.
 // Stellar uses x402.org facilitator registered on the same resource server.
-// Unified middleware: PayAI supports v2 on Base (eip155:8453) AND SKALE (eip155:1187947933)
-// This matches the original working v1.7.1 architecture
-const unifiedResourceServer = new x402ResourceServer(skaleFacilitator)
+// Unified resource server with ALL facilitators in one array.
+// x402ResourceServer tries each facilitator until one succeeds.
+// PayAI handles EVM (Base + SKALE), x402.org handles Stellar.
+// Single middleware = no conflicts between networks.
+const facilitatorArray = STELLAR_ENABLED
+  ? [skaleFacilitator, stellarFacilitator]
+  : [skaleFacilitator];
+
+const unifiedResourceServer = new x402ResourceServer(facilitatorArray)
   .register("eip155:*", new ExactEvmScheme());
+
+if (STELLAR_ENABLED) {
+  unifiedResourceServer.register("stellar:*", new ExactStellarScheme());
+  console.log(`✅ Multi-chain resource server: Base + SKALE (PayAI) + Stellar (x402.org)`);
+}
+
 unifiedResourceServer.registerExtension(bazaarResourceServerExtension);
 
 app.use(paymentMiddleware(routeConfig, unifiedResourceServer));
-console.log(`✅ Unified payment middleware: Base + SKALE via PayAI (v2 supported)`);
-
-// Stellar middleware — SEPARATE instance, must NOT conflict with EVM middleware
-// Only handles stellar:* payments. EVM middleware calls next() for unrecognized payments,
-// so Stellar middleware only activates for Stellar-signed requests.
-if (STELLAR_ENABLED) {
-  const stellarRouteConfig = {
-    "POST /research": { accepts: [stellarAcceptResearch], description: "Real-time research. $0.02 USDC on Stellar." },
-    "POST /deep-research": { accepts: [stellarAcceptDeep], description: "Deep research. $0.10 USDC on Stellar." },
-    "POST /research/batch": { accepts: [stellarAcceptBatch], description: "Batch research. $0.10 USDC on Stellar." },
-  };
-  const stellarResourceServerMiddleware = new x402ResourceServer(stellarFacilitator)
-    .register("stellar:*", new ExactStellarScheme());
-  app.use(paymentMiddleware(stellarRouteConfig, stellarResourceServerMiddleware));
-  console.log(`✅ Stellar payment middleware: stellar:testnet via x402.org`);
-}
+console.log(`✅ Unified payment middleware: single instance, all chains via facilitator array`);
 
 // ── Bazaar Bootstrap: direct CDP verify+settle for discovery indexing ──
 if (CDP_ENABLED && cdpFacilitatorClient) {
