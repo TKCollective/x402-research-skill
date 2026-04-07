@@ -1,7 +1,7 @@
 {
   "name": "x402-research-api",
   "version": "1.2.0",
-  "description": "x402 payable real-time research API — AI agents pay 0.02 USDC on Base for structured research powered by Perplexity",
+  "description": "x402 payable real-time research API \u2014 AI agents pay $0.02 USDC per query on Base, SKALE (gasless), or Stellar (Soroban) for structured research powered by Perplexity. No API keys.",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -14,8 +14,13 @@
     "perplexity",
     "usdc",
     "base",
+    "skale",
+    "stellar",
+    "soroban",
     "ai-agents",
-    "micropayments"
+    "micropayments",
+    "mcp",
+    "autonomous-agents"
   ],
   "license": "MIT",
   "dependencies": {
