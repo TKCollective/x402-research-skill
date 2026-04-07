@@ -21,8 +21,8 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AgentOracle — Live Research API for AI Agents | Gasless on SKALE, Paid via x402</title>
-<meta name="description" content="AgentOracle is a pay-per-query research API for AI agents using the x402 payment protocol. Accept USDC and EURC on Base mainnet.">
+<title>AgentOracle — Research Intelligence for AI Agents | Confidence Scoring + x402</title>
+<meta name="description" content="AgentOracle delivers research intelligence for AI agents — confidence scoring (0.00–1.00), structured JSON output, and x402 payments on Base, SKALE (gasless), and Stellar. Agents don't just retrieve data. They trust it.">
 
 <style>
 /* === FONTS === */
@@ -824,16 +824,16 @@ a:hover { color: var(--color-primary-hover); }
   <div class="container" style="text-align:center;margin-bottom:var(--space-6);">
     <div class="hero__badge fade-in" style="display:inline-flex;">
       <span class="hero__badge-dot"></span>
-      v1.8.0 — Live on Base + SKALE + Stellar · Multi-Chain
+      v1.9.0 — Base · SKALE Gasless · Stellar · Confidence Scoring
     </div>
   </div>
   <div class="container hero__inner">
     <div class="hero__content">
       <h1 class="hero__headline fade-in">
-        Research API<br>for <span class="gold-text">AI Agents</span>
+        Research Intelligence<br><span class="gold-text">Agents Can Trust</span>
       </h1>
       <p class="hero__subtitle fade-in">
-        Live research API for agents — gasless on SKALE, paid via x402. One HTTP request, one USDC micropayment, structured JSON back — no API keys, no subscriptions, no human in the loop.
+        Agents don't just need data. They need to know how much to trust it. AgentOracle delivers structured research intelligence over x402 — $0.02/query, with a confidence score on every result, so your agent can reason, not just retrieve.
       </p>
       <p class="hero__secondary-tagline fade-in">Get Started in 60 Seconds</p>
       <div class="hero__ctas fade-in">
@@ -863,13 +863,13 @@ a:hover { color: var(--color-primary-hover); }
 <!-- STATS BAR -->
 <div class="stats-bar">
   <div class="container stats-bar__inner">
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> From $0.02</span>
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Base Mainnet</span>
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Structured JSON</span>
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Zero API Keys</span>
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> MCP Server</span>
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> SKALE Gasless Live</span>
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Stellar Testnet Live</span>
+    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Confidence Scoring</span>
+    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> x402 Native</span>
+    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> From $0.02/query</span>
+    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Base + SKALE + Stellar</span>
+    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> SKALE Gasless</span>
+    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> MCP Compatible</span>
+    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> No API Keys</span>
   </div>
 </div>
 
@@ -905,7 +905,7 @@ a:hover { color: var(--color-primary-hover); }
         <div class="feature-row">
           <div class="feature-row__icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
           <div class="feature-row__content">
-            <div class="feature-row__title">No API Keys</div>
+            <div class="feature-row__title">Confidence Scoring</div>
             <div class="feature-row__desc">Pure x402 micropayments. Agents simply pay and receive data. No OAuth, no accounts.</div>
           </div>
         </div>
@@ -1036,7 +1036,7 @@ a:hover { color: var(--color-primary-hover); }
   <div class="container section-center">
     <span class="section-label fade-in">Try It</span>
     <h2 class="section-title fade-in">Copy. Paste. Research.</h2>
-    <p class="section-subtitle fade-in">One curl command — that's all it takes for your agent to access real-time research.</p>
+    <p class="section-subtitle fade-in">One curl command — that's all it takes for your agent to access structured research intelligence with confidence scoring.</p>
     <div class="curl-section fade-in" style="max-width:720px;margin:0 auto;">
       <div class="code-block">
         <div class="code-block__header">
@@ -1143,7 +1143,7 @@ a:hover { color: var(--color-primary-hover); }
   <div class="container">
     <span class="section-label fade-in">Process</span>
     <h2 class="section-title fade-in">Three Steps. No Setup.</h2>
-    <p class="section-subtitle fade-in">Your agent goes from zero to real-time research in seconds.</p>
+    <p class="section-subtitle fade-in">Your agent goes from zero to trusted research intelligence in seconds.</p>
 
     <!-- Flow Diagram (Cat 2) -->
     <div class="flow-diagram fade-in">
