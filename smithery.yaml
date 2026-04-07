@@ -1,0 +1,31 @@
+# AgentOracle MCP Server — Smithery Configuration
+# Connects AI agents to AgentOracle's pay-per-query research API via x402 protocol
+
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties:
+      walletPrivateKey:
+        type: string
+        title: Wallet Private Key
+        description: "EVM private key (0x...) for autonomous x402 payments on Base or SKALE. Optional — omit to use free /preview endpoint only."
+      network:
+        type: string
+        title: Payment Network
+        description: "Network to use for payments: base (mainnet), skale (gasless), or stellar (Soroban, sponsored fees)."
+        default: base
+        enum:
+          - base
+          - skale
+          - stellar
+    required: []
+  commandFunction: |-
+    (config) => ({
+      command: "npx",
+      args: ["-y", "agentoracle-mcp"],
+      env: {
+        ...(config.walletPrivateKey ? { X402_PRIVATE_KEY: config.walletPrivateKey } : {}),
+        ...(config.network ? { X402_NETWORK: config.network } : {})
+      }
+    })
