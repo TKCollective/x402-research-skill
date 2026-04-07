@@ -1434,18 +1434,18 @@ a:hover { color: var(--color-primary-hover); }
     <div class="compare-section fade-in">
       <div class="compare-table-wrapper">
         <table class="compare-table">
-          <thead><tr><th></th><th class="compare-highlight">AgentOracle</th><th>Tavily</th><th>Exa</th><th>Brave Search</th><th>Perplexity API</th></tr></thead>
+          <thead><tr><th></th><th class="compare-highlight">AgentOracle</th><th>Exa <span style="font-size:10px;color:#4ADE80;font-weight:600;">+x402</span></th><th>Tavily</th><th>Brave Search</th><th>Perplexity API</th></tr></thead>
           <tbody>
-            <tr><td>Pricing</td><td class="compare-highlight"><span class="check-yes">$0.02/query</span></td><td>$0.008/credit</td><td>Contact sales</td><td>$5-9/1K</td><td>$5-12/1K</td></tr>
-            <tr><td>Payment Method</td><td class="compare-highlight"><span class="check-yes">USDC on-chain</span></td><td>Credit card</td><td>Credit card</td><td>Credit card</td><td>Credit card</td></tr>
-            <tr><td>Auth Required</td><td class="compare-highlight"><span class="check-yes">None (x402)</span></td><td>API key</td><td>API key</td><td>API key</td><td>API key</td></tr>
-            <tr><td>Agent-Native</td><td class="compare-highlight"><span class="check-yes">x402 (HTTP 402)</span></td><td class="check-no">REST only</td><td class="check-no">REST only</td><td class="check-no">REST only</td><td class="check-no">REST only</td></tr>
+            <tr><td>Pricing</td><td class="compare-highlight"><span class="check-yes">$0.02/query</span></td><td>$0.005–$0.012/query</td><td>$0.008/credit</td><td>$5-9/1K</td><td>$5-12/1K</td></tr>
+            <tr><td>Output Type</td><td class="compare-highlight"><span class="check-yes">Synthesized intelligence</span></td><td class="check-no">Raw search results</td><td class="check-no">Raw search results</td><td class="check-no">Raw search results</td><td>Answers + tokens</td></tr>
+            <tr><td>Confidence Scoring</td><td class="compare-highlight"><span class="check-yes">Built-in (0.00–1.00)</span></td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td></tr>
+            <tr><td>x402 / Agent-Native</td><td class="compare-highlight"><span class="check-yes">x402 native (all chains)</span></td><td style="color:#4ADE80;font-weight:600;">x402 (Base only)</td><td class="check-no">API key</td><td class="check-no">API key</td><td class="check-no">API key</td></tr>
+            <tr><td>Multi-Chain</td><td class="compare-highlight"><span class="check-yes">Base + SKALE + Stellar</span></td><td class="check-no">Base only</td><td class="check-no">N/A</td><td class="check-no">N/A</td><td class="check-no">N/A</td></tr>
+            <tr><td>Gasless Option</td><td class="compare-highlight"><span class="check-yes">Yes (SKALE)</span></td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td></tr>
             <tr><td>On-Chain Verifiable</td><td class="compare-highlight"><span class="check-yes">Yes (Base L2)</span></td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td></tr>
-            <tr><td>Multi-Chain</td><td class="compare-highlight"><span class="check-yes">Base + SKALE + Stellar</span></td><td class="check-no">N/A</td><td class="check-no">N/A</td><td class="check-no">N/A</td><td class="check-no">N/A</td></tr>
+            <tr><td>Free Preview</td><td class="compare-highlight"><span class="check-yes">20 req/hr (no auth)</span></td><td>1K/mo (signup)</td><td>1K/mo (signup)</td><td>2K/mo (signup)</td><td>100/day (signup)</td></tr>
             <tr><td>MCP Server</td><td class="compare-highlight"><span class="check-yes">Yes</span></td><td><span class="check-yes">Yes</span></td><td><span class="check-yes">Yes</span></td><td class="check-no">No</td><td class="check-no">No</td></tr>
-            <tr><td>Free Tier</td><td class="compare-highlight"><span class="check-yes">20 req/hr</span></td><td>1K/mo</td><td class="check-no">None</td><td>2K/mo</td><td>100/day</td></tr>
-            <tr><td>Confidence Scoring</td><td class="compare-highlight"><span class="check-yes">Built-in</span></td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td></tr>
-            <tr><td>Human Setup</td><td class="compare-highlight"><span class="check-yes">0 min</span></td><td>~5 min</td><td>Contact sales</td><td>~5 min</td><td>~5 min</td></tr>
+            <tr><td>Human Setup</td><td class="compare-highlight"><span class="check-yes">0 min</span></td><td>Signup required</td><td>~5 min</td><td>~5 min</td><td>~5 min</td></tr>
           </tbody>
         </table>
         <div class="compare-mobile-cards">
@@ -1475,16 +1475,15 @@ a:hover { color: var(--color-primary-hover); }
             <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Human Setup</span><span class="compare-mobile-card__value">~5 min</span></div>
           </div>
           <div class="compare-mobile-card">
-            <div class="compare-mobile-card__name">Exa</div>
-            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Pricing</span><span class="compare-mobile-card__value">Contact sales</span></div>
-            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Payment</span><span class="compare-mobile-card__value">Credit card</span></div>
-            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Auth</span><span class="compare-mobile-card__value">API key</span></div>
-            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Agent-Native</span><span class="compare-mobile-card__value"><span class="check-no">REST only</span></span></div>
+            <div class="compare-mobile-card__name">Exa <span style="font-size:10px;color:#4ADE80;font-weight:600;">+x402</span></div>
+            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Pricing</span><span class="compare-mobile-card__value">$0.005–$0.012/query</span></div>
+            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Output</span><span class="compare-mobile-card__value"><span class="check-no">Raw search results</span></span></div>
+            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">x402</span><span class="compare-mobile-card__value" style="color:#4ADE80;">Base only</span></div>
+            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Multi-Chain</span><span class="compare-mobile-card__value"><span class="check-no">Base only</span></span></div>
             <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">On-Chain</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
-            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">MCP Server</span><span class="compare-mobile-card__value"><span class="check-yes">Yes</span></span></div>
-            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Free Tier</span><span class="compare-mobile-card__value"><span class="check-no">None</span></span></div>
+            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Free Tier</span><span class="compare-mobile-card__value">1K/mo (signup)</span></div>
             <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Confidence Scoring</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
-            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Human Setup</span><span class="compare-mobile-card__value">Contact sales</span></div>
+            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Human Setup</span><span class="compare-mobile-card__value">Signup required</span></div>
           </div>
           <div class="compare-mobile-card">
             <div class="compare-mobile-card__name">Brave Search</div>
@@ -1512,7 +1511,7 @@ a:hover { color: var(--color-primary-hover); }
           </div>
         </div>
       </div>
-      <p class="compare-note">Comparison based on publicly available pricing and documentation as of March 2026.</p>
+      <p class="compare-note">Comparison based on publicly available pricing and documentation as of April 2026. Exa added x402 support on April 7, 2026 (Base only).</p>
     </div>
   </div>
 </section>

@@ -116,6 +116,178 @@ const SKALE_PRICE_DEEP = {
 const PERPLEXITY_MODEL = "sonar";
 const PERPLEXITY_MODEL_PRO = "sonar-pro";
 
+const TRUST_PAGE_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AgentOracle — The Trust Layer for AI Agents</title>
+<meta name="description" content="Why AI agents need confidence scoring before acting on data. AgentOracle returns a 0.00–1.00 trust score with every research result via x402.">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#111;color:#f0ede8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.6}
+.container{max-width:860px;margin:0 auto;padding:0 24px}
+header{padding:32px 0 0;text-align:center}
+.logo{font-size:22px;font-weight:700;color:#C9A96E;letter-spacing:-0.5px}
+h1{font-size:clamp(36px,6vw,64px);font-weight:800;line-height:1.1;margin:48px 0 20px;letter-spacing:-1px}
+h1 span{color:#C9A96E}
+.subtitle{font-size:20px;color:#999;max-width:640px;margin:0 auto 60px}
+.score-demo{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:16px;padding:40px;margin:48px 0;text-align:center}
+.score-bar{display:flex;align-items:center;gap:16px;margin:24px 0}
+.score-label{width:140px;text-align:right;font-size:14px;color:#666;font-family:monospace}
+.bar-track{flex:1;height:12px;background:#222;border-radius:6px;overflow:hidden}
+.bar-fill{height:100%;border-radius:6px;transition:width 0.6s ease}
+.bar-high{background:linear-gradient(90deg,#22c55e,#4ADE80)}
+.bar-med{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.bar-low{background:linear-gradient(90deg,#ef4444,#f87171)}
+.bar-score{width:48px;font-family:monospace;font-size:14px;font-weight:700}
+.high{color:#4ADE80}.med{color:#fbbf24}.low{color:#ef4444}
+.section{padding:64px 0}
+h2{font-size:32px;font-weight:700;margin-bottom:16px}
+.card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:28px;margin:16px 0}
+.card h3{font-size:18px;font-weight:700;margin-bottom:10px;color:#C9A96E}
+.card p{color:#aaa;font-size:15px}
+.code{background:#0d0d0d;border:1px solid #222;border-radius:10px;padding:24px;font-family:monospace;font-size:14px;overflow-x:auto;margin:24px 0}
+.key{color:#79c0ff}.str{color:#a5d6ff}.num{color:#C9A96E}.field{color:#7ee787}
+.cta{text-align:center;padding:80px 0 60px}
+.btn{display:inline-block;background:#C9A96E;color:#111;padding:16px 40px;border-radius:8px;font-weight:700;font-size:16px;text-decoration:none;margin:8px}
+.btn-ghost{background:transparent;border:2px solid #333;color:#f0ede8}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:32px 0}
+@media(max-width:600px){.compare-grid{grid-template-columns:1fr}.score-label{width:80px;font-size:12px}}
+.tag{display:inline-block;background:#1e3a2e;color:#4ADE80;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;margin-right:6px}
+.tag-gold{background:#2a2010;color:#C9A96E}
+.divider{border:none;border-top:1px solid #1f1f1f;margin:48px 0}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <div class="logo">AgentOracle</div>
+</header>
+
+<section style="padding:80px 0 40px;text-align:center">
+  <h1>The Trust Layer<br><span>for AI Agents</span></h1>
+  <p class="subtitle">Agents don't just need data. They need to know how much to trust it before acting on it.</p>
+</section>
+
+<div class="score-demo">
+  <p style="color:#666;font-size:13px;text-transform:uppercase;letter-spacing:2px;margin-bottom:24px">Live Confidence Score Examples</p>
+  <div class="score-bar">
+    <div class="score-label">Breaking news</div>
+    <div class="bar-track"><div class="bar-fill bar-high" style="width:94%"></div></div>
+    <div class="bar-score high">0.94</div>
+  </div>
+  <div class="score-bar">
+    <div class="score-label">Market data</div>
+    <div class="bar-track"><div class="bar-fill bar-high" style="width:91%"></div></div>
+    <div class="bar-score high">0.91</div>
+  </div>
+  <div class="score-bar">
+    <div class="score-label">Emerging tech</div>
+    <div class="bar-track"><div class="bar-fill bar-med" style="width:73%"></div></div>
+    <div class="bar-score med">0.73</div>
+  </div>
+  <div class="score-bar">
+    <div class="score-label">Historical events</div>
+    <div class="bar-track"><div class="bar-fill bar-med" style="width:68%"></div></div>
+    <div class="bar-score med">0.68</div>
+  </div>
+  <div class="score-bar">
+    <div class="score-label">Speculation</div>
+    <div class="bar-track"><div class="bar-fill bar-low" style="width:41%"></div></div>
+    <div class="bar-score low">0.41</div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<section class="section">
+  <h2>Why This Matters</h2>
+  <p style="color:#aaa;margin-bottom:32px">A search result is not intelligence. It's raw material. An agent that acts on low-confidence data causes real-world mistakes. AgentOracle solves this by returning a confidence score on every response — so your agent can decide when to act, when to verify, and when to ask again.</p>
+  
+  <div class="compare-grid">
+    <div class="card">
+      <h3>Raw Search Results</h3>
+      <p>A list of links and snippets. No synthesis. No quality signal. Your agent doesn't know if the source is current, credible, or contradicted by newer data.</p>
+    </div>
+    <div class="card">
+      <h3>AgentOracle Research Intelligence</h3>
+      <p>Synthesized summary + key facts + cited sources + a confidence score from 0.00 to 1.00. Your agent knows exactly how much to trust the result before taking action.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <h2>How Confidence Scoring Works</h2>
+  <p style="color:#aaa;margin-bottom:24px">Every AgentOracle response includes a <code style="color:#C9A96E">confidence_score</code> field. The score factors in source count, fact density, and data freshness — adjusted automatically.</p>
+  
+  <div class="code">
+<span class="field">{</span><br>
+&nbsp;&nbsp;<span class="key">"query"</span>: <span class="str">"Best AI agent frameworks for autonomous research in 2026"</span>,<br>
+&nbsp;&nbsp;<span class="key">"result"</span>: <span class="field">{</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"summary"</span>: <span class="str">"The top AI agent frameworks in 2026 are LangGraph, AutoGen, and CrewAI..."</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"key_facts"</span>: [<span class="str">"LangGraph leads with stateful workflows"</span>, <span class="str">"CrewAI simplifies role-based orchestration"</span>],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"sources"</span>: [<span class="field">{</span><span class="key">"url"</span>: <span class="str">"https://arxiv.org/..."</span><span class="field">}</span>, ...],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"confidence_score"</span>: <span class="num">0.92</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"freshness"</span>: <span class="str">"real-time"</span><br>
+&nbsp;&nbsp;<span class="field">}</span>,<br>
+&nbsp;&nbsp;<span class="key">"payment"</span>: <span class="field">{</span> <span class="key">"amount"</span>: <span class="str">"$0.02"</span>, <span class="key">"network"</span>: <span class="str">"SKALE (gasless)"</span> <span class="field">}</span><br>
+<span class="field">}</span>
+  </div>
+
+  <div class="card" style="margin-top:24px">
+    <h3>Use the min_confidence parameter</h3>
+    <p>Set a confidence threshold on any request. If the result scores below your threshold, AgentOracle flags it automatically — so your agent can decide whether to retry or escalate.</p>
+    <div class="code" style="margin-top:16px">
+POST /research<br>
+<span class="field">{</span><br>
+&nbsp;&nbsp;<span class="key">"query"</span>: <span class="str">"Q3 2026 earnings for Nvidia"</span>,<br>
+&nbsp;&nbsp;<span class="key">"min_confidence"</span>: <span class="num">0.85</span><br>
+<span class="field">}</span><br><br>
+<span style="color:#666">// Response includes: "threshold_met": true/false</span>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <h2>Try /compare — New Endpoint</h2>
+  <p style="color:#aaa;margin-bottom:24px">Run the same query through multiple models simultaneously. AgentOracle returns both results with confidence scores so your agent picks the most reliable answer.</p>
+  <div class="code">
+POST /compare  <span style="color:#666">// $0.05 USDC via x402</span><br>
+<span class="field">{</span> <span class="key">"query"</span>: <span class="str">"your research question"</span> <span class="field">}</span><br><br>
+<span style="color:#666">// Returns: sonar + sonar-pro results with confidence scores</span><br>
+<span style="color:#666">// AgentOracle recommends the winner automatically</span>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <h2>Multi-Chain. Zero Setup.</h2>
+  <p style="color:#aaa;margin-bottom:32px">Pay on the network that fits your agent stack. No accounts. No API keys. Just x402.</p>
+  <div class="compare-grid">
+    <div class="card"><h3>Base Mainnet</h3><p>$0.02 USDC per query. Standard gas. Production-grade.</p></div>
+    <div class="card"><h3>SKALE — Gasless</h3><p>$0.02 USDC. Zero transaction fees. No gas cost for your agent.</p></div>
+    <div class="card"><h3>Stellar — Sponsored</h3><p>Native USDC via Soroban. Fees sponsored. First Stellar x402 payment confirmed April 6, 2026.</p></div>
+    <div class="card"><h3>Free Preview</h3><p>No wallet needed. 20 requests/hour at /preview. Evaluate confidence scores before committing.</p></div>
+  </div>
+</section>
+
+<div class="cta">
+  <h2 style="margin-bottom:16px">Start building with confidence</h2>
+  <p style="color:#666;margin-bottom:32px">agentoracle.co/preview — free, no auth required</p>
+  <a href="https://agentoracle.co" class="btn">Try AgentOracle &rarr;</a>
+  <a href="https://agentoracle.co/.well-known/x402-manifest.json" class="btn btn-ghost">View x402 Manifest</a>
+</div>
+
+</div>
+</body>
+</html>``;
+
+
 // ── Rate Limiting (in-memory, per-IP) ────────────────────────────
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const RATE_LIMIT_MAX = 100; // 100 requests per hour per IP
@@ -511,6 +683,11 @@ const routeConfig = {
       "with expert-level synthesis, powered by Perplexity Sonar Pro. $0.10 USDC per query. Base + SKALE.",
     mimeType: "application/json",
     extensions: { ...bazaarDeep },
+  },
+  "POST /compare": {
+    price: "$0.05",
+    network: NETWORK,
+    description: "Multi-model confidence comparison — sonar vs sonar-pro, returns highest confidence result",
   },
   "POST /research/batch": {
     accepts: batchAccepts,
@@ -1040,7 +1217,7 @@ app.get("/health", (_req, res) => {
 //    - Default tier is "standard" ($0.02, Sonar)
 
 app.post("/research", async (req, res) => {
-  const { query, tier } = req.body;
+  const { query, tier, min_confidence } = req.body;
 
   // ── Input validation ────────────────────────────────────────────
   if (!query || typeof query !== "string" || query.trim().length === 0) {
@@ -1209,10 +1386,17 @@ app.post("/research", async (req, res) => {
     };
     setCacheEntry(query, tier, responsePayload);
 
+    // ── Confidence threshold check ─────────────────────────────
+    const thresholdMet = min_confidence
+      ? adjustedScore >= parseFloat(min_confidence)
+      : true;
+
     // ── Return structured result ────────────────────────────────
     return res.json({
       query: query.trim(),
       tier: selectedTier,
+      threshold_met: thresholdMet,
+      ...(min_confidence ? { min_confidence_requested: parseFloat(min_confidence) } : {}),
       ...responsePayload,
     });
   } catch (err) {
@@ -2063,6 +2247,8 @@ app.use((_req, res) => {
       "POST /preview": "Free live preview (truncated results, 10/hr)",
       "POST /research": "Standard research ($0.02 USDC on Base or SKALE gasless)",
       "POST /deep-research": "Deep research with Sonar Pro ($0.10 USDC on Base or SKALE gasless)",
+    "POST /compare": "Multi-model confidence comparison ($0.05 USDC) — returns sonar + sonar-pro results with scores",
+    "GET /trust": "Confidence scoring explainer — why agents need the trust layer",
       "POST /free": "Promotional free queries (use code AGENT100)",
       "POST /defi": "DeFi vertical research (beta — free)",
       "GET /health": "Service health check",
@@ -2108,6 +2294,91 @@ app.listen(PORT, () => {
   console.log(`  Facilitator:  ${FACILITATOR_URL}`);
   console.log(`  Model:        ${PERPLEXITY_MODEL}`);
   console.log("═══════════════════════════════════════════════════");
+});
+
+
+
+// ═══════════════════════════════════════════════════════════════════
+//  GET /trust — Confidence Scoring Explainer Page
+// ═══════════════════════════════════════════════════════════════════
+app.get("/trust", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(TRUST_PAGE_HTML);
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  POST /compare — Multi-Model Confidence Comparison ($0.05 USDC)
+//  Runs query through Sonar + Sonar Pro, returns both with scores
+//  Agent picks the highest confidence result — unique to AgentOracle
+// ═══════════════════════════════════════════════════════════════════
+
+app.post("/compare", async (req, res) => {
+  const { query } = req.body;
+
+  if (!query || typeof query !== "string" || query.trim().length === 0) {
+    return res.status(400).json({
+      error: "Bad Request",
+      message: 'Request body must include a non-empty "query" string.',
+      example: { query: "What are the latest developments in AI agents?" },
+    });
+  }
+
+  const requestStartTime = Date.now();
+
+  try {
+    const systemPrompt = 'Respond only in clean JSON: { "summary": string, "key_facts": array, "sources": array, "confidence_score": number }. Keep concise, accurate, real-time.';
+
+    // Run both models in parallel
+    const [sonarRes, sonarProRes] = await Promise.allSettled([
+      axios.post("https://api.perplexity.ai/chat/completions", {
+        model: PERPLEXITY_MODEL,
+        stream: false,
+        max_tokens: 2000,
+        messages: [{ role: "system", content: systemPrompt }, { role: "user", content: query.trim() }],
+      }, { headers: { Authorization: `Bearer ${PERPLEXITY_KEY}`, "Content-Type": "application/json" }, timeout: 30000 }),
+      axios.post("https://api.perplexity.ai/chat/completions", {
+        model: PERPLEXITY_MODEL_PRO,
+        stream: false,
+        max_tokens: 3000,
+        messages: [{ role: "system", content: systemPrompt }, { role: "user", content: query.trim() }],
+      }, { headers: { Authorization: `Bearer ${PERPLEXITY_KEY}`, "Content-Type": "application/json" }, timeout: 45000 }),
+    ]);
+
+    const parseResult = (settled, modelName) => {
+      if (settled.status === "rejected") return { model: modelName, error: settled.reason.message, confidence_score: 0 };
+      try {
+        const raw = settled.value.data?.choices?.[0]?.message?.content || "";
+        const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+        const parsed = JSON.parse(cleaned);
+        const score = Math.round((parsed.confidence_score || 0.5) * 100) / 100;
+        return { model: modelName, ...parsed, confidence_score: score };
+      } catch {
+        return { model: modelName, summary: settled.value.data?.choices?.[0]?.message?.content, confidence_score: 0.5 };
+      }
+    };
+
+    const sonarResult = parseResult(sonarRes, "sonar");
+    const sonarProResult = parseResult(sonarProRes, "sonar-pro");
+
+    const winner = sonarProResult.confidence_score >= sonarResult.confidence_score ? "sonar-pro" : "sonar";
+    const responseTimeMs = Date.now() - requestStartTime;
+
+    return res.json({
+      query: query.trim(),
+      endpoint: "/compare",
+      price_paid: "$0.05 USDC",
+      response_time_ms: responseTimeMs,
+      recommended: winner,
+      recommendation_reason: `${winner} returned higher confidence score (${winner === "sonar-pro" ? sonarProResult.confidence_score : sonarResult.confidence_score})`,
+      results: {
+        sonar: sonarResult,
+        "sonar-pro": sonarProResult,
+      },
+      _note: "Use the recommended model result or pick based on your confidence threshold. sonar is faster ($0.02), sonar-pro is more thorough ($0.10).",
+    });
+  } catch (err) {
+    return res.status(500).json({ error: "Compare failed", message: err.message });
+  }
 });
 
 // ═══════════════════════════════════════════════════════════════════
