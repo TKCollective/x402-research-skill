@@ -2109,3 +2109,102 @@ app.listen(PORT, () => {
   console.log(`  Model:        ${PERPLEXITY_MODEL}`);
   console.log("═══════════════════════════════════════════════════");
 });
+
+// ═══════════════════════════════════════════════════════════════════
+//  MCP HTTP Endpoint — Streamable HTTP Transport (Smithery)
+// ═══════════════════════════════════════════════════════════════════
+
+const MCP_TOOLS = [
+  {
+    name: "research",
+    description: "Real-time research on any topic via AgentOracle. Returns structured JSON: summary, key_facts, sources, confidence_score (0.00–1.00). Free preview mode on remote server — run locally with X402_PRIVATE_KEY for full paid results ($0.02 USDC).",
+    inputSchema: { type: "object", properties: { query: { type: "string", description: "Research question or topic" } }, required: ["query"] }
+  },
+  {
+    name: "preview",
+    description: "Free truncated research preview. Up to 20 requests/hour. No payment required.",
+    inputSchema: { type: "object", properties: { query: { type: "string", description: "Research question or topic" } }, required: ["query"] }
+  },
+  {
+    name: "check-health",
+    description: "Check AgentOracle API health, version, and supported networks.",
+    inputSchema: { type: "object", properties: {} }
+  },
+  {
+    name: "get-manifest",
+    description: "Get the x402 payment manifest — lists all endpoints, prices, and supported networks (Base, SKALE, Stellar).",
+    inputSchema: { type: "object", properties: {} }
+  }
+];
+
+app.post("/mcp", express.json(), async (req, res) => {
+  const { id, method, params } = req.body || {};
+  res.setHeader("Content-Type", "application/json");
+
+  const ok = (result) => res.json({ jsonrpc: "2.0", id, result });
+  const err = (code, msg) => res.json({ jsonrpc: "2.0", id, error: { code, message: msg } });
+
+  try {
+    if (method === "initialize") {
+      return ok({
+        protocolVersion: "2024-11-05",
+        capabilities: { tools: {} },
+        serverInfo: { name: "agentoracle", version: "1.9.0", description: "Pay-per-query research API for AI agents via x402 on Base, SKALE, and Stellar" }
+      });
+    }
+    if (method === "notifications/initialized" || method === "ping") return res.status(204).end();
+    if (method === "tools/list") return ok({ tools: MCP_TOOLS });
+
+    if (method === "tools/call") {
+      const { name, arguments: args } = params || {};
+
+      if (name === "check-health") {
+        return ok({ content: [{ type: "text", text: JSON.stringify({ status: "ok", version: "1.9.0", networks: ["base", "skale", "stellar"], price: "$0.02 USDC/query", manifest: "https://agentoracle.co/.well-known/x402-manifest.json", timestamp: new Date().toISOString() }, null, 2) }] });
+      }
+
+      if (name === "get-manifest") {
+        const manifest = {
+          name: "AgentOracle Research API", version: "1.9.0", baseUrl: "https://agentoracle.co",
+          endpoints: {
+            "/research": { price: "$0.02 USDC", networks: ["base", "skale", "stellar"], description: "Full paid research query" },
+            "/preview": { price: "free", rateLimit: "20/hour", description: "Truncated preview" },
+            "/deep-research": { price: "$0.10 USDC", networks: ["base", "skale"], description: "Deep multi-source research" }
+          },
+          discovery: "https://agentoracle.co/.well-known/x402-manifest.json"
+        };
+        return ok({ content: [{ type: "text", text: JSON.stringify(manifest, null, 2) }] });
+      }
+
+      if (name === "preview" || name === "research") {
+        const { query } = args || {};
+        if (!query) return err(-32602, "query parameter is required");
+
+        const resp = await axios.post("https://agentoracle.co/preview", { query }, {
+          timeout: 28000, headers: { "Content-Type": "application/json" }
+        }).catch(e => ({ data: { error: e.message } }));
+
+        const data = resp.data;
+        if (name === "research" && !data.error) {
+          data._upgrade = "For full paid research ($0.02 USDC via x402), run: npx agentoracle-mcp with X402_PRIVATE_KEY set.";
+        }
+
+        return ok({ content: [{ type: "text", text: JSON.stringify(data, null, 2) }] });
+      }
+
+      return err(-32601, `Unknown tool: ${name}`);
+    }
+
+    return err(-32601, `Method not found: ${method}`);
+  } catch (e) {
+    return err(-32603, `Internal error: ${e.message}`);
+  }
+});
+
+app.get("/mcp", (_req, res) => {
+  res.json({
+    name: "agentoracle", version: "1.9.0",
+    description: "Pay-per-query research API for AI agents via x402 on Base, SKALE, and Stellar",
+    transport: "streamable-http", endpoint: "https://agentoracle.co/mcp",
+    tools: MCP_TOOLS.map(t => ({ name: t.name, description: t.description }))
+  });
+});
