@@ -1,9 +1,31 @@
 {
   "version": 2,
   "builds": [
-    { "src": "index.js", "use": "@vercel/node" }
+    {
+      "src": "trust.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "ao-logo.jpg",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "index.js",
+      "use": "@vercel/node"
+    }
   ],
   "routes": [
-    { "src": "/(.*)", "dest": "index.js" }
+    {
+      "src": "/trust",
+      "dest": "/trust.html"
+    },
+    {
+      "src": "/ao-logo.jpg",
+      "dest": "/ao-logo.jpg"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "index.js"
+    }
   ]
 }

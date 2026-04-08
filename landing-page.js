@@ -487,7 +487,12 @@ a:hover { color: var(--color-primary-hover); }
 
 /* Section CTA (Cat 4) */
 .section-cta { text-align: center; margin-top: var(--space-12); }
-.section-cta .btn { display: inline-flex; }
+.section-cta 
+.hero__actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; }
+.hero__actions .btn { min-width: 200px; text-align: center; justify-content: center; padding: 14px 24px; font-size: 0.875rem; }
+.hero__actions .btn--ghost { padding: 13px 24px; }
+@media (max-width: 768px) { .hero__actions .btn { min-width: 0; flex: 1 1 45%; } }
+.btn { display: inline-flex; }
 
 /* MCP */
 .mcp-grid { display: grid; grid-template-columns: 1fr; gap: var(--space-10); align-items: center; }
@@ -837,10 +842,10 @@ a:hover { color: var(--color-primary-hover); }
       </p>
       <p class="hero__secondary-tagline fade-in">Get Started in 60 Seconds</p>
       <div class="hero__ctas fade-in">
-        <a href="#live-demo" class="btn btn--primary btn--hero">Try Live Demo &#8594;</a>
+        <a href="https://agentoracle.co/preview" class="btn btn--primary btn--hero" target="_blank" rel="noopener noreferrer">Try Live Demo &#8594;</a>
         <a href="https://agentoracle.co/.well-known/x402.json" class="btn btn--ghost" target="_blank" rel="noopener noreferrer">View x402 Manifest</a>
         <a href="https://agentoracle.co/demo" class="btn btn--ghost" target="_blank" rel="noopener noreferrer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Watch Demo</a>
-        <a href="/trust" class="btn btn--ghost" style="border-color:var(--color-primary);color:var(--color-primary);">Trust Layer Docs &#8594;</a>
+        <a href="https://agentoracle.co/trust" class="btn btn--ghost" style="border-color:var(--color-primary);color:var(--color-primary);" target="_blank" rel="noopener noreferrer">Trust Layer Docs &#8594;</a>
       </div>
     </div>
     <div class="hero__code-wrapper fade-in">
@@ -1314,7 +1319,7 @@ a:hover { color: var(--color-primary-hover); }
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> 20 requests/hour</li>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> No payment required</li>
         </ul>
-        <a href="#live-demo" class="btn btn--ghost" style="width:100%;">Try /preview</a>
+        <a href="https://agentoracle.co/preview" class="btn btn--ghost" style="width:100%;" target="_blank" rel="noopener noreferrer">Try /preview</a>
       </div>
       <div class="pricing-card pricing-card--featured" style="position:relative;">
 
@@ -1434,11 +1439,11 @@ a:hover { color: var(--color-primary-hover); }
       <h3 style="font-size:var(--text-xl);font-weight:700;margin-bottom:var(--space-3);">The Trust Layer for Agentic AI</h3>
       <p style="color:var(--color-text-muted);max-width:560px;margin:0 auto var(--space-4);">Pass ANY data through /evaluate — from Exa, Perplexity, web scrapes, anything. Get per-claim verification, confidence scores, and a recommendation: act, verify, or reject.</p>
       <p style="color:var(--color-text-muted);font-size:var(--text-sm);max-width:560px;margin:0 auto var(--space-5);">Every evaluation builds our source reputation graph. Every /feedback call improves scoring. The moat compounds with usage.</p>
-      <a href="/trust" style="display:inline-block;background:var(--color-primary);color:#111;padding:10px 28px;border-radius:8px;font-weight:700;font-size:var(--text-sm);text-decoration:none;">See /evaluate in Action &#8594;</a>
+      <a href="https://agentoracle.co/trust" style="display:inline-block;background:var(--color-primary);color:#111;padding:10px 28px;border-radius:8px;font-weight:700;font-size:var(--text-sm);text-decoration:none;" target="_blank" rel="noopener noreferrer">See /evaluate in Action &#8594;</a>
     </div>
 <span class="section-label fade-in">Why AgentOracle</span>
       <h2 class="section-title fade-in">How We Compare</h2>
-      <p class="section-subtitle fade-in">The only research API with native crypto payments and zero auth overhead.</p>
+      <p class="section-subtitle fade-in">How the x402 research ecosystem stacks up — honest comparison, April 2026.</p>
     </div>
     <div class="compare-section fade-in">
       <div class="compare-table-wrapper">
@@ -1446,14 +1451,14 @@ a:hover { color: var(--color-primary-hover); }
           <thead><tr><th></th><th class="compare-highlight">AgentOracle</th><th>Exa <span style="font-size:10px;color:#4ADE80;font-weight:600;">+x402</span></th><th>Tavily</th><th>Brave Search</th><th>Perplexity API</th></tr></thead>
           <tbody>
             <tr><td>Pricing</td><td class="compare-highlight"><span class="check-yes">$0.01-0.02/query</span></td><td>$0.005-0.012/query</td><td>$0.008/credit</td><td>$5-9/1K</td><td>$5-12/1K</td></tr>
-            <tr><td>Output Type</td><td class="compare-highlight"><span class="check-yes">Per-claim verified intelligence</span></td><td class="check-no">Raw search results</td><td class="check-no">Raw search results</td><td class="check-no">Raw search results</td><td>Answers + tokens</td></tr>
-            <tr><td>Trust Evaluation</td><td class="compare-highlight"><span class="check-yes">/evaluate endpoint</span></td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td></tr>
-            <tr><td>Confidence Scoring</td><td class="compare-highlight"><span class="check-yes">Built-in (0.00-1.00)</span></td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td></tr>
-            <tr><td>Claim Verification</td><td class="compare-highlight"><span class="check-yes">Per-claim verdicts</span></td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td></tr>
-            <tr><td>x402 / Agent-Native</td><td class="compare-highlight"><span class="check-yes">x402 (all chains)</span></td><td style="color:#4ADE80;">x402 (Base only)</td><td class="check-no">API key</td><td class="check-no">API key</td><td class="check-no">API key</td></tr>
+            <tr><td>Output Type</td><td class="compare-highlight"><span class="check-yes">Per-claim verified intelligence</span></td><td style="color:var(--color-text-muted);">Search results</td><td style="color:var(--color-text-muted);">Search results</td><td style="color:var(--color-text-muted);">Search results</td><td>Answers + tokens</td></tr>
+            <tr><td>Trust Evaluation</td><td class="compare-highlight"><span class="check-yes">/evaluate endpoint</span></td><td class="check-no">\u2014</td><td class="check-no">\u2014</td><td class="check-no">\u2014</td><td class="check-no">\u2014</td></tr>
+            <tr><td>Confidence Scoring</td><td class="compare-highlight"><span class="check-yes">Built-in (0.00-1.00)</span></td><td class="check-no">\u2014</td><td class="check-no">\u2014</td><td class="check-no">\u2014</td><td class="check-no">\u2014</td></tr>
+            <tr><td>Claim Verification</td><td class="compare-highlight"><span class="check-yes">Per-claim verdicts</span></td><td class="check-no">\u2014</td><td class="check-no">\u2014</td><td class="check-no">\u2014</td><td class="check-no">\u2014</td></tr>
+            <tr><td>x402 / Agent-Native</td><td class="compare-highlight"><span class="check-yes">x402 (all chains)</span></td><td style="color:#4ADE80;font-weight:600;">x402 (Base only)</td><td class="check-no">API key</td><td class="check-no">API key</td><td class="check-no">API key</td></tr>
             <tr><td>Multi-Chain</td><td class="compare-highlight"><span class="check-yes">Base + SKALE + Stellar</span></td><td class="check-no">Base only</td><td class="check-no">N/A</td><td class="check-no">N/A</td><td class="check-no">N/A</td></tr>
-            <tr><td>Source Reputation</td><td class="compare-highlight"><span class="check-yes">/reputation endpoint</span></td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td></tr>
-            <tr><td>Agent Feedback Loop</td><td class="compare-highlight"><span class="check-yes">/feedback endpoint</span></td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td></tr>
+            <tr><td>Source Reputation</td><td class="compare-highlight"><span class="check-yes">/reputation endpoint</span></td><td class="check-no">\u2014</td><td class="check-no">\u2014</td><td class="check-no">\u2014</td><td class="check-no">\u2014</td></tr>
+            <tr><td>Agent Feedback Loop</td><td class="compare-highlight"><span class="check-yes">/feedback endpoint</span></td><td class="check-no">\u2014</td><td class="check-no">\u2014</td><td class="check-no">\u2014</td><td class="check-no">\u2014</td></tr>
             <tr><td>Free Tier</td><td class="compare-highlight"><span class="check-yes">20 req/hr (no auth)</span></td><td>1K/mo (signup)</td><td>1K/mo (signup)</td><td>2K/mo (signup)</td><td>100/day (signup)</td></tr>
           </tbody>
         </table>
@@ -1611,7 +1616,7 @@ a:hover { color: var(--color-primary-hover); }
     <h2 class="bottom-cta__headline fade-in">Start Querying in <span class="gold-text">Seconds</span></h2>
     <p class="bottom-cta__sub fade-in">One endpoint. One payment. Real-time research for your agent.<br>No setup required. Get started in 60 seconds.</p>
     <div class="bottom-cta__buttons fade-in">
-      <a href="#live-demo" class="btn btn--primary btn--hero">Try Live Demo &#8594;</a>
+      <a href="https://agentoracle.co/preview" class="btn btn--primary btn--hero" target="_blank" rel="noopener noreferrer">Try Live Demo &#8594;</a>
       <a href="https://agentoracle.co/health" class="btn btn--ghost" target="_blank" rel="noopener noreferrer">Check Health Status &#8594;</a>
       <a href="https://github.com/TKCollective/agentoracle-mcp" class="btn btn--ghost" target="_blank" rel="noopener noreferrer">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:inline;margin-right:4px;vertical-align:middle;"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg> MCP Server
