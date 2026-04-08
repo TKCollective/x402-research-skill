@@ -991,7 +991,7 @@ app.get("/.well-known/x402-manifest.json", (_req, res) => {
 app.get("/health", (_req, res) => {
   res.json({
     status: "ok",
-    version: "1.8.0",
+    version: "2.0.0",
     service: "x402-research-api",
     chain: "base + skale + stellar",
     networks: {
