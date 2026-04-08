@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trust Layer — AgentOracle</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #111111;
+    --bg-card: #1a1a1a;
+    --bg-code: #0d0d0d;
+    --text: #f0ede8;
+    --text-muted: #9a9590;
+    --text-dim: #6b6560;
+    --gold: #C9A96E;
+    --gold-dim: rgba(201,169,110,0.15);
+    --green: #4ADE80;
+    --green-dim: rgba(74,222,128,0.12);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.12);
+    --yellow: #fbbf24;
+    --yellow-dim: rgba(251,191,36,0.12);
+    --purple: #7C67EF;
+    --purple-dim: rgba(124,103,239,0.15);
+    --border: rgba(240,237,232,0.08);
+    --border-gold: rgba(201,169,110,0.25);
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 15px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    height: 60px;
+    background: rgba(17,17,17,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .nav-logo svg { flex-shrink: 0; }
+
+  .nav-links {
+    display: flex;
+    gap: 28px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    letter-spacing: 0.03em;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--text); }
+
+  .nav-cta {
+    background: var(--gold);
+    color: #111;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    transition: opacity 0.2s;
+  }
+
+  .nav-cta:hover { opacity: 0.88; }
+
+  /* LAYOUT */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  section {
+    padding: 88px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  section:last-child { border-bottom: none; }
+
+  /* LABELS */
+  .section-label {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+  }
+
+  /* HERO */
+  .hero {
+    padding: 100px 0 88px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--gold-dim);
+    border: 1px solid var(--border-gold);
+    border-radius: 100px;
+    padding: 5px 14px;
+    font-size: 12px;
+    color: var(--gold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 36px;
+  }
+
+  .hero-eyebrow-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--gold);
+    border-radius: 50%;
+  }
+
+  h1 {
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+
+  .hero-sub {
+    font-size: clamp(15px, 2vw, 18px);
+    color: var(--text-muted);
+    max-width: 560px;
+    margin: 0 auto 40px;
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  .hero-badges {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+
+  .badge-green { background: var(--green-dim); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+  .badge-gold { background: var(--gold-dim); color: var(--gold); border: 1px solid var(--border-gold); }
+  .badge-purple { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(124,103,239,0.25); }
+
+  /* SECTION HEADERS */
+  h2 {
+    font-size: clamp(22px, 3.5vw, 32px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    margin-bottom: 12px;
+  }
+
+  h3 {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 8px;
+  }
+
+  .section-desc {
+    font-size: 15px;
+    color: var(--text-muted);
+    max-width: 580px;
+    margin-bottom: 48px;
+    line-height: 1.7;
+  }
+
+  /* CONFIDENCE BARS */
+  .confidence-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .conf-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 60px;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .conf-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: right;
+  }
+
+  .conf-bar-track {
+    background: rgba(255,255,255,0.06);
+    border-radius: 4px;
+    height: 10px;
+    overflow: hidden;
+  }
+
+  .conf-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s ease;
+  }
+
+  .bar-green { background: var(--green); }
+  .bar-yellow { background: var(--yellow); }
+  .bar-red { background: var(--red); }
+
+  .conf-score {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .score-green { color: var(--green); }
+  .score-yellow { color: var(--yellow); }
+  .score-red { color: var(--red); }
+
+  .conf-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .tag-green { background: var(--green-dim); color: var(--green); }
+  .tag-yellow { background: var(--yellow-dim); color: var(--yellow); }
+  .tag-red { background: var(--red-dim); color: var(--red); }
+
+  /* PROBLEM — CARDS */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .problem-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+  }
+
+  .problem-card.bad {
+    border-color: rgba(248,113,113,0.2);
+  }
+
+  .problem-card.good {
+    border-color: rgba(74,222,128,0.2);
+  }
+
+  .card-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .card-title-bad { color: var(--red); }
+  .card-title-good { color: var(--green); }
+
+  .problem-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .problem-list li {
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.5;
+  }
+
+  .problem-list li span.icon {
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* CODE BLOCKS */
+  .endpoint-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .method-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .method-post { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(124,103,239,0.3); }
+  .method-get  { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(74,222,128,0.25); }
+
+  .endpoint-path {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.01em;
+  }
+
+  .code-block {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.75;
+    position: relative;
+  }
+
+  .code-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+
+  .code-row { display: flex; gap: 16px; margin-bottom: 24px; }
+  .code-col { flex: 1; min-width: 0; }
+
+  pre {
+    white-space: pre;
+    color: var(--text-muted);
+    overflow-x: auto;
+  }
+
+  .k { color: #7dd3fc; }      /* key */
+  .s { color: #86efac; }      /* string value */
+  .n { color: #fb923c; }      /* number */
+  .p { color: var(--text-dim); } /* punctuation */
+  .c-green { color: var(--green); font-weight: 600; }
+  .c-red   { color: var(--red); font-weight: 600; }
+  .c-yellow { color: var(--yellow); font-weight: 600; }
+  .c-gold  { color: var(--gold); }
+
+  /* RECOMMENDATION TABLE */
+  .rec-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 24px;
+    font-size: 13px;
+  }
+
+  .rec-table th {
+    text-align: left;
+    padding: 10px 16px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .rec-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+
+  .rec-table tr:last-child td { border-bottom: none; }
+
+  .rec-act    { color: var(--green);  font-weight: 600; }
+  .rec-verify { color: var(--yellow); font-weight: 600; }
+  .rec-reject { color: var(--red);    font-weight: 600; }
+
+  /* FLYWHEEL */
+  .flywheel-flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-top: 36px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
+  .flow-step {
+    flex: 1;
+    min-width: 120px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 14px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .flow-step-icon {
+    font-size: 20px;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .flow-arrow {
+    color: var(--text-dim);
+    font-size: 18px;
+    padding: 0 8px;
+    flex-shrink: 0;
+  }
+
+  /* REPUTATION TABLE */
+  .rep-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 12px;
+  }
+
+  .rep-table th {
+    text-align: left;
+    padding: 10px 16px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .rep-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+
+  .rep-table tr:last-child td { border-bottom: none; }
+
+  .rep-mini-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .rep-mini-track {
+    width: 80px;
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .rep-mini-fill {
+    height: 100%;
+    border-radius: 3px;
+  }
+
+  /* ARCHITECTURE FLOW */
+  .arch-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 40px;
+    position: relative;
+  }
+
+  .arch-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .arch-step:last-child { border-bottom: none; }
+
+  .arch-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .arch-num-1 { background: var(--gold-dim); color: var(--gold); border: 1px solid var(--border-gold); }
+  .arch-num-2 { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(124,103,239,0.3); }
+  .arch-num-3 { background: var(--green-dim); color: var(--green); border: 1px solid rgba(74,222,128,0.25); }
+  .arch-num-4 { background: var(--yellow-dim); color: var(--yellow); border: 1px solid rgba(251,191,36,0.2); }
+  .arch-num-5 { background: rgba(99,102,241,0.12); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.25); }
+
+  .arch-content h3 {
+    font-size: 15px;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+
+  .arch-content p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .arch-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .arch-tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.05);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+
+  /* PRICING */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+    margin-top: 40px;
+  }
+
+  .price-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    transition: border-color 0.2s;
+  }
+
+  .price-card:hover { border-color: var(--border-gold); }
+
+  .price-card.featured {
+    border-color: var(--border-gold);
+    background: rgba(201,169,110,0.04);
+  }
+
+  .price-endpoint {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .price-amount {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+
+  .price-free {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--green);
+    margin-bottom: 6px;
+  }
+
+  .price-desc {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .price-note {
+    font-size: 11px;
+    color: var(--text-dim);
+    background: rgba(74,222,128,0.08);
+    border: 1px solid rgba(74,222,128,0.15);
+    border-radius: 4px;
+    padding: 3px 8px;
+    margin-top: 8px;
+    display: inline-block;
+  }
+
+  /* CTA */
+  .cta-section {
+    text-align: center;
+    padding: 100px 0;
+    border-bottom: none;
+  }
+
+  .cta-section h2 {
+    margin-bottom: 14px;
+  }
+
+  .cta-section p {
+    color: var(--text-muted);
+    margin-bottom: 40px;
+    font-size: 15px;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    display: inline-block;
+    background: var(--gold);
+    color: #111;
+    padding: 13px 28px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+
+  .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  .btn-secondary {
+    display: inline-block;
+    background: transparent;
+    color: var(--text);
+    padding: 13px 28px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    border: 1px solid var(--border);
+    transition: border-color 0.2s, transform 0.15s;
+  }
+
+  .btn-secondary:hover { border-color: var(--border-gold); transform: translateY(-1px); }
+
+  .btn-ghost {
+    display: inline-block;
+    background: transparent;
+    color: var(--text-muted);
+    padding: 13px 28px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    border: 1px solid var(--border);
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .btn-ghost:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+
+  /* DIVIDER */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0;
+  }
+
+  /* FOOTER */
+  footer {
+    padding: 32px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  footer p {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  footer a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 12px;
+    transition: color 0.2s;
+  }
+
+  footer a:hover { color: var(--gold); }
+
+  .footer-links {
+    display: flex;
+    gap: 24px;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 700px) {
+    nav { padding: 0 20px; }
+    .nav-links { display: none; }
+    section { padding: 60px 0; }
+    .hero { padding: 72px 0 60px; }
+    .problem-grid { grid-template-columns: 1fr; }
+    .code-row { flex-direction: column; }
+    .conf-row { grid-template-columns: 130px 1fr 52px; gap: 10px; }
+    .pricing-grid { grid-template-columns: 1fr 1fr; }
+    footer { padding: 24px 20px; }
+  }
+
+  @media (max-width: 480px) {
+    .pricing-grid { grid-template-columns: 1fr; }
+    .conf-row { grid-template-columns: 110px 1fr 48px; }
+    .flywheel-flow { flex-direction: column; gap: 0; }
+    .flow-arrow { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-label="AgentOracle" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="11" cy="11" r="9" stroke="#C9A96E" stroke-width="1.5"/>
+      <circle cx="11" cy="11" r="4" fill="#C9A96E"/>
+      <line x1="11" y1="2" x2="11" y2="5" stroke="#C9A96E" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="11" y1="17" x2="11" y2="20" stroke="#C9A96E" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="2" y1="11" x2="5" y2="11" stroke="#C9A96E" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="17" y1="11" x2="20" y2="11" stroke="#C9A96E" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    AgentOracle
+  </a>
+  <ul class="nav-links">
+    <li><a href="#evaluate">Evaluate</a></li>
+    <li><a href="#feedback">Feedback</a></li>
+    <li><a href="#reputation">Reputation</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#docs">Docs</a></li>
+  </ul>
+  <a href="#cta" class="nav-cta">Try Free</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-eyebrow">
+      <span class="hero-eyebrow-dot"></span>
+      Trust Infrastructure for AI Agents
+    </div>
+    <h1>The Trust Layer<br>for Agentic AI</h1>
+    <p class="hero-sub">"Agents don't just need data. They need to know what to trust before they act."</p>
+    <div class="hero-badges">
+      <span class="badge badge-green">&#10003; Per-claim verification</span>
+      <span class="badge badge-gold">&#9679; Confidence scoring</span>
+      <span class="badge badge-purple">&#10033; x402 micropayments</span>
+    </div>
+  </div>
+</section>
+
+<!-- CONFIDENCE SCORE BARS -->
+<section id="scores">
+  <div class="container">
+    <span class="section-label">Signal Quality</span>
+    <h2>Real-time Confidence Scoring</h2>
+    <p class="section-desc">Every evaluation returns a numeric confidence score per claim. Agents consume these scores programmatically — no parsing, no guessing.</p>
+
+    <div class="confidence-grid">
+      <div class="conf-row">
+        <span class="conf-label">Breaking news<span class="conf-tag tag-green">act</span></span>
+        <div class="conf-bar-track">
+          <div class="conf-bar-fill bar-green" style="width:94%"></div>
+        </div>
+        <span class="conf-score score-green">0.94</span>
+      </div>
+      <div class="conf-row">
+        <span class="conf-label">Market data<span class="conf-tag tag-green">act</span></span>
+        <div class="conf-bar-track">
+          <div class="conf-bar-fill bar-green" style="width:91%"></div>
+        </div>
+        <span class="conf-score score-green">0.91</span>
+      </div>
+      <div class="conf-row">
+        <span class="conf-label">Emerging tech<span class="conf-tag tag-yellow">verify</span></span>
+        <div class="conf-bar-track">
+          <div class="conf-bar-fill bar-yellow" style="width:73%"></div>
+        </div>
+        <span class="conf-score score-yellow">0.73</span>
+      </div>
+      <div class="conf-row">
+        <span class="conf-label">Speculation<span class="conf-tag tag-red">reject</span></span>
+        <div class="conf-bar-track">
+          <div class="conf-bar-fill bar-red" style="width:41%"></div>
+        </div>
+        <span class="conf-score score-red">0.41</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- THE PROBLEM -->
+<section id="problem">
+  <div class="container">
+    <span class="section-label">The Problem</span>
+    <h2>A search result is not intelligence.</h2>
+    <p class="section-desc">An agent acting on unverified data causes real-world mistakes — wrong trades, false emails, bad decisions at scale. Raw retrieval is not enough.</p>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <div class="card-title card-title-bad">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <circle cx="7" cy="7" r="6" stroke="#f87171" stroke-width="1.5"/>
+            <line x1="4.5" y1="4.5" x2="9.5" y2="9.5" stroke="#f87171" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="9.5" y1="4.5" x2="4.5" y2="9.5" stroke="#f87171" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          Raw Search Results
+        </div>
+        <ul class="problem-list">
+          <li><span class="icon">&#9632;</span>No signal on accuracy or recency</li>
+          <li><span class="icon">&#9632;</span>No distinction between facts and opinion</li>
+          <li><span class="icon">&#9632;</span>No adversarial content detection</li>
+          <li><span class="icon">&#9632;</span>No per-claim breakdown</li>
+          <li><span class="icon">&#9632;</span>Agent must hallucinate a trust decision</li>
+          <li><span class="icon">&#9632;</span>Stale data appears identical to fresh data</li>
+        </ul>
+      </div>
+      <div class="problem-card good">
+        <div class="card-title card-title-good">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <circle cx="7" cy="7" r="6" stroke="#4ADE80" stroke-width="1.5"/>
+            <polyline points="4,7 6,9.5 10,4.5" stroke="#4ADE80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          AgentOracle Evaluation
+        </div>
+        <ul class="problem-list">
+          <li><span class="icon" style="color:var(--green)">&#9632;</span>Numeric confidence per claim (0–1)</li>
+          <li><span class="icon" style="color:var(--green)">&#9632;</span>Supported / refuted / unverifiable verdicts</li>
+          <li><span class="icon" style="color:var(--green)">&#9632;</span>Adversarial flag detection</li>
+          <li><span class="icon" style="color:var(--green)">&#9632;</span>act / verify / reject recommendation</li>
+          <li><span class="icon" style="color:var(--green)">&#9632;</span>Correction provided for refuted claims</li>
+          <li><span class="icon" style="color:var(--green)">&#9632;</span>Real-time freshness assessment</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- POST /evaluate -->
+<section id="evaluate">
+  <div class="container">
+    <span class="section-label">Core Product</span>
+    <div class="endpoint-header">
+      <span class="method-badge method-post">POST</span>
+      <span class="endpoint-path">/evaluate</span>
+    </div>
+    <p class="section-desc">Submit any content from any source. Get back structured, per-claim confidence scores and a machine-readable recommendation.</p>
+
+    <div class="code-row">
+      <div class="code-col">
+        <div class="code-label">Request</div>
+        <div class="code-block">
+<pre><span class="p">POST /evaluate</span>
+<span class="p">{</span>
+  <span class="k">"content"</span><span class="p">:</span> <span class="s">"LangGraph leads AI
+   frameworks in 2026.
+   CrewAI was acquired
+   by Google."</span><span class="p">,</span>
+  <span class="k">"source"</span><span class="p">:</span> <span class="s">"exa"</span><span class="p">,</span>
+  <span class="k">"min_confidence"</span><span class="p">:</span> <span class="n">0.8</span>
+<span class="p">}</span></pre>
+        </div>
+      </div>
+      <div class="code-col">
+        <div class="code-label">Response</div>
+        <div class="code-block" style="font-size:12px;">
+<pre><span class="p">{</span>
+  <span class="k">"evaluation_id"</span><span class="p">:</span> <span class="s">"eval_1712345678_abc123"</span><span class="p">,</span>
+  <span class="k">"evaluation"</span><span class="p">: {</span>
+    <span class="k">"overall_confidence"</span><span class="p">:</span> <span class="n">0.71</span><span class="p">,</span>
+    <span class="k">"recommendation"</span><span class="p">:</span> <span class="c-yellow">"verify"</span><span class="p">,</span>
+    <span class="k">"total_claims"</span><span class="p">:</span> <span class="n">2</span><span class="p">,</span>
+    <span class="k">"verified_claims"</span><span class="p">:</span> <span class="n">1</span><span class="p">,</span>
+    <span class="k">"refuted_claims"</span><span class="p">:</span> <span class="n">1</span><span class="p">,</span>
+    <span class="k">"claims"</span><span class="p">: [</span>
+      <span class="p">{</span>
+        <span class="k">"claim"</span><span class="p">:</span> <span class="s">"LangGraph leads AI
+          frameworks in 2026"</span><span class="p">,</span>
+        <span class="k">"verdict"</span><span class="p">:</span> <span class="c-green">"supported"</span><span class="p">,</span>
+        <span class="k">"confidence"</span><span class="p">:</span> <span class="n">0.94</span><span class="p">,</span>
+        <span class="k">"evidence"</span><span class="p">:</span> <span class="s">"Multiple sources
+          confirm LangGraph's
+          leading position"</span>
+      <span class="p">},</span>
+      <span class="p">{</span>
+        <span class="k">"claim"</span><span class="p">:</span> <span class="s">"CrewAI was acquired
+          by Google"</span><span class="p">,</span>
+        <span class="k">"verdict"</span><span class="p">:</span> <span class="c-red">"refuted"</span><span class="p">,</span>
+        <span class="k">"confidence"</span><span class="p">:</span> <span class="n">0.08</span><span class="p">,</span>
+        <span class="k">"evidence"</span><span class="p">:</span> <span class="s">"No acquisition
+          found in any source"</span><span class="p">,</span>
+        <span class="k">"correction"</span><span class="p">:</span> <span class="s">"CrewAI remains
+          independent as of
+          April 2026"</span>
+      <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="k">"source_assessment"</span><span class="p">: {</span>
+      <span class="k">"content_type"</span><span class="p">:</span> <span class="s">"research"</span><span class="p">,</span>
+      <span class="k">"freshness"</span><span class="p">:</span> <span class="s">"real-time"</span><span class="p">,</span>
+      <span class="k">"adversarial_flags"</span><span class="p">: []</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:36px; margin-bottom:16px; color:var(--text-muted); font-size:13px; text-transform:uppercase; letter-spacing:0.08em;">Recommendation Logic</h3>
+    <table class="rec-table">
+      <thead>
+        <tr>
+          <th>Recommendation</th>
+          <th>Confidence Range</th>
+          <th>Agent Behavior</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="rec-act">act</td>
+          <td>&gt; 0.8</td>
+          <td>Proceed — claims sufficiently verified</td>
+        </tr>
+        <tr>
+          <td class="rec-verify">verify</td>
+          <td>0.5 – 0.8</td>
+          <td>Pause — route to secondary check or human review</td>
+        </tr>
+        <tr>
+          <td class="rec-reject">reject</td>
+          <td>&lt; 0.5</td>
+          <td>Discard — evidence insufficient or contradicted</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- POST /feedback -->
+<section id="feedback">
+  <div class="container">
+    <span class="section-label">The Flywheel</span>
+    <div class="endpoint-header">
+      <span class="method-badge method-post">POST</span>
+      <span class="endpoint-path">/feedback</span>
+    </div>
+    <p class="section-desc">Agents report whether evaluations were accurate. Every signal improves the scoring model — for every agent on the network. The system gets smarter with each evaluation loop.</p>
+
+    <div class="code-block" style="max-width:480px;">
+      <div class="code-label">Submit outcome</div>
+<pre><span class="p">POST /feedback</span>
+<span class="p">{</span>
+  <span class="k">"evaluation_id"</span><span class="p">:</span> <span class="s">"eval_1712345678_abc123"</span><span class="p">,</span>
+  <span class="k">"outcome"</span><span class="p">:</span> <span class="c-green">"accurate"</span>
+<span class="p">}</span></pre>
+    </div>
+
+    <div class="flywheel-flow" style="margin-top:40px;">
+      <div class="flow-step">
+        <span class="flow-step-icon">&#128270;</span>
+        Agent queries<br>data source
+      </div>
+      <div class="flow-arrow">&#8594;</div>
+      <div class="flow-step" style="border-color:rgba(124,103,239,0.3);">
+        <span class="flow-step-icon">&#9889;</span>
+        POST<br>/evaluate
+      </div>
+      <div class="flow-arrow">&#8594;</div>
+      <div class="flow-step" style="border-color:rgba(74,222,128,0.25);">
+        <span class="flow-step-icon">&#9989;</span>
+        Agent acts<br>or rejects
+      </div>
+      <div class="flow-arrow">&#8594;</div>
+      <div class="flow-step" style="border-color:rgba(201,169,110,0.25);">
+        <span class="flow-step-icon">&#128257;</span>
+        POST<br>/feedback
+      </div>
+      <div class="flow-arrow">&#8594;</div>
+      <div class="flow-step" style="border-color:rgba(99,102,241,0.3);">
+        <span class="flow-step-icon">&#128200;</span>
+        Scores<br>improve
+      </div>
+    </div>
+
+    <p style="font-size:13px; color:var(--text-dim); margin-top:20px;">Feedback is always free. The network effect compounds — more feedback loops yield faster accuracy improvements across all sources.</p>
+  </div>
+</section>
+
+<!-- GET /reputation -->
+<section id="reputation">
+  <div class="container">
+    <span class="section-label">Source Intelligence</span>
+    <div class="endpoint-header">
+      <span class="method-badge method-get">GET</span>
+      <span class="endpoint-path">/reputation</span>
+    </div>
+    <p class="section-desc">Every data source accumulates a reputation score based on verified claim history. Query any domain to get its current trust profile before you use its data.</p>
+
+    <div class="code-block" style="max-width:480px; margin-bottom:32px;">
+      <div class="code-label">Request</div>
+<pre><span class="p">GET /reputation?domain=</span><span class="c-gold">reuters.com</span>
+<span class="p">GET /reputation?domain=</span><span class="c-gold">arxiv.org</span>
+<span class="p">GET /reputation?source=</span><span class="c-gold">exa</span></pre>
+    </div>
+
+    <table class="rep-table">
+      <thead>
+        <tr>
+          <th>Domain / Source</th>
+          <th>Reputation Score</th>
+          <th>Content Type</th>
+          <th>Verified Claims</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--text);">reuters.com</td>
+          <td>
+            <div class="rep-mini-bar">
+              <div class="rep-mini-track"><div class="rep-mini-fill bar-green" style="width:95%"></div></div>
+              <span class="score-green">0.95</span>
+            </div>
+          </td>
+          <td>news</td>
+          <td style="color:var(--text-muted);">142,881</td>
+        </tr>
+        <tr>
+          <td style="color:var(--text);">arxiv.org</td>
+          <td>
+            <div class="rep-mini-bar">
+              <div class="rep-mini-track"><div class="rep-mini-fill bar-green" style="width:91%"></div></div>
+              <span class="score-green">0.91</span>
+            </div>
+          </td>
+          <td>research</td>
+          <td style="color:var(--text-muted);">98,220</td>
+        </tr>
+        <tr>
+          <td style="color:var(--text);">techcrunch.com</td>
+          <td>
+            <div class="rep-mini-bar">
+              <div class="rep-mini-track"><div class="rep-mini-fill bar-green" style="width:82%"></div></div>
+              <span class="score-green">0.82</span>
+            </div>
+          </td>
+          <td>tech news</td>
+          <td style="color:var(--text-muted);">61,450</td>
+        </tr>
+        <tr>
+          <td style="color:var(--text);">reddit.com</td>
+          <td>
+            <div class="rep-mini-bar">
+              <div class="rep-mini-track"><div class="rep-mini-fill bar-yellow" style="width:58%"></div></div>
+              <span class="score-yellow">0.58</span>
+            </div>
+          </td>
+          <td>social</td>
+          <td style="color:var(--text-muted);">312,104</td>
+        </tr>
+        <tr>
+          <td style="color:var(--text);">unknown-blog.io</td>
+          <td>
+            <div class="rep-mini-bar">
+              <div class="rep-mini-track"><div class="rep-mini-fill bar-red" style="width:29%"></div></div>
+              <span class="score-red">0.29</span>
+            </div>
+          </td>
+          <td>unclassified</td>
+          <td style="color:var(--text-muted);">44</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- HOW IT ALL FITS TOGETHER -->
+<section id="architecture">
+  <div class="container">
+    <span class="section-label">Architecture</span>
+    <h2>How it all fits together</h2>
+    <p class="section-desc">AgentOracle sits between data retrieval and agent action. Any source, any framework, any agent runtime.</p>
+
+    <div class="arch-flow">
+      <div class="arch-step">
+        <div class="arch-num arch-num-1">1</div>
+        <div class="arch-content">
+          <h3>Agent retrieves data</h3>
+          <p>Your agent fetches content from any source — Exa, Perplexity, web fetch, internal databases, API responses. No changes to your retrieval layer.</p>
+          <div class="arch-tags">
+            <span class="arch-tag">Exa</span>
+            <span class="arch-tag">Perplexity</span>
+            <span class="arch-tag">Web fetch</span>
+            <span class="arch-tag">Any source</span>
+          </div>
+        </div>
+      </div>
+      <div class="arch-step">
+        <div class="arch-num arch-num-2">2</div>
+        <div class="arch-content">
+          <h3>Pass content to POST /evaluate</h3>
+          <p>Submit the content string, source identifier, and your minimum confidence threshold. AgentOracle decomposes it into claims and verifies each one independently.</p>
+          <div class="arch-tags">
+            <span class="arch-tag">Claim extraction</span>
+            <span class="arch-tag">Multi-source verification</span>
+            <span class="arch-tag">Adversarial scan</span>
+          </div>
+        </div>
+      </div>
+      <div class="arch-step">
+        <div class="arch-num arch-num-3">3</div>
+        <div class="arch-content">
+          <h3>Receive per-claim confidence + recommendation</h3>
+          <p>Each claim returns a verdict (supported / refuted / unverifiable), a confidence score, evidence, and corrections where applicable. The top-level recommendation tells the agent to act, verify, or reject.</p>
+          <div class="arch-tags">
+            <span class="arch-tag" style="color:var(--green); border-color:rgba(74,222,128,0.2);">act</span>
+            <span class="arch-tag" style="color:var(--yellow); border-color:rgba(251,191,36,0.2);">verify</span>
+            <span class="arch-tag" style="color:var(--red); border-color:rgba(248,113,113,0.2);">reject</span>
+          </div>
+        </div>
+      </div>
+      <div class="arch-step">
+        <div class="arch-num arch-num-4">4</div>
+        <div class="arch-content">
+          <h3>Agent reports outcome via POST /feedback</h3>
+          <p>After acting, the agent submits whether the evaluation was accurate or not. This closes the verification loop and contributes to the shared scoring model.</p>
+          <div class="arch-tags">
+            <span class="arch-tag">Always free</span>
+            <span class="arch-tag">Asynchronous</span>
+          </div>
+        </div>
+      </div>
+      <div class="arch-step">
+        <div class="arch-num arch-num-5">5</div>
+        <div class="arch-content">
+          <h3>Scoring improves for ALL agents</h3>
+          <p>Every feedback signal is aggregated into the source reputation model. Every agent on the network benefits from every other agent's feedback — a compounding trust graph.</p>
+          <div class="arch-tags">
+            <span class="arch-tag">Network effect</span>
+            <span class="arch-tag">Continuous improvement</span>
+            <span class="arch-tag">No retraining required</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="container">
+    <span class="section-label">Pricing</span>
+    <h2>Simple, usage-based pricing</h2>
+    <p class="section-desc">Payments via x402 — USDC micropayments per request. No subscriptions, no rate limits, no API keys to manage.</p>
+
+    <div class="pricing-grid">
+      <div class="price-card featured">
+        <div class="price-endpoint">POST /evaluate</div>
+        <div class="price-amount">$0.01 USDC</div>
+        <div class="price-desc">Per evaluation. Full claim extraction, multi-source verification, adversarial scan, and confidence scores.</div>
+      </div>
+      <div class="price-card">
+        <div class="price-endpoint">POST /feedback</div>
+        <div class="price-free">Free</div>
+        <div class="price-desc">Submit outcome signals. Always free — contributes to the shared trust graph.</div>
+      </div>
+      <div class="price-card">
+        <div class="price-endpoint">GET /reputation</div>
+        <div class="price-free">Free</div>
+        <div class="price-desc">Query domain or source reputation scores. Unlimited calls, no auth required.</div>
+      </div>
+      <div class="price-card">
+        <div class="price-endpoint">POST /research</div>
+        <div class="price-amount">$0.02 USDC</div>
+        <div class="price-desc">Deep multi-source research with synthesis, citations, and confidence-weighted conclusions.</div>
+      </div>
+      <div class="price-card">
+        <div class="price-endpoint">POST /compare</div>
+        <div class="price-amount">$0.05 USDC</div>
+        <div class="price-desc">Side-by-side evaluation of competing claims or sources. Returns ranked confidence with evidence.</div>
+      </div>
+      <div class="price-card">
+        <div class="price-endpoint">GET /preview</div>
+        <div class="price-free">Free</div>
+        <div class="price-desc">Lightweight evaluation preview, no payment required.</div>
+        <span class="price-note">20 req / hr rate limit</span>
+      </div>
+    </div>
+
+    <div style="margin-top:28px; padding:20px 24px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style="flex-shrink:0;">
+        <circle cx="10" cy="10" r="8" stroke="#7C67EF" stroke-width="1.5"/>
+        <text x="6.5" y="14" font-size="9" fill="#7C67EF" font-family="monospace" font-weight="700">x402</text>
+      </svg>
+      <div>
+        <div style="font-size:13px; font-weight:600; color:var(--text); margin-bottom:3px;">Payments via x402 protocol</div>
+        <div style="font-size:12px; color:var(--text-dim);">USDC on Base. No wallet setup required for most agent frameworks — x402 handles payment headers automatically. <a href="#" style="color:var(--purple); text-decoration:none;">View x402 manifest &#8594;</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="cta">
+  <div class="container">
+    <h2>Start verifying claims today.</h2>
+    <p>Add trust infrastructure to your agent in under five minutes.</p>
+    <div class="cta-buttons">
+      <a href="#" class="btn-primary">Try /evaluate now</a>
+      <a href="#" class="btn-secondary">Try /preview free</a>
+      <a href="#" class="btn-ghost">View x402 Manifest</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>&#169; 2026 AgentOracle. Trust infrastructure for agentic AI.</p>
+  <div class="footer-links">
+    <a href="#">Docs</a>
+    <a href="#">API Reference</a>
+    <a href="#">GitHub</a>
+    <a href="#">x402</a>
+    <a href="#">Status</a>
+  </div>
+</footer>
+
+</body>
+</html>

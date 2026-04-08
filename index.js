@@ -116,9 +116,6 @@ const SKALE_PRICE_DEEP = {
 const PERPLEXITY_MODEL = "sonar";
 const PERPLEXITY_MODEL_PRO = "sonar-pro";
 
-const TRUST_PAGE_HTML = "`<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<title>AgentOracle — The Trust Layer for AI Agents</title>\n<meta name=\"description\" content=\"Why AI agents need confidence scoring before acting on data. AgentOracle returns a 0.00–1.00 trust score with every research result via x402.\">\n<style>\n*{margin:0;padding:0;box-sizing:border-box}\nbody{background:#111;color:#f0ede8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.6}\n.container{max-width:860px;margin:0 auto;padding:0 24px}\nheader{padding:32px 0 0;text-align:center}\n.logo{font-size:22px;font-weight:700;color:#C9A96E;letter-spacing:-0.5px}\nh1{font-size:clamp(36px,6vw,64px);font-weight:800;line-height:1.1;margin:48px 0 20px;letter-spacing:-1px}\nh1 span{color:#C9A96E}\n.subtitle{font-size:20px;color:#999;max-width:640px;margin:0 auto 60px}\n.score-demo{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:16px;padding:40px;margin:48px 0;text-align:center}\n.score-bar{display:flex;align-items:center;gap:16px;margin:24px 0}\n.score-label{width:140px;text-align:right;font-size:14px;color:#666;font-family:monospace}\n.bar-track{flex:1;height:12px;background:#222;border-radius:6px;overflow:hidden}\n.bar-fill{height:100%;border-radius:6px;transition:width 0.6s ease}\n.bar-high{background:linear-gradient(90deg,#22c55e,#4ADE80)}\n.bar-med{background:linear-gradient(90deg,#f59e0b,#fbbf24)}\n.bar-low{background:linear-gradient(90deg,#ef4444,#f87171)}\n.bar-score{width:48px;font-family:monospace;font-size:14px;font-weight:700}\n.high{color:#4ADE80}.med{color:#fbbf24}.low{color:#ef4444}\n.section{padding:64px 0}\nh2{font-size:32px;font-weight:700;margin-bottom:16px}\n.card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:28px;margin:16px 0}\n.card h3{font-size:18px;font-weight:700;margin-bottom:10px;color:#C9A96E}\n.card p{color:#aaa;font-size:15px}\n.code{background:#0d0d0d;border:1px solid #222;border-radius:10px;padding:24px;font-family:monospace;font-size:14px;overflow-x:auto;margin:24px 0}\n.key{color:#79c0ff}.str{color:#a5d6ff}.num{color:#C9A96E}.field{color:#7ee787}\n.cta{text-align:center;padding:80px 0 60px}\n.btn{display:inline-block;background:#C9A96E;color:#111;padding:16px 40px;border-radius:8px;font-weight:700;font-size:16px;text-decoration:none;margin:8px}\n.btn-ghost{background:transparent;border:2px solid #333;color:#f0ede8}\n.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:32px 0}\n@media(max-width:600px){.compare-grid{grid-template-columns:1fr}.score-label{width:80px;font-size:12px}}\n.tag{display:inline-block;background:#1e3a2e;color:#4ADE80;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;margin-right:6px}\n.tag-gold{background:#2a2010;color:#C9A96E}\n.divider{border:none;border-top:1px solid #1f1f1f;margin:48px 0}\n</style>\n</head>\n<body>\n<div class=\"container\">\n<header>\n  <div class=\"logo\">AgentOracle</div>\n</header>\n\n<section style=\"padding:80px 0 40px;text-align:center\">\n  <h1>The Trust Layer<br><span>for AI Agents</span></h1>\n  <p class=\"subtitle\">Agents don't just need data. They need to know how much to trust it before acting on it.</p>\n</section>\n\n<div class=\"score-demo\">\n  <p style=\"color:#666;font-size:13px;text-transform:uppercase;letter-spacing:2px;margin-bottom:24px\">Live Confidence Score Examples</p>\n  <div class=\"score-bar\">\n    <div class=\"score-label\">Breaking news</div>\n    <div class=\"bar-track\"><div class=\"bar-fill bar-high\" style=\"width:94%\"></div></div>\n    <div class=\"bar-score high\">0.94</div>\n  </div>\n  <div class=\"score-bar\">\n    <div class=\"score-label\">Market data</div>\n    <div class=\"bar-track\"><div class=\"bar-fill bar-high\" style=\"width:91%\"></div></div>\n    <div class=\"bar-score high\">0.91</div>\n  </div>\n  <div class=\"score-bar\">\n    <div class=\"score-label\">Emerging tech</div>\n    <div class=\"bar-track\"><div class=\"bar-fill bar-med\" style=\"width:73%\"></div></div>\n    <div class=\"bar-score med\">0.73</div>\n  </div>\n  <div class=\"score-bar\">\n    <div class=\"score-label\">Historical events</div>\n    <div class=\"bar-track\"><div class=\"bar-fill bar-med\" style=\"width:68%\"></div></div>\n    <div class=\"bar-score med\">0.68</div>\n  </div>\n  <div class=\"score-bar\">\n    <div class=\"score-label\">Speculation</div>\n    <div class=\"bar-track\"><div class=\"bar-fill bar-low\" style=\"width:41%\"></div></div>\n    <div class=\"bar-score low\">0.41</div>\n  </div>\n</div>\n\n<hr class=\"divider\">\n\n<section class=\"section\">\n  <h2>Why This Matters</h2>\n  <p style=\"color:#aaa;margin-bottom:32px\">A search result is not intelligence. It's raw material. An agent that acts on low-confidence data causes real-world mistakes. AgentOracle solves this by returning a confidence score on every response — so your agent can decide when to act, when to verify, and when to ask again.</p>\n  \n  <div class=\"compare-grid\">\n    <div class=\"card\">\n      <h3>Raw Search Results</h3>\n      <p>A list of links and snippets. No synthesis. No quality signal. Your agent doesn't know if the source is current, credible, or contradicted by newer data.</p>\n    </div>\n    <div class=\"card\">\n      <h3>AgentOracle Research Intelligence</h3>\n      <p>Synthesized summary + key facts + cited sources + a confidence score from 0.00 to 1.00. Your agent knows exactly how much to trust the result before taking action.</p>\n    </div>\n  </div>\n</section>\n\n<hr class=\"divider\">\n\n<section class=\"section\">\n  <h2>How Confidence Scoring Works</h2>\n  <p style=\"color:#aaa;margin-bottom:24px\">Every AgentOracle response includes a <code style=\"color:#C9A96E\">confidence_score</code> field. The score factors in source count, fact density, and data freshness — adjusted automatically.</p>\n  \n  <div class=\"code\">\n<span class=\"field\">{</span><br>\n&nbsp;&nbsp;<span class=\"key\">\"query\"</span>: <span class=\"str\">\"Best AI agent frameworks for autonomous research in 2026\"</span>,<br>\n&nbsp;&nbsp;<span class=\"key\">\"result\"</span>: <span class=\"field\">{</span><br>\n&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"key\">\"summary\"</span>: <span class=\"str\">\"The top AI agent frameworks in 2026 are LangGraph, AutoGen, and CrewAI...\"</span>,<br>\n&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"key\">\"key_facts\"</span>: [<span class=\"str\">\"LangGraph leads with stateful workflows\"</span>, <span class=\"str\">\"CrewAI simplifies role-based orchestration\"</span>],<br>\n&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"key\">\"sources\"</span>: [<span class=\"field\">{</span><span class=\"key\">\"url\"</span>: <span class=\"str\">\"https://arxiv.org/...\"</span><span class=\"field\">}</span>, ...],<br>\n&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"key\">\"confidence_score\"</span>: <span class=\"num\">0.92</span>,<br>\n&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"key\">\"freshness\"</span>: <span class=\"str\">\"real-time\"</span><br>\n&nbsp;&nbsp;<span class=\"field\">}</span>,<br>\n&nbsp;&nbsp;<span class=\"key\">\"payment\"</span>: <span class=\"field\">{</span> <span class=\"key\">\"amount\"</span>: <span class=\"str\">\"$0.02\"</span>, <span class=\"key\">\"network\"</span>: <span class=\"str\">\"SKALE (gasless)\"</span> <span class=\"field\">}</span><br>\n<span class=\"field\">}</span>\n  </div>\n\n  <div class=\"card\" style=\"margin-top:24px\">\n    <h3>Use the min_confidence parameter</h3>\n    <p>Set a confidence threshold on any request. If the result scores below your threshold, AgentOracle flags it automatically — so your agent can decide whether to retry or escalate.</p>\n    <div class=\"code\" style=\"margin-top:16px\">\nPOST /research<br>\n<span class=\"field\">{</span><br>\n&nbsp;&nbsp;<span class=\"key\">\"query\"</span>: <span class=\"str\">\"Q3 2026 earnings for Nvidia\"</span>,<br>\n&nbsp;&nbsp;<span class=\"key\">\"min_confidence\"</span>: <span class=\"num\">0.85</span><br>\n<span class=\"field\">}</span><br><br>\n<span style=\"color:#666\">// Response includes: \"threshold_met\": true/false</span>\n    </div>\n  </div>\n</section>\n\n<hr class=\"divider\">\n\n<section class=\"section\">\n  <h2>Try /compare — New Endpoint</h2>\n  <p style=\"color:#aaa;margin-bottom:24px\">Run the same query through multiple models simultaneously. AgentOracle returns both results with confidence scores so your agent picks the most reliable answer.</p>\n  <div class=\"code\">\nPOST /compare  <span style=\"color:#666\">// $0.05 USDC via x402</span><br>\n<span class=\"field\">{</span> <span class=\"key\">\"query\"</span>: <span class=\"str\">\"your research question\"</span> <span class=\"field\">}</span><br><br>\n<span style=\"color:#666\">// Returns: sonar + sonar-pro results with confidence scores</span><br>\n<span style=\"color:#666\">// AgentOracle recommends the winner automatically</span>\n  </div>\n</section>\n\n<hr class=\"divider\">\n\n<section class=\"section\">\n  <h2>Multi-Chain. Zero Setup.</h2>\n  <p style=\"color:#aaa;margin-bottom:32px\">Pay on the network that fits your agent stack. No accounts. No API keys. Just x402.</p>\n  <div class=\"compare-grid\">\n    <div class=\"card\"><h3>Base Mainnet</h3><p>$0.02 USDC per query. Standard gas. Production-grade.</p></div>\n    <div class=\"card\"><h3>SKALE — Gasless</h3><p>$0.02 USDC. Zero transaction fees. No gas cost for your agent.</p></div>\n    <div class=\"card\"><h3>Stellar — Sponsored</h3><p>Native USDC via Soroban. Fees sponsored. First Stellar x402 payment confirmed April 6, 2026.</p></div>\n    <div class=\"card\"><h3>Free Preview</h3><p>No wallet needed. 20 requests/hour at /preview. Evaluate confidence scores before committing.</p></div>\n  </div>\n</section>\n\n<div class=\"cta\">\n  <h2 style=\"margin-bottom:16px\">Start building with confidence</h2>\n  <p style=\"color:#666;margin-bottom:32px\">agentoracle.co/preview — free, no auth required</p>\n  <a href=\"https://agentoracle.co\" class=\"btn\">Try AgentOracle &rarr;</a>\n  <a href=\"https://agentoracle.co/.well-known/x402-manifest.json\" class=\"btn btn-ghost\">View x402 Manifest</a>\n</div>\n\n</div>\n</body>\n</html>`"
-
-
 // ── Rate Limiting (in-memory, per-IP) ────────────────────────────
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const RATE_LIMIT_MAX = 100; // 100 requests per hour per IP
@@ -514,11 +511,6 @@ const routeConfig = {
       "with expert-level synthesis, powered by Perplexity Sonar Pro. $0.10 USDC per query. Base + SKALE.",
     mimeType: "application/json",
     extensions: { ...bazaarDeep },
-  },
-  "POST /compare": {
-    price: "$0.05",
-    network: NETWORK,
-    description: "Multi-model confidence comparison — sonar vs sonar-pro, returns highest confidence result",
   },
   "POST /research/batch": {
     accepts: batchAccepts,
@@ -1048,7 +1040,7 @@ app.get("/health", (_req, res) => {
 //    - Default tier is "standard" ($0.02, Sonar)
 
 app.post("/research", async (req, res) => {
-  const { query, tier, min_confidence } = req.body;
+  const { query, tier } = req.body;
 
   // ── Input validation ────────────────────────────────────────────
   if (!query || typeof query !== "string" || query.trim().length === 0) {
@@ -1217,17 +1209,10 @@ app.post("/research", async (req, res) => {
     };
     setCacheEntry(query, tier, responsePayload);
 
-    // ── Confidence threshold check ─────────────────────────────
-    const thresholdMet = min_confidence
-      ? adjustedScore >= parseFloat(min_confidence)
-      : true;
-
     // ── Return structured result ────────────────────────────────
     return res.json({
       query: query.trim(),
       tier: selectedTier,
-      threshold_met: thresholdMet,
-      ...(min_confidence ? { min_confidence_requested: parseFloat(min_confidence) } : {}),
       ...responsePayload,
     });
   } catch (err) {
@@ -2071,6 +2056,74 @@ app.get("/cache/stats", (_req, res) => {
 //  404 Catch-All
 // ═══════════════════════════════════════════════════════════════════
 
+
+// ═══════════════════════════════════════════════════════════════════
+//  POST /evaluate — Trust Evaluation Layer
+// ═══════════════════════════════════════════════════════════════════
+const sourceReputation = new Map();
+const feedbackStore = [];
+function getSourceReputation(domain) {
+  if (sourceReputation.has(domain)) return sourceReputation.get(domain);
+  const defaults = {"arxiv.org":0.95,"nature.com":0.96,"reuters.com":0.94,"bbc.com":0.91,"nytimes.com":0.90,"github.com":0.85,"wikipedia.org":0.82,"medium.com":0.65,"reddit.com":0.58,"x.com":0.55};
+  return defaults[domain] || 0.70;
+}
+function updateSourceReputation(domain, score) {
+  const current = getSourceReputation(domain);
+  sourceReputation.set(domain, Math.round((current*0.95+score*0.05)*100)/100);
+}
+
+app.post("/evaluate", async (req, res) => {
+  const { content, url, source, min_confidence } = req.body;
+  const startTime = Date.now();
+  if (!content && !url) return res.status(400).json({error:"Bad Request",message:"Provide content (text/JSON) or url to evaluate.",example:{content:"Some factual claims to verify",source:"exa",min_confidence:0.8}});
+  try {
+    let text = typeof content === "object" ? JSON.stringify(content) : (content || "");
+    if (url && !content) {
+      try { const f = await axios.get(url, {timeout:10000}); text = typeof f.data === "string" ? f.data.slice(0,5000) : JSON.stringify(f.data).slice(0,5000); }
+      catch(e) { return res.status(400).json({error:"URL fetch failed",message:e.message}); }
+    }
+    text = text.slice(0, 4000);
+    const evalPrompt = 'You are a fact-checking AI. Analyze this text: 1) Extract every distinct factual claim (max 8) 2) Verify each as true/false/unverifiable 3) Rate confidence 0.00-1.00 4) Check for AI-generated or manipulated content. Respond ONLY in JSON: {"claims":[{"claim":"text","verdict":"supported|refuted|unverifiable","confidence":0.00,"evidence":"why","correction":"if refuted"}],"content_assessment":{"content_type":"research|news|opinion","freshness":"real-time|recent|dated","adversarial_flags":["flags"]}}';
+    const evalResp = await axios.post("https://api.perplexity.ai/chat/completions",{model:PERPLEXITY_MODEL,stream:false,max_tokens:3000,messages:[{role:"system",content:evalPrompt},{role:"user",content:text}]},{headers:{Authorization:`Bearer ${PERPLEXITY_KEY}`,"Content-Type":"application/json"},timeout:30000});
+    const raw = evalResp.data?.choices?.[0]?.message?.content || "{}";
+    const cleaned = raw.replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/i,"").trim();
+    let evaluation; try { evaluation = JSON.parse(cleaned); } catch { evaluation = {claims:[],content_assessment:{}}; }
+    const claims = evaluation.claims || [];
+    const total = claims.length, verified = claims.filter(c=>c.verdict==="supported").length, refuted = claims.filter(c=>c.verdict==="refuted").length;
+    let overall = 0.5;
+    if (total > 0) { const ws = claims.reduce((s,c)=>{if(c.verdict==="supported")return s+(c.confidence||0.7);if(c.verdict==="refuted")return s+(1-(c.confidence||0.7))*0.3;return s+0.5;},0); overall = Math.round((ws/total)*100)/100; }
+    const threshold = min_confidence ? parseFloat(min_confidence) : 0.8;
+    let rec = "verify"; if(overall>=threshold)rec="act"; else if(overall<0.5)rec="reject";
+    const flags = (evaluation.content_assessment?.adversarial_flags||[]).filter(f=>f!=="");
+    if(flags.length>0){overall=Math.round(Math.max(0,overall-flags.length*0.1)*100)/100;if(overall<0.5)rec="reject";}
+    if(url){try{updateSourceReputation(new URL(url).hostname.replace("www.",""),overall);}catch{}}
+    return res.json({evaluation_id:`eval_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,evaluation:{overall_confidence:overall,recommendation:rec,threshold_applied:threshold,total_claims:total,verified_claims:verified,refuted_claims:refuted,unverifiable_claims:total-verified-refuted,claims:claims.map(c=>({claim:c.claim,verdict:c.verdict,confidence:Math.round((c.confidence||0.5)*100)/100,evidence:c.evidence||"",...(c.correction?{correction:c.correction}:{})})),source_assessment:{evaluated_source:source||"unknown",source_url:url||null,content_type:evaluation.content_assessment?.content_type||"unknown",freshness:evaluation.content_assessment?.freshness||"unknown",adversarial_flags:flags}},meta:{evaluation_time_ms:Date.now()-startTime,endpoint:"/evaluate",price:"$0.01 USDC",feedback_url:"POST /feedback with this evaluation_id"}});
+  } catch(err) { return res.status(500).json({error:"Evaluation failed",message:err.message}); }
+});
+
+app.post("/feedback", express.json(), async (req, res) => {
+  const { evaluation_id, outcome, details, agent_id } = req.body;
+  if (!evaluation_id || !outcome) return res.status(400).json({error:"Provide evaluation_id and outcome"});
+  if (!["accurate","inaccurate","partially_accurate"].includes(outcome)) return res.status(400).json({error:"Invalid outcome"});
+  const fb = {feedback_id:`fb_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,evaluation_id,outcome,details:details||null,agent_id:agent_id||null,timestamp:new Date().toISOString()};
+  feedbackStore.push(fb); console.log("[FEEDBACK]",JSON.stringify(fb));
+  return res.json({recorded:true,feedback_id:fb.feedback_id,message:"Feedback recorded — improves scoring for all agents.",total_feedback:feedbackStore.length});
+});
+
+app.get("/reputation", (_req, res) => {
+  const data = {};
+  for (const d of ["arxiv.org","nature.com","reuters.com","bbc.com","nytimes.com","github.com","wikipedia.org","medium.com","reddit.com","x.com","coindesk.com","techcrunch.com","bloomberg.com"]) data[d]=getSourceReputation(d);
+  for (const [d,s] of sourceReputation.entries()) if(!data[d]) data[d]=s;
+  return res.json({endpoint:"/reputation",description:"Source reputation scores — improves with every /evaluate call",total_tracked_domains:Object.keys(data).length,scores:data});
+});
+
+app.get("/trust", async (_req, res) => {
+  res.setHeader("Content-Type","text/html; charset=utf-8");
+  try { const fs=await import("fs"); const path=await import("path"); res.send(fs.readFileSync(path.join(process.cwd(),"trust.html"),"utf-8")); }
+  catch { res.redirect("/"); }
+});
+
+
 app.use((_req, res) => {
   res.status(404).json({
     error: "Not Found",
@@ -2078,8 +2131,6 @@ app.use((_req, res) => {
       "POST /preview": "Free live preview (truncated results, 10/hr)",
       "POST /research": "Standard research ($0.02 USDC on Base or SKALE gasless)",
       "POST /deep-research": "Deep research with Sonar Pro ($0.10 USDC on Base or SKALE gasless)",
-    "POST /compare": "Multi-model confidence comparison ($0.05 USDC) — returns sonar + sonar-pro results with scores",
-    "GET /trust": "Confidence scoring explainer — why agents need the trust layer",
       "POST /free": "Promotional free queries (use code AGENT100)",
       "POST /defi": "DeFi vertical research (beta — free)",
       "GET /health": "Service health check",
@@ -2125,91 +2176,6 @@ app.listen(PORT, () => {
   console.log(`  Facilitator:  ${FACILITATOR_URL}`);
   console.log(`  Model:        ${PERPLEXITY_MODEL}`);
   console.log("═══════════════════════════════════════════════════");
-});
-
-
-
-// ═══════════════════════════════════════════════════════════════════
-//  GET /trust — Confidence Scoring Explainer Page
-// ═══════════════════════════════════════════════════════════════════
-app.get("/trust", (_req, res) => {
-  res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.send(TRUST_PAGE_HTML);
-});
-
-// ═══════════════════════════════════════════════════════════════════
-//  POST /compare — Multi-Model Confidence Comparison ($0.05 USDC)
-//  Runs query through Sonar + Sonar Pro, returns both with scores
-//  Agent picks the highest confidence result — unique to AgentOracle
-// ═══════════════════════════════════════════════════════════════════
-
-app.post("/compare", async (req, res) => {
-  const { query } = req.body;
-
-  if (!query || typeof query !== "string" || query.trim().length === 0) {
-    return res.status(400).json({
-      error: "Bad Request",
-      message: 'Request body must include a non-empty "query" string.',
-      example: { query: "What are the latest developments in AI agents?" },
-    });
-  }
-
-  const requestStartTime = Date.now();
-
-  try {
-    const systemPrompt = 'Respond only in clean JSON: { "summary": string, "key_facts": array, "sources": array, "confidence_score": number }. Keep concise, accurate, real-time.';
-
-    // Run both models in parallel
-    const [sonarRes, sonarProRes] = await Promise.allSettled([
-      axios.post("https://api.perplexity.ai/chat/completions", {
-        model: PERPLEXITY_MODEL,
-        stream: false,
-        max_tokens: 2000,
-        messages: [{ role: "system", content: systemPrompt }, { role: "user", content: query.trim() }],
-      }, { headers: { Authorization: `Bearer ${PERPLEXITY_KEY}`, "Content-Type": "application/json" }, timeout: 30000 }),
-      axios.post("https://api.perplexity.ai/chat/completions", {
-        model: PERPLEXITY_MODEL_PRO,
-        stream: false,
-        max_tokens: 3000,
-        messages: [{ role: "system", content: systemPrompt }, { role: "user", content: query.trim() }],
-      }, { headers: { Authorization: `Bearer ${PERPLEXITY_KEY}`, "Content-Type": "application/json" }, timeout: 45000 }),
-    ]);
-
-    const parseResult = (settled, modelName) => {
-      if (settled.status === "rejected") return { model: modelName, error: settled.reason.message, confidence_score: 0 };
-      try {
-        const raw = settled.value.data?.choices?.[0]?.message?.content || "";
-        const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
-        const parsed = JSON.parse(cleaned);
-        const score = Math.round((parsed.confidence_score || 0.5) * 100) / 100;
-        return { model: modelName, ...parsed, confidence_score: score };
-      } catch {
-        return { model: modelName, summary: settled.value.data?.choices?.[0]?.message?.content, confidence_score: 0.5 };
-      }
-    };
-
-    const sonarResult = parseResult(sonarRes, "sonar");
-    const sonarProResult = parseResult(sonarProRes, "sonar-pro");
-
-    const winner = sonarProResult.confidence_score >= sonarResult.confidence_score ? "sonar-pro" : "sonar";
-    const responseTimeMs = Date.now() - requestStartTime;
-
-    return res.json({
-      query: query.trim(),
-      endpoint: "/compare",
-      price_paid: "$0.05 USDC",
-      response_time_ms: responseTimeMs,
-      recommended: winner,
-      recommendation_reason: `${winner} returned higher confidence score (${winner === "sonar-pro" ? sonarProResult.confidence_score : sonarResult.confidence_score})`,
-      results: {
-        sonar: sonarResult,
-        "sonar-pro": sonarProResult,
-      },
-      _note: "Use the recommended model result or pick based on your confidence threshold. sonar is faster ($0.02), sonar-pro is more thorough ($0.10).",
-    });
-  } catch (err) {
-    return res.status(500).json({ error: "Compare failed", message: err.message });
-  }
 });
 
 // ═══════════════════════════════════════════════════════════════════
