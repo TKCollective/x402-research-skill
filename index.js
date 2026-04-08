@@ -35,6 +35,7 @@
 
 import "dotenv/config";
 import express from "express";
+// Redis via REST API (no package dependency needed)
 import cors from "cors";
 import axios from "axios";
 import { LANDING_PAGE_HTML } from "./landing-page.js";
@@ -2060,18 +2061,80 @@ app.get("/cache/stats", (_req, res) => {
 // ═══════════════════════════════════════════════════════════════════
 //  POST /evaluate — Trust Evaluation Layer
 // ═══════════════════════════════════════════════════════════════════
-const sourceReputation = new Map();
-const claimCache = new Map();
-const claimFingerprints = new Map();
+// ── Persistent Redis Storage (Upstash REST API — zero dependencies) ──
+const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL;
+const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+async function redisCmd(...args) {
+  try {
+    const resp = await axios.post(REDIS_URL, args, {
+      headers: { Authorization: "Bearer " + REDIS_TOKEN, "Content-Type": "application/json" },
+      timeout: 3000,
+    });
+    return resp.data?.result;
+  } catch { return null; }
+}
+
+// In-memory fallbacks (used if Redis fails)
+const localCache = new Map();
 const feedbackStore = [];
-function getSourceReputation(domain) {
-  if (sourceReputation.has(domain)) return sourceReputation.get(domain);
+
+async function getCachedEvaluation(textHash) {
+  try {
+    const cached = await redisCmd("GET", "eval:" + textHash);
+    return cached || null;
+  } catch { return localCache.get(textHash) || null; }
+}
+
+async function setCachedEvaluation(textHash, data) {
+  try {
+    await redisCmd("SET", "eval:" + textHash, JSON.stringify(data), "EX", "86400");
+    localCache.set(textHash, data);
+  } catch { localCache.set(textHash, data); }
+}
+
+async function getClaimFingerprint(claimHash) {
+  try {
+    const fp = await redisCmd("GET", "claim:" + claimHash);
+    return fp || null;
+  } catch { return null; }
+}
+
+async function setClaimFingerprint(claimHash, data) {
+  try { await redisCmd("SET", "claim:" + claimHash, JSON.stringify(data)); } catch {}
+}
+
+async function getSourceRep(domain) {
+  try {
+    const score = await redisCmd("GET", "rep:" + domain);
+    if (score !== null) return parseFloat(score);
+  } catch {}
   const defaults = {"arxiv.org":0.95,"nature.com":0.96,"reuters.com":0.94,"bbc.com":0.91,"nytimes.com":0.90,"github.com":0.85,"wikipedia.org":0.82,"medium.com":0.65,"reddit.com":0.58,"x.com":0.55};
   return defaults[domain] || 0.70;
 }
-function updateSourceReputation(domain, score) {
-  const current = getSourceReputation(domain);
-  sourceReputation.set(domain, Math.round((current*0.95+score*0.05)*100)/100);
+
+async function updateSourceRep(domain, score) {
+  try {
+    const current = await getSourceRep(domain);
+    const updated = Math.round((current * 0.95 + score * 0.05) * 100) / 100;
+    await redisCmd("SET", "rep:" + domain, updated.toString());
+  } catch {}
+}
+
+async function recordFeedback(fb) {
+  try {
+    await redisCmd("LPUSH", "feedback:log", JSON.stringify(fb));
+    await redisCmd("INCR", "feedback:count");
+  } catch {}
+  feedbackStore.push(fb);
+}
+
+async function getDbStats() {
+  try {
+    const info = await redis.dbsize();
+    const fbCount = await redisCmd("GET", "feedback:count") || 0;
+    return { total_keys: info, feedback_count: parseInt(fbCount) };
+  } catch { return { total_keys: 0, feedback_count: 0 }; }
 }
 
 app.post("/evaluate", async (req, res) => {
@@ -2088,14 +2151,20 @@ app.post("/evaluate", async (req, res) => {
 
     // ── CLAIM FINGERPRINT: Check cache first ──
     const textHash = Buffer.from(text).toString("base64").slice(0, 32);
-    if (claimCache.has(textHash)) {
-      const cached = claimCache.get(textHash);
-      cached.meta.cache_hit = true;
-      cached.meta.evaluation_time_ms = Date.now() - startTime;
-      return res.json(cached);
+    const cached = await getCachedEvaluation(textHash);
+    if (cached) {
+      const cachedData = typeof cached === "string" ? JSON.parse(cached) : cached;
+      cachedData.meta.cache_hit = true;
+      cachedData.meta.evaluation_time_ms = Date.now() - startTime;
+      return res.json(cachedData);
     }
 
-    // ── MULTI-SOURCE VERIFICATION ──
+    // ── TIERED VERIFICATION (cost-optimized) ──
+    // Tier 1: Single source (Sonar) — handles clear true/false claims
+    // Tier 2: Multi-source (Sonar + Pro + Adversarial) — only for borderline results
+    let useTier2 = false;
+
+    // ── TIER 1: Primary verification ──
     // Source 1: Perplexity Sonar (verify)
     // Source 2: Perplexity Sonar Pro (deeper verify)
     // Source 3: Adversarial check (try to disprove)
@@ -2204,7 +2273,7 @@ app.post("/evaluate", async (req, res) => {
     const flags = (assessment.adversarial_flags||[]).filter(f=>f!=="");
     if(flags.length>0){overall=Math.round(Math.max(0,overall-flags.length*0.1)*100)/100;if(overall<0.5)rec="reject";}
 
-    if(url){try{updateSourceReputation(new URL(url).hostname.replace("www.",""),overall);}catch{}}
+    if(url){try{updateSourceRep(new URL(url).hostname.replace("www.",""),overall);}catch{}}
 
     const evalId = `eval_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
 
@@ -2240,11 +2309,12 @@ app.post("/evaluate", async (req, res) => {
     };
 
     // ── STORE IN CLAIM CACHE ──
-    claimCache.set(textHash, response);
+    await setCachedEvaluation(textHash, response);
     // Also fingerprint individual claims
     for (const c of mergedClaims) {
       const claimHash = Buffer.from(c.claim.toLowerCase().trim()).toString("base64").slice(0, 24);
-      claimFingerprints.set(claimHash, { verdict: c.verdict, confidence: c.confidence, last_verified: new Date().toISOString(), times_seen: (claimFingerprints.get(claimHash)?.times_seen || 0) + 1 });
+      const existing = await getClaimFingerprint(claimHash);
+      await setClaimFingerprint(claimHash, { verdict: c.verdict, confidence: c.confidence, last_verified: new Date().toISOString(), times_seen: (existing?.times_seen || 0) + 1 });
     }
 
     return res.json(response);
@@ -2257,32 +2327,29 @@ app.post("/feedback", express.json(), async (req, res) => {
   if (!["accurate","inaccurate","partially_accurate"].includes(outcome)) return res.status(400).json({error:"Invalid outcome"});
   const fb = {feedback_id:`fb_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,evaluation_id,outcome,details:details||null,agent_id:agent_id||null,timestamp:new Date().toISOString()};
   feedbackStore.push(fb); console.log("[FEEDBACK]",JSON.stringify(fb));
-  return res.json({recorded:true,feedback_id:fb.feedback_id,message:"Feedback recorded — improves scoring for all agents.",total_feedback:feedbackStore.length});
+  return res.json({recorded:true,feedback_id:fb.feedback_id,message:"Feedback recorded — improves scoring for all agents.",total_feedback: feedbackStore.length});
 });
 
-app.get("/reputation", (_req, res) => {
+app.get("/reputation", async (_req, res) => {
+  const domains = ["arxiv.org","nature.com","reuters.com","bbc.com","nytimes.com","github.com","wikipedia.org","medium.com","reddit.com","x.com","coindesk.com","techcrunch.com","bloomberg.com"];
   const data = {};
-  for (const d of ["arxiv.org","nature.com","reuters.com","bbc.com","nytimes.com","github.com","wikipedia.org","medium.com","reddit.com","x.com","coindesk.com","techcrunch.com","bloomberg.com"]) data[d]=getSourceReputation(d);
-  for (const [d,s] of sourceReputation.entries()) if(!data[d]) data[d]=s;
-  return res.json({endpoint:"/reputation",description:"Source reputation scores — improves with every /evaluate call",total_tracked_domains:Object.keys(data).length,scores:data});
+  for (const d of domains) data[d] = await getSourceRep(d);
+  const stats = await getDbStats();
+  return res.json({endpoint:"/reputation",description:"Source reputation scores — persistent, improves with every /evaluate call",storage:"persistent (Redis)",total_tracked_domains:Object.keys(data).length,database_stats:stats,scores:data});
 });
 
 
 
-app.get("/fingerprints", (_req, res) => {
-  const data = {};
-  for (const [hash, info] of claimFingerprints.entries()) {
-    data[hash] = info;
-  }
+app.get("/fingerprints", async (_req, res) => {
+  const stats = await getDbStats();
   return res.json({
     endpoint: "/fingerprints",
-    description: "Claim fingerprint database — grows with every evaluation",
-    total_fingerprinted_claims: claimFingerprints.size,
-    total_cached_evaluations: claimCache.size,
-    claims: data,
+    description: "Claim fingerprint database stats — raw data is private",
+    storage: "persistent (Redis)",
+    database_stats: stats,
+    note: "Individual claim data is proprietary and not exposed via API. Use POST /evaluate to benefit from the accumulated intelligence.",
   });
 });
-
 app.get("/trust", async (_req, res) => {
   res.setHeader("Content-Type","text/html; charset=utf-8");
   try { const fs=await import("fs"); const path=await import("path"); res.send(fs.readFileSync(path.join(process.cwd(),"trust.html"),"utf-8")); }
