@@ -21,8 +21,8 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AgentOracle — Live Research API for AI Agents | Gasless on SKALE, Paid via x402</title>
-<meta name="description" content="AgentOracle is a pay-per-query research API for AI agents using the x402 payment protocol. Accept USDC and EURC on Base mainnet.">
+<title>AgentOracle — The Trust Layer for AI Agents | x402 Native</title>
+<meta name="description" content="AgentOracle is the trust layer for agentic AI — evaluate any data with per-claim verification, confidence scoring (0.00–1.00), and x402 payments on Base, SKALE, and Stellar.">
 
 <style>
 /* === FONTS === */
@@ -824,22 +824,23 @@ a:hover { color: var(--color-primary-hover); }
   <div class="container" style="text-align:center;margin-bottom:var(--space-6);">
     <div class="hero__badge fade-in" style="display:inline-flex;">
       <span class="hero__badge-dot"></span>
-      v1.8.0 — Live on Base + SKALE + Stellar · Multi-Chain
+      v2.0.0 — Trust Layer · /evaluate · /feedback · Base · SKALE · Stellar
     </div>
   </div>
   <div class="container hero__inner">
     <div class="hero__content">
       <h1 class="hero__headline fade-in">
-        Research API<br>for <span class="gold-text">AI Agents</span>
+        The Trust Layer<br>for <span class="gold-text">AI Agents</span>
       </h1>
       <p class="hero__subtitle fade-in">
-        Live research API for agents — gasless on SKALE, paid via x402. One HTTP request, one USDC micropayment, structured JSON back — no API keys, no subscriptions, no human in the loop.
+        Agents don't just need data — they need to know what to trust. Pass any data through /evaluate and get per-claim verification, confidence scores, and a recommendation: act, verify, or reject. x402 native on Base, SKALE, and Stellar.
       </p>
       <p class="hero__secondary-tagline fade-in">Get Started in 60 Seconds</p>
       <div class="hero__ctas fade-in">
         <a href="#live-demo" class="btn btn--primary btn--hero">Try Live Demo &#8594;</a>
         <a href="https://agentoracle.co/.well-known/x402.json" class="btn btn--ghost" target="_blank" rel="noopener noreferrer">View x402 Manifest</a>
         <a href="https://agentoracle.co/demo" class="btn btn--ghost" target="_blank" rel="noopener noreferrer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Watch Demo</a>
+        <a href="/trust" class="btn btn--ghost" style="border-color:var(--color-primary);color:var(--color-primary);">Trust Layer Docs &#8594;</a>
       </div>
     </div>
     <div class="hero__code-wrapper fade-in">
@@ -863,13 +864,13 @@ a:hover { color: var(--color-primary-hover); }
 <!-- STATS BAR -->
 <div class="stats-bar">
   <div class="container stats-bar__inner">
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> From $0.02</span>
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Base Mainnet</span>
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Structured JSON</span>
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Zero API Keys</span>
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> MCP Server</span>
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> SKALE Gasless Live</span>
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Stellar Testnet Live</span>
+    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Trust Evaluation</span>
+    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Confidence Scoring</span>
+    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> x402 Native</span>
+    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Base + SKALE + Stellar</span>
+    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Per-Claim Verification</span>
+    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Source Reputation</span>
+    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> No API Keys</span>
   </div>
 </div>
 
@@ -1427,25 +1428,33 @@ a:hover { color: var(--color-primary-hover); }
 <section class="section section--alt" id="compare">
   <div class="container">
     <div class="section-center">
-      <span class="section-label fade-in">Why AgentOracle</span>
+      
+    <div style="text-align:center;margin-bottom:var(--space-10);padding:var(--space-8) var(--space-6);background:linear-gradient(135deg,rgba(201,169,110,0.06) 0%,rgba(74,222,128,0.04) 100%);border:1px solid var(--color-border);border-radius:var(--radius-xl);">
+      <p style="font-size:var(--text-xs);text-transform:uppercase;letter-spacing:3px;color:var(--color-primary);margin-bottom:var(--space-3);">New in v2.0</p>
+      <h3 style="font-size:var(--text-xl);font-weight:700;margin-bottom:var(--space-3);">The Trust Layer for Agentic AI</h3>
+      <p style="color:var(--color-text-muted);max-width:560px;margin:0 auto var(--space-4);">Pass ANY data through /evaluate — from Exa, Perplexity, web scrapes, anything. Get per-claim verification, confidence scores, and a recommendation: act, verify, or reject.</p>
+      <p style="color:var(--color-text-muted);font-size:var(--text-sm);max-width:560px;margin:0 auto var(--space-5);">Every evaluation builds our source reputation graph. Every /feedback call improves scoring. The moat compounds with usage.</p>
+      <a href="/trust" style="display:inline-block;background:var(--color-primary);color:#111;padding:10px 28px;border-radius:8px;font-weight:700;font-size:var(--text-sm);text-decoration:none;">See /evaluate in Action &#8594;</a>
+    </div>
+<span class="section-label fade-in">Why AgentOracle</span>
       <h2 class="section-title fade-in">How We Compare</h2>
       <p class="section-subtitle fade-in">The only research API with native crypto payments and zero auth overhead.</p>
     </div>
     <div class="compare-section fade-in">
       <div class="compare-table-wrapper">
         <table class="compare-table">
-          <thead><tr><th></th><th class="compare-highlight">AgentOracle</th><th>Tavily</th><th>Exa</th><th>Brave Search</th><th>Perplexity API</th></tr></thead>
+          <thead><tr><th></th><th class="compare-highlight">AgentOracle</th><th>Exa <span style="font-size:10px;color:#4ADE80;font-weight:600;">+x402</span></th><th>Tavily</th><th>Brave Search</th><th>Perplexity API</th></tr></thead>
           <tbody>
-            <tr><td>Pricing</td><td class="compare-highlight"><span class="check-yes">$0.02/query</span></td><td>$0.008/credit</td><td>Contact sales</td><td>$5-9/1K</td><td>$5-12/1K</td></tr>
-            <tr><td>Payment Method</td><td class="compare-highlight"><span class="check-yes">USDC on-chain</span></td><td>Credit card</td><td>Credit card</td><td>Credit card</td><td>Credit card</td></tr>
-            <tr><td>Auth Required</td><td class="compare-highlight"><span class="check-yes">None (x402)</span></td><td>API key</td><td>API key</td><td>API key</td><td>API key</td></tr>
-            <tr><td>Agent-Native</td><td class="compare-highlight"><span class="check-yes">x402 (HTTP 402)</span></td><td class="check-no">REST only</td><td class="check-no">REST only</td><td class="check-no">REST only</td><td class="check-no">REST only</td></tr>
-            <tr><td>On-Chain Verifiable</td><td class="compare-highlight"><span class="check-yes">Yes (Base L2)</span></td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td></tr>
-            <tr><td>Multi-Chain</td><td class="compare-highlight"><span class="check-yes">Base + SKALE + Stellar</span></td><td class="check-no">N/A</td><td class="check-no">N/A</td><td class="check-no">N/A</td><td class="check-no">N/A</td></tr>
-            <tr><td>MCP Server</td><td class="compare-highlight"><span class="check-yes">Yes</span></td><td><span class="check-yes">Yes</span></td><td><span class="check-yes">Yes</span></td><td class="check-no">No</td><td class="check-no">No</td></tr>
-            <tr><td>Free Tier</td><td class="compare-highlight"><span class="check-yes">20 req/hr</span></td><td>1K/mo</td><td class="check-no">None</td><td>2K/mo</td><td>100/day</td></tr>
-            <tr><td>Confidence Scoring</td><td class="compare-highlight"><span class="check-yes">Built-in</span></td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td></tr>
-            <tr><td>Human Setup</td><td class="compare-highlight"><span class="check-yes">0 min</span></td><td>~5 min</td><td>Contact sales</td><td>~5 min</td><td>~5 min</td></tr>
+            <tr><td>Pricing</td><td class="compare-highlight"><span class="check-yes">$0.01-0.02/query</span></td><td>$0.005-0.012/query</td><td>$0.008/credit</td><td>$5-9/1K</td><td>$5-12/1K</td></tr>
+            <tr><td>Output Type</td><td class="compare-highlight"><span class="check-yes">Per-claim verified intelligence</span></td><td class="check-no">Raw search results</td><td class="check-no">Raw search results</td><td class="check-no">Raw search results</td><td>Answers + tokens</td></tr>
+            <tr><td>Trust Evaluation</td><td class="compare-highlight"><span class="check-yes">/evaluate endpoint</span></td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td></tr>
+            <tr><td>Confidence Scoring</td><td class="compare-highlight"><span class="check-yes">Built-in (0.00-1.00)</span></td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td></tr>
+            <tr><td>Claim Verification</td><td class="compare-highlight"><span class="check-yes">Per-claim verdicts</span></td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td></tr>
+            <tr><td>x402 / Agent-Native</td><td class="compare-highlight"><span class="check-yes">x402 (all chains)</span></td><td style="color:#4ADE80;">x402 (Base only)</td><td class="check-no">API key</td><td class="check-no">API key</td><td class="check-no">API key</td></tr>
+            <tr><td>Multi-Chain</td><td class="compare-highlight"><span class="check-yes">Base + SKALE + Stellar</span></td><td class="check-no">Base only</td><td class="check-no">N/A</td><td class="check-no">N/A</td><td class="check-no">N/A</td></tr>
+            <tr><td>Source Reputation</td><td class="compare-highlight"><span class="check-yes">/reputation endpoint</span></td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td></tr>
+            <tr><td>Agent Feedback Loop</td><td class="compare-highlight"><span class="check-yes">/feedback endpoint</span></td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td><td class="check-no">No</td></tr>
+            <tr><td>Free Tier</td><td class="compare-highlight"><span class="check-yes">20 req/hr (no auth)</span></td><td>1K/mo (signup)</td><td>1K/mo (signup)</td><td>2K/mo (signup)</td><td>100/day (signup)</td></tr>
           </tbody>
         </table>
         <div class="compare-mobile-cards">
@@ -1475,16 +1484,15 @@ a:hover { color: var(--color-primary-hover); }
             <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Human Setup</span><span class="compare-mobile-card__value">~5 min</span></div>
           </div>
           <div class="compare-mobile-card">
-            <div class="compare-mobile-card__name">Exa</div>
-            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Pricing</span><span class="compare-mobile-card__value">Contact sales</span></div>
-            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Payment</span><span class="compare-mobile-card__value">Credit card</span></div>
-            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Auth</span><span class="compare-mobile-card__value">API key</span></div>
-            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Agent-Native</span><span class="compare-mobile-card__value"><span class="check-no">REST only</span></span></div>
-            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">On-Chain</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
-            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">MCP Server</span><span class="compare-mobile-card__value"><span class="check-yes">Yes</span></span></div>
-            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Free Tier</span><span class="compare-mobile-card__value"><span class="check-no">None</span></span></div>
+            <div class="compare-mobile-card__name">Exa <span style="font-size:10px;color:#4ADE80;">+x402</span></div>
+            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Pricing</span><span class="compare-mobile-card__value">$0.005-0.012/query</span></div>
+            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Output</span><span class="compare-mobile-card__value"><span class="check-no">Raw search results</span></span></div>
+            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Trust Evaluation</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
             <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Confidence Scoring</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
-            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Human Setup</span><span class="compare-mobile-card__value">Contact sales</span></div>
+            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">x402</span><span class="compare-mobile-card__value" style="color:#4ADE80;">Base only</span></div>
+            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Multi-Chain</span><span class="compare-mobile-card__value"><span class="check-no">Base only</span></span></div>
+            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Feedback Loop</span><span class="compare-mobile-card__value"><span class="check-no">No</span></span></div>
+            <div class="compare-mobile-card__row"><span class="compare-mobile-card__label">Free Tier</span><span class="compare-mobile-card__value">1K/mo (signup)</span></div>
           </div>
           <div class="compare-mobile-card">
             <div class="compare-mobile-card__name">Brave Search</div>
@@ -1512,7 +1520,7 @@ a:hover { color: var(--color-primary-hover); }
           </div>
         </div>
       </div>
-      <p class="compare-note">Comparison based on publicly available pricing and documentation as of March 2026.</p>
+      <p class="compare-note">Comparison based on publicly available pricing and documentation as of April 2026. Exa added x402 (Base only) on April 7, 2026.</p>
     </div>
   </div>
 </section>
