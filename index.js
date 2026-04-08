@@ -2061,6 +2061,8 @@ app.get("/cache/stats", (_req, res) => {
 //  POST /evaluate — Trust Evaluation Layer
 // ═══════════════════════════════════════════════════════════════════
 const sourceReputation = new Map();
+const claimCache = new Map();
+const claimFingerprints = new Map();
 const feedbackStore = [];
 function getSourceReputation(domain) {
   if (sourceReputation.has(domain)) return sourceReputation.get(domain);
@@ -2083,23 +2085,171 @@ app.post("/evaluate", async (req, res) => {
       catch(e) { return res.status(400).json({error:"URL fetch failed",message:e.message}); }
     }
     text = text.slice(0, 4000);
-    const evalPrompt = 'You are a fact-checking AI. Analyze this text: 1) Extract every distinct factual claim (max 8) 2) Verify each as true/false/unverifiable 3) Rate confidence 0.00-1.00 4) Check for AI-generated or manipulated content. Respond ONLY in JSON: {"claims":[{"claim":"text","verdict":"supported|refuted|unverifiable","confidence":0.00,"evidence":"why","correction":"if refuted"}],"content_assessment":{"content_type":"research|news|opinion","freshness":"real-time|recent|dated","adversarial_flags":["flags"]}}';
-    const evalResp = await axios.post("https://api.perplexity.ai/chat/completions",{model:PERPLEXITY_MODEL,stream:false,max_tokens:3000,messages:[{role:"system",content:evalPrompt},{role:"user",content:text}]},{headers:{Authorization:`Bearer ${PERPLEXITY_KEY}`,"Content-Type":"application/json"},timeout:30000});
-    const raw = evalResp.data?.choices?.[0]?.message?.content || "{}";
-    const cleaned = raw.replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/i,"").trim();
-    let evaluation; try { evaluation = JSON.parse(cleaned); } catch { evaluation = {claims:[],content_assessment:{}}; }
-    const claims = evaluation.claims || [];
-    const total = claims.length, verified = claims.filter(c=>c.verdict==="supported").length, refuted = claims.filter(c=>c.verdict==="refuted").length;
+
+    // ── CLAIM FINGERPRINT: Check cache first ──
+    const textHash = Buffer.from(text).toString("base64").slice(0, 32);
+    if (claimCache.has(textHash)) {
+      const cached = claimCache.get(textHash);
+      cached.meta.cache_hit = true;
+      cached.meta.evaluation_time_ms = Date.now() - startTime;
+      return res.json(cached);
+    }
+
+    // ── MULTI-SOURCE VERIFICATION ──
+    // Source 1: Perplexity Sonar (verify)
+    // Source 2: Perplexity Sonar Pro (deeper verify)
+    // Source 3: Adversarial check (try to disprove)
+
+    const verifyPrompt = 'You are a fact-checking AI. Analyze this text: 1) Extract every distinct factual claim (max 8) 2) Verify each as true/false/unverifiable 3) Rate confidence 0.00-1.00 4) Check for AI-generated or manipulated content. Respond ONLY in JSON: {"claims":[{"claim":"text","verdict":"supported|refuted|unverifiable","confidence":0.00,"evidence":"why","correction":"if refuted"}],"content_assessment":{"content_type":"research|news|opinion","freshness":"real-time|recent|dated","adversarial_flags":["flags"]}}';
+
+    const adversarialPrompt = 'You are a skeptical fact-checker whose job is to DISPROVE claims. For each claim in this text, actively search for contradicting evidence. If you cannot find evidence against a claim, mark it as "resistant" (meaning it survived adversarial checking). Respond ONLY in JSON: {"claims":[{"claim":"text","adversarial_verdict":"resistant|vulnerable|contradicted","counter_evidence":"any evidence against this claim or empty string"}]}';
+
+    // Run all 3 in parallel
+    const [sonarRes, proRes, advRes] = await Promise.allSettled([
+      axios.post("https://api.perplexity.ai/chat/completions",
+        {model:PERPLEXITY_MODEL,stream:false,max_tokens:3000,messages:[{role:"system",content:verifyPrompt},{role:"user",content:text}]},
+        {headers:{Authorization:`Bearer ${PERPLEXITY_KEY}`,"Content-Type":"application/json"},timeout:30000}),
+      axios.post("https://api.perplexity.ai/chat/completions",
+        {model:PERPLEXITY_MODEL_PRO,stream:false,max_tokens:3000,messages:[{role:"system",content:verifyPrompt},{role:"user",content:text}]},
+        {headers:{Authorization:`Bearer ${PERPLEXITY_KEY}`,"Content-Type":"application/json"},timeout:45000}),
+      axios.post("https://api.perplexity.ai/chat/completions",
+        {model:PERPLEXITY_MODEL,stream:false,max_tokens:2000,messages:[{role:"system",content:adversarialPrompt},{role:"user",content:text}]},
+        {headers:{Authorization:`Bearer ${PERPLEXITY_KEY}`,"Content-Type":"application/json"},timeout:30000}),
+    ]);
+
+    function parseEvalResponse(settled) {
+      if (settled.status === "rejected") return null;
+      try {
+        const raw = settled.value.data?.choices?.[0]?.message?.content || "{}";
+        const cleaned = raw.replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/i,"").trim();
+        return JSON.parse(cleaned);
+      } catch { return null; }
+    }
+
+    const sonarEval = parseEvalResponse(sonarRes);
+    const proEval = parseEvalResponse(proRes);
+    const advEval = parseEvalResponse(advRes);
+
+    // Use sonar as primary, pro as secondary verification
+    const primaryClaims = sonarEval?.claims || proEval?.claims || [];
+    const proClaims = proEval?.claims || [];
+    const advClaims = advEval?.claims || [];
+
+    // Cross-reference claims across sources
+    const mergedClaims = primaryClaims.map((claim, i) => {
+      const proMatch = proClaims.find(p => p.claim && claim.claim && (p.claim.toLowerCase().includes(claim.claim.slice(0,30).toLowerCase()) || claim.claim.toLowerCase().includes((p.claim || "").slice(0,30).toLowerCase())));
+      const advMatch = advClaims.find(a => a.claim && claim.claim && (a.claim.toLowerCase().includes(claim.claim.slice(0,30).toLowerCase()) || claim.claim.toLowerCase().includes((a.claim || "").slice(0,30).toLowerCase())));
+
+      let sourcesAgreeing = 0;
+      let sourcesChecked = 1; // sonar always counts
+
+      // Count sonar
+      if (claim.verdict === "supported") sourcesAgreeing++;
+
+      // Count pro
+      if (proMatch) {
+        sourcesChecked++;
+        if (proMatch.verdict === claim.verdict) sourcesAgreeing++;
+      }
+
+      // Count adversarial
+      if (advMatch) {
+        sourcesChecked++;
+        if (advMatch.adversarial_verdict === "resistant" && claim.verdict === "supported") sourcesAgreeing++;
+        if (advMatch.adversarial_verdict === "contradicted" && claim.verdict === "refuted") sourcesAgreeing++;
+      }
+
+      // Compute cross-referenced confidence
+      let crossConfidence = claim.confidence || 0.5;
+      if (sourcesChecked >= 2) {
+        const agreement = sourcesAgreeing / sourcesChecked;
+        crossConfidence = Math.round(((claim.confidence || 0.5) * 0.5 + agreement * 0.5) * 100) / 100;
+      }
+
+      // If adversarial found contradictions, reduce confidence
+      if (advMatch && advMatch.adversarial_verdict === "contradicted" && claim.verdict === "supported") {
+        crossConfidence = Math.round(Math.max(0.1, crossConfidence - 0.3) * 100) / 100;
+        claim.verdict = "unverifiable";
+        claim.evidence = (claim.evidence || "") + " Note: adversarial check found contradicting evidence.";
+      }
+
+      return {
+        claim: claim.claim,
+        verdict: claim.verdict,
+        confidence: crossConfidence,
+        evidence: claim.evidence || "",
+        ...(claim.correction ? {correction: claim.correction} : {}),
+        sources_checked: sourcesChecked,
+        sources_agreeing: sourcesAgreeing,
+        adversarial_result: advMatch ? advMatch.adversarial_verdict : "not_checked",
+        ...(advMatch && advMatch.counter_evidence ? {counter_evidence: advMatch.counter_evidence} : {}),
+        verification_method: sourcesChecked >= 2 ? "multi-source" : "single-source",
+      };
+    });
+
+    const total = mergedClaims.length;
+    const verified = mergedClaims.filter(c=>c.verdict==="supported").length;
+    const refuted = mergedClaims.filter(c=>c.verdict==="refuted").length;
+
     let overall = 0.5;
-    if (total > 0) { const ws = claims.reduce((s,c)=>{if(c.verdict==="supported")return s+(c.confidence||0.7);if(c.verdict==="refuted")return s+(1-(c.confidence||0.7))*0.3;return s+0.5;},0); overall = Math.round((ws/total)*100)/100; }
+    if (total > 0) {
+      const ws = mergedClaims.reduce((s,c)=>{if(c.verdict==="supported")return s+(c.confidence||0.7);if(c.verdict==="refuted")return s+(1-(c.confidence||0.7))*0.3;return s+0.5;},0);
+      overall = Math.round((ws/total)*100)/100;
+    }
+
     const threshold = min_confidence ? parseFloat(min_confidence) : 0.8;
     let rec = "verify"; if(overall>=threshold)rec="act"; else if(overall<0.5)rec="reject";
-    const flags = (evaluation.content_assessment?.adversarial_flags||[]).filter(f=>f!=="");
+
+    const assessment = sonarEval?.content_assessment || proEval?.content_assessment || {};
+    const flags = (assessment.adversarial_flags||[]).filter(f=>f!=="");
     if(flags.length>0){overall=Math.round(Math.max(0,overall-flags.length*0.1)*100)/100;if(overall<0.5)rec="reject";}
+
     if(url){try{updateSourceReputation(new URL(url).hostname.replace("www.",""),overall);}catch{}}
-    return res.json({evaluation_id:`eval_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,evaluation:{overall_confidence:overall,recommendation:rec,threshold_applied:threshold,total_claims:total,verified_claims:verified,refuted_claims:refuted,unverifiable_claims:total-verified-refuted,claims:claims.map(c=>({claim:c.claim,verdict:c.verdict,confidence:Math.round((c.confidence||0.5)*100)/100,evidence:c.evidence||"",...(c.correction?{correction:c.correction}:{})})),source_assessment:{evaluated_source:source||"unknown",source_url:url||null,content_type:evaluation.content_assessment?.content_type||"unknown",freshness:evaluation.content_assessment?.freshness||"unknown",adversarial_flags:flags}},meta:{evaluation_time_ms:Date.now()-startTime,endpoint:"/evaluate",price:"$0.01 USDC",feedback_url:"POST /feedback with this evaluation_id"}});
+
+    const evalId = `eval_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+
+    const response = {
+      evaluation_id: evalId,
+      evaluation: {
+        overall_confidence: overall,
+        recommendation: rec,
+        threshold_applied: threshold,
+        total_claims: total,
+        verified_claims: verified,
+        refuted_claims: refuted,
+        unverifiable_claims: total-verified-refuted,
+        verification_method: "multi-source",
+        sources_used: [sonarRes.status==="fulfilled"?"sonar":null,proRes.status==="fulfilled"?"sonar-pro":null,advRes.status==="fulfilled"?"adversarial":null].filter(Boolean),
+        claims: mergedClaims,
+        source_assessment: {
+          evaluated_source: source||"unknown",
+          source_url: url||null,
+          content_type: assessment.content_type||"unknown",
+          freshness: assessment.freshness||"unknown",
+          adversarial_flags: flags,
+        },
+      },
+      meta: {
+        evaluation_time_ms: Date.now()-startTime,
+        endpoint: "/evaluate",
+        price: "$0.01 USDC",
+        verification_method: "multi-source (sonar + sonar-pro + adversarial)",
+        cache_hit: false,
+        feedback_url: "POST /feedback with this evaluation_id",
+      },
+    };
+
+    // ── STORE IN CLAIM CACHE ──
+    claimCache.set(textHash, response);
+    // Also fingerprint individual claims
+    for (const c of mergedClaims) {
+      const claimHash = Buffer.from(c.claim.toLowerCase().trim()).toString("base64").slice(0, 24);
+      claimFingerprints.set(claimHash, { verdict: c.verdict, confidence: c.confidence, last_verified: new Date().toISOString(), times_seen: (claimFingerprints.get(claimHash)?.times_seen || 0) + 1 });
+    }
+
+    return res.json(response);
   } catch(err) { return res.status(500).json({error:"Evaluation failed",message:err.message}); }
-});
+})
 
 app.post("/feedback", express.json(), async (req, res) => {
   const { evaluation_id, outcome, details, agent_id } = req.body;
@@ -2115,6 +2265,22 @@ app.get("/reputation", (_req, res) => {
   for (const d of ["arxiv.org","nature.com","reuters.com","bbc.com","nytimes.com","github.com","wikipedia.org","medium.com","reddit.com","x.com","coindesk.com","techcrunch.com","bloomberg.com"]) data[d]=getSourceReputation(d);
   for (const [d,s] of sourceReputation.entries()) if(!data[d]) data[d]=s;
   return res.json({endpoint:"/reputation",description:"Source reputation scores — improves with every /evaluate call",total_tracked_domains:Object.keys(data).length,scores:data});
+});
+
+
+
+app.get("/fingerprints", (_req, res) => {
+  const data = {};
+  for (const [hash, info] of claimFingerprints.entries()) {
+    data[hash] = info;
+  }
+  return res.json({
+    endpoint: "/fingerprints",
+    description: "Claim fingerprint database — grows with every evaluation",
+    total_fingerprinted_claims: claimFingerprints.size,
+    total_cached_evaluations: claimCache.size,
+    claims: data,
+  });
 });
 
 app.get("/trust", async (_req, res) => {
