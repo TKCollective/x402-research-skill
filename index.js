@@ -2124,6 +2124,60 @@ app.get("/trust", async (_req, res) => {
 });
 
 
+app.use((_req, res) => {
+  res.status(404).json({
+    error: "Not Found",
+    available_endpoints: {
+      "POST /preview": "Free live preview (truncated results, 10/hr)",
+      "POST /research": "Standard research ($0.02 USDC on Base or SKALE gasless)",
+      "POST /deep-research": "Deep research with Sonar Pro ($0.10 USDC on Base or SKALE gasless)",
+      "POST /free": "Promotional free queries (use code AGENT100)",
+      "POST /defi": "DeFi vertical research (beta — free)",
+      "GET /health": "Service health check",
+      "GET /cache/stats": "Research cache monitoring",
+      "GET /skale": "SKALE gasless payments info (live — zero gas fees)",
+      "GET /.well-known/x402": "x402 discovery document",
+      "GET /.well-known/x402.json": "x402 service manifest (alias)",
+      "GET /.well-known/x402-manifest.json": "x402 standard manifest path (Base + SKALE + Stellar)",
+      "GET /": "AgentOracle landing page",
+    },
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  Global Error Handler
+// ═══════════════════════════════════════════════════════════════════
+
+app.use((err, _req, res, _next) => {
+  console.error("[global]", err.stack || err.message);
+  res.status(500).json({
+    error: "Internal Server Error",
+    message: "Something went wrong.",
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  Start Server
+// ═══════════════════════════════════════════════════════════════════
+
+app.listen(PORT, () => {
+  console.log("═══════════════════════════════════════════════════");
+  console.log("  x402 Research API v1.5.0 — Live");
+  console.log("═══════════════════════════════════════════════════");
+  console.log(`  Endpoint:     http://localhost:${PORT}/research`);
+  console.log(`  Health:       http://localhost:${PORT}/health`);
+  console.log(`  Discovery:    http://localhost:${PORT}/.well-known/x402`);
+  console.log(`  Manifest:     http://localhost:${PORT}/.well-known/x402.json`);
+  console.log(`  Chain:        Base mainnet (${NETWORK})`);
+  console.log(`  SKALE:        ${SKALE_NETWORK} ${SKALE_FACILITATOR_READY ? '📋 CONFIGURED (manifest + PayAI ready, Base middleware only)' : '⏸ DISABLED'}`);
+  console.log(`  SKALE Facil:  ${SKALE_FACILITATOR_URL}`);
+  console.log(`  Price:        ${PRICE} USDC per query`);
+  console.log(`  Pay to:       ${PAY_TO}`);
+  console.log(`  Facilitator:  ${FACILITATOR_URL}`);
+  console.log(`  Model:        ${PERPLEXITY_MODEL}`);
+  console.log("═══════════════════════════════════════════════════");
+});
+
 // ═══════════════════════════════════════════════════════════════════
 //  MCP HTTP Endpoint — Streamable HTTP Transport (Smithery)
 // ═══════════════════════════════════════════════════════════════════
@@ -2221,58 +2275,4 @@ app.get("/mcp", (_req, res) => {
     transport: "streamable-http", endpoint: "https://agentoracle.co/mcp",
     tools: MCP_TOOLS.map(t => ({ name: t.name, description: t.description }))
   });
-
-app.use((_req, res) => {
-  res.status(404).json({
-    error: "Not Found",
-    available_endpoints: {
-      "POST /preview": "Free live preview (truncated results, 10/hr)",
-      "POST /research": "Standard research ($0.02 USDC on Base or SKALE gasless)",
-      "POST /deep-research": "Deep research with Sonar Pro ($0.10 USDC on Base or SKALE gasless)",
-      "POST /free": "Promotional free queries (use code AGENT100)",
-      "POST /defi": "DeFi vertical research (beta — free)",
-      "GET /health": "Service health check",
-      "GET /cache/stats": "Research cache monitoring",
-      "GET /skale": "SKALE gasless payments info (live — zero gas fees)",
-      "GET /.well-known/x402": "x402 discovery document",
-      "GET /.well-known/x402.json": "x402 service manifest (alias)",
-      "GET /.well-known/x402-manifest.json": "x402 standard manifest path (Base + SKALE + Stellar)",
-      "GET /": "AgentOracle landing page",
-    },
-  });
-});
-
-// ═══════════════════════════════════════════════════════════════════
-//  Global Error Handler
-// ═══════════════════════════════════════════════════════════════════
-
-app.use((err, _req, res, _next) => {
-  console.error("[global]", err.stack || err.message);
-  res.status(500).json({
-    error: "Internal Server Error",
-    message: "Something went wrong.",
-  });
-});
-
-// ═══════════════════════════════════════════════════════════════════
-//  Start Server
-// ═══════════════════════════════════════════════════════════════════
-
-app.listen(PORT, () => {
-  console.log("═══════════════════════════════════════════════════");
-  console.log("  x402 Research API v1.5.0 — Live");
-  console.log("═══════════════════════════════════════════════════");
-  console.log(`  Endpoint:     http://localhost:${PORT}/research`);
-  console.log(`  Health:       http://localhost:${PORT}/health`);
-  console.log(`  Discovery:    http://localhost:${PORT}/.well-known/x402`);
-  console.log(`  Manifest:     http://localhost:${PORT}/.well-known/x402.json`);
-  console.log(`  Chain:        Base mainnet (${NETWORK})`);
-  console.log(`  SKALE:        ${SKALE_NETWORK} ${SKALE_FACILITATOR_READY ? '📋 CONFIGURED (manifest + PayAI ready, Base middleware only)' : '⏸ DISABLED'}`);
-  console.log(`  SKALE Facil:  ${SKALE_FACILITATOR_URL}`);
-  console.log(`  Price:        ${PRICE} USDC per query`);
-  console.log(`  Pay to:       ${PAY_TO}`);
-  console.log(`  Facilitator:  ${FACILITATOR_URL}`);
-  console.log(`  Model:        ${PERPLEXITY_MODEL}`);
-  console.log("═══════════════════════════════════════════════════");
-});
 });
