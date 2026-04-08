@@ -1480,6 +1480,12 @@ a:hover { color: var(--color-primary-hover); }
   </div>
   <div class="playground fade-in">
     <textarea class="playground__input" id="pg-input" placeholder="Try: LangGraph leads AI frameworks in 2026. CrewAI was acquired by Google. Bitcoin was created by Satoshi Nakamoto."></textarea>
+    <div style="display:flex;gap:8px;margin-top:0.75rem;flex-wrap:wrap;">
+      <button onclick="loadExample('ai')" style="padding:6px 14px;background:transparent;border:1px solid var(--color-border);border-radius:20px;color:var(--color-text-muted);font-size:0.8rem;cursor:pointer;font-family:var(--font-body);transition:border-color 0.2s;">Try: AI claims</button>
+      <button onclick="loadExample('crypto')" style="padding:6px 14px;background:transparent;border:1px solid var(--color-border);border-radius:20px;color:var(--color-text-muted);font-size:0.8rem;cursor:pointer;font-family:var(--font-body);transition:border-color 0.2s;">Try: Crypto claims</button>
+      <button onclick="loadExample('health')" style="padding:6px 14px;background:transparent;border:1px solid var(--color-border);border-radius:20px;color:var(--color-text-muted);font-size:0.8rem;cursor:pointer;font-family:var(--font-body);transition:border-color 0.2s;">Try: Health claims</button>
+      <button onclick="loadExample('mixed')" style="padding:6px 14px;background:transparent;border:1px solid var(--color-border);border-radius:20px;color:var(--color-text-muted);font-size:0.8rem;cursor:pointer;font-family:var(--font-body);transition:border-color 0.2s;">Try: True + false mix</button>
+    </div>
     <button class="playground__btn" id="pg-btn" onclick="runEvaluation()">Evaluate Claims &#8594;</button>
     <div class="playground__result" id="pg-result"></div>
   </div>
@@ -1944,6 +1950,18 @@ draw();
 </script>
 
 <script>
+
+function loadExample(type) {
+  var input = document.getElementById('pg-input');
+  var examples = {
+    'ai': 'LangGraph leads AI agent frameworks in 2026 with stateful workflows. OpenAI acquired Anthropic in early 2026. Google released Gemini 3.0 with native agent capabilities.',
+    'crypto': 'Bitcoin was created by Satoshi Nakamoto in 2009. Ethereum processes over 1 million transactions per day. Solana reached a market cap of $500 billion in 2026.',
+    'health': 'Vitamin D deficiency is linked to increased risk of respiratory infections. Drinking 8 glasses of water daily is required for proper hydration. CRISPR gene therapy cured Type 1 diabetes in 2025.',
+    'mixed': 'The x402 protocol was created by Coinbase for agent micropayments. AgentOracle was founded in 2019 in New York. Base network processes 75% of all x402 transactions. Exa raised $85 million in their Series B.'
+  };
+  input.value = examples[type] || '';
+  input.focus();
+}
 async function runEvaluation() {
   var input = document.getElementById('pg-input');
   var btn = document.getElementById('pg-btn');
