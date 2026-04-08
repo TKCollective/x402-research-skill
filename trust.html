@@ -192,6 +192,53 @@ footer p{font-size:.75rem;color:var(--fa)}
 .fl{display:flex;gap:1.5rem}
 .fl a{color:var(--fa);font-size:.75rem;text-decoration:none;transition:color var(--t)}
 .fl a:hover{color:var(--gd)}
+
+/* ── SIZE + POP FIXES to match landing page ── */
+h2 { font-size: clamp(2.2rem, 4vw, 3.2rem) !important; letter-spacing: -0.03em; }
+h3 { font-size: clamp(1.3rem, 2.5vw, 1.6rem) !important; }
+
+/* Body text bigger */
+p, li, .step-desc, .flow-desc { font-size: clamp(1rem, 1.5vw, 1.15rem) !important; line-height: 1.75 !important; }
+
+/* Section subtitles bigger */
+.section-subtitle, .section-intro { font-size: clamp(1.05rem, 1.6vw, 1.2rem) !important; line-height: 1.7 !important; }
+
+/* Card content bigger */
+.card p, .card li, .card-body { font-size: 1.05rem !important; line-height: 1.7 !important; }
+
+/* Comparison cards — bigger list items */
+.compare-card li, .problem-list li { font-size: 1.05rem !important; line-height: 1.8 !important; }
+
+/* Step titles bigger */
+.step-title { font-size: 1.25rem !important; font-weight: 700 !important; }
+
+/* More generous section spacing */
+section, .section { padding-top: 5rem !important; padding-bottom: 5rem !important; }
+
+/* Confidence bars — bigger labels and scores */
+.bar-label { font-size: 1rem !important; }
+.bar-score { font-size: 1.1rem !important; font-weight: 700 !important; }
+
+/* Code blocks bigger */
+pre, code, .code-block { font-size: 0.95rem !important; }
+
+/* Pricing card titles bigger */
+.pricing-endpoint { font-size: 1.3rem !important; }
+.pricing-price { font-size: 2rem !important; }
+.pricing-desc { font-size: 1rem !important; }
+
+/* Tags/chips bigger */
+.tag, .chip, .badge { font-size: 0.85rem !important; padding: 4px 12px !important; }
+
+/* Flow diagram text bigger */
+.flow-label, .flow-step-label { font-size: 0.95rem !important; }
+
+/* CTA buttons bigger */
+.cta-section .btn, .btn-primary, .btn-secondary { font-size: 1rem !important; padding: 14px 32px !important; }
+
+/* More breathing room */
+.container { max-width: 960px !important; }
+
 </style>
 </head>
 <body>

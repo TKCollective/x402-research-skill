@@ -751,6 +751,34 @@ a:hover { color: var(--color-primary-hover); }
   .pricing-card__price { font-size: 1.8rem; }
   .stat-pill { font-size: 0.7rem; padding: var(--space-1) var(--space-2); }
 }
+
+/* ── LIVE EVALUATION PLAYGROUND ── */
+.playground { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: 2rem; max-width: 800px; margin: 0 auto var(--space-10); }
+.playground__input { width: 100%; min-height: 120px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 1rem; color: var(--color-text); font-family: var(--font-body); font-size: 0.95rem; resize: vertical; outline: none; }
+.playground__input:focus { border-color: var(--color-primary); }
+.playground__input::placeholder { color: var(--color-text-muted); }
+.playground__btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 1rem; padding: 12px 28px; background: var(--color-primary); color: #111; border: none; border-radius: var(--radius-md); font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: opacity 0.2s; }
+.playground__btn:hover { opacity: 0.9; }
+.playground__btn:disabled { opacity: 0.5; cursor: wait; }
+.playground__result { margin-top: 1.5rem; display: none; }
+.playground__result.active { display: block; }
+.playground__overall { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--color-bg); border-radius: var(--radius-md); margin-bottom: 1rem; }
+.playground__score { font-family: var(--font-mono); font-size: 2rem; font-weight: 700; }
+.playground__rec { font-family: var(--font-display); font-size: 1rem; font-weight: 600; padding: 4px 14px; border-radius: 20px; }
+.playground__rec--act { background: rgba(74,222,128,0.15); color: #4ADE80; }
+.playground__rec--verify { background: rgba(251,191,36,0.15); color: #FBBF24; }
+.playground__rec--reject { background: rgba(239,68,68,0.15); color: #EF4444; }
+.playground__claim { padding: 1rem; background: var(--color-bg); border-radius: var(--radius-md); margin-bottom: 0.75rem; border-left: 3px solid var(--color-border); }
+.playground__claim--supported { border-left-color: #4ADE80; }
+.playground__claim--refuted { border-left-color: #EF4444; }
+.playground__claim--unverifiable { border-left-color: #FBBF24; }
+.playground__verdict { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.playground__claim-text { font-size: 0.95rem; color: var(--color-text); margin-bottom: 4px; }
+.playground__evidence { font-size: 0.85rem; color: var(--color-text-muted); }
+.playground__correction { font-size: 0.85rem; color: #FBBF24; margin-top: 4px; }
+.playground__loading { text-align: center; padding: 2rem; color: var(--color-text-muted); }
+@media (max-width: 768px) { .playground { padding: 1.25rem; } .playground__input { min-height: 100px; } }
+
 </style>
 </head>
 <body>
@@ -774,7 +802,8 @@ a:hover { color: var(--color-primary-hover); }
     </a>
     <nav class="header__nav" aria-label="Main navigation">
       <a href="#features" class="header__nav-link">Features</a>
-      <a href="#how-it-works" class="header__nav-link">How It Works</a>
+      <a href="#playground" class="header__nav-link">Try Live</a>
+        <a href="#how-it-works" class="header__nav-link">How It Works</a>
       <a href="#pricing" class="header__nav-link">Pricing</a>
       <a href="#live-demo" class="header__nav-link">Demo</a>
       <a href="#specs" class="header__nav-link">Specs</a>
@@ -1441,6 +1470,20 @@ a:hover { color: var(--color-primary-hover); }
       <p style="color:var(--color-text-muted);font-size:var(--text-sm);max-width:560px;margin:0 auto var(--space-5);">Every evaluation builds our source reputation graph. Every /feedback call improves scoring. The moat compounds with usage.</p>
       <a href="https://agentoracle.co/trust" style="display:inline-block;background:var(--color-primary);color:#111;padding:10px 28px;border-radius:8px;font-weight:700;font-size:var(--text-sm);text-decoration:none;" target="_blank" rel="noopener noreferrer">See /evaluate in Action &#8594;</a>
     </div>
+
+<!-- ═══ LIVE EVALUATION PLAYGROUND ═══ -->
+<section class="section" id="playground" style="padding-bottom:2rem;">
+  <div class="section-center">
+    <span class="section-label fade-in">Try It Live</span>
+    <h2 class="section-title fade-in">Evaluate Any Text</h2>
+    <p class="section-subtitle fade-in">Paste any text with factual claims. AgentOracle verifies each one in real-time.</p>
+  </div>
+  <div class="playground fade-in">
+    <textarea class="playground__input" id="pg-input" placeholder="Try: LangGraph leads AI frameworks in 2026. CrewAI was acquired by Google. Bitcoin was created by Satoshi Nakamoto."></textarea>
+    <button class="playground__btn" id="pg-btn" onclick="runEvaluation()">Evaluate Claims &#8594;</button>
+    <div class="playground__result" id="pg-result"></div>
+  </div>
+</section>
 <span class="section-label fade-in">Why AgentOracle</span>
       <h2 class="section-title fade-in">How We Compare</h2>
       <p class="section-subtitle fade-in">How the x402 research ecosystem stacks up — honest comparison, April 2026.</p>
@@ -1898,6 +1941,69 @@ ctx.fillStyle='rgba(201,169,110,'+p.o+')';ctx.fill();
 requestAnimationFrame(draw);}
 draw();
 })();
+</script>
+
+<script>
+async function runEvaluation() {
+  var input = document.getElementById('pg-input');
+  var btn = document.getElementById('pg-btn');
+  var result = document.getElementById('pg-result');
+  var text = input.value.trim();
+  if (!text) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Evaluating...';
+  result.className = 'playground__result active';
+  result.innerHTML = '<div class="playground__loading">Analyzing claims... this takes 3-5 seconds</div>';
+
+  try {
+    var resp = await fetch('https://agentoracle.co/evaluate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: text, source: 'playground', min_confidence: 0.8 })
+    });
+    var data = await resp.json();
+    var ev = data.evaluation;
+
+    if (!ev) {
+      result.innerHTML = '<div class="playground__loading" style="color:#EF4444;">Error: ' + (data.error || 'Unknown error') + '</div>';
+      btn.disabled = false;
+      btn.textContent = 'Evaluate Claims \u2192';
+      return;
+    }
+
+    var scoreColor = ev.overall_confidence >= 0.8 ? '#4ADE80' : ev.overall_confidence >= 0.5 ? '#FBBF24' : '#EF4444';
+    var recClass = ev.recommendation === 'act' ? 'act' : ev.recommendation === 'reject' ? 'reject' : 'verify';
+
+    var html = '<div class="playground__overall">';
+    html += '<div class="playground__score" style="color:' + scoreColor + '">' + ev.overall_confidence + '</div>';
+    html += '<div>';
+    html += '<span class="playground__rec playground__rec--' + recClass + '">' + ev.recommendation.toUpperCase() + '</span>';
+    html += '<div style="font-size:0.85rem;color:#9A9590;margin-top:6px;">' + ev.total_claims + ' claims found &middot; ' + ev.verified_claims + ' supported &middot; ' + ev.refuted_claims + ' refuted</div>';
+    html += '</div></div>';
+
+    var claims = ev.claims || [];
+    for (var i = 0; i < claims.length; i++) {
+      var c = claims[i];
+      var vColor = c.verdict === 'supported' ? '#4ADE80' : c.verdict === 'refuted' ? '#EF4444' : '#FBBF24';
+      var vIcon = c.verdict === 'supported' ? '\u2705' : c.verdict === 'refuted' ? '\u274C' : '\u2753';
+      html += '<div class="playground__claim playground__claim--' + c.verdict + '">';
+      html += '<div class="playground__verdict" style="color:' + vColor + '">' + vIcon + ' ' + c.verdict + ' (' + c.confidence + ')</div>';
+      html += '<div class="playground__claim-text">' + c.claim + '</div>';
+      if (c.evidence) html += '<div class="playground__evidence">' + c.evidence + '</div>';
+      if (c.correction) html += '<div class="playground__correction">\u21B3 Correction: ' + c.correction + '</div>';
+      html += '</div>';
+    }
+
+    html += '<div style="text-align:center;margin-top:1.5rem;font-size:0.85rem;color:#9A9590;">Evaluation ID: ' + data.evaluation_id + ' &middot; ' + ev.source_assessment.freshness + '</div>';
+    result.innerHTML = html;
+  } catch (err) {
+    result.innerHTML = '<div class="playground__loading" style="color:#EF4444;">Request failed: ' + err.message + '</div>';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Evaluate Claims \u2192';
+}
 </script>
 </body>
 </html>`;
