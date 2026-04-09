@@ -1006,6 +1006,10 @@ app.get("/health", (_req, res) => {
       "POST /deep-research": { price: DEEP_PRICE, model: PERPLEXITY_MODEL_PRO },
     },
     features: {
+      trust_layer: true,
+      evaluate: true,
+      multi_source_verification: true,
+      persistent_storage: "redis",
       live_preview: true,
       confidence_scoring: true,
       freshness_detection: true,
@@ -2395,7 +2399,7 @@ app.use((err, _req, res, _next) => {
 
 app.listen(PORT, () => {
   console.log("═══════════════════════════════════════════════════");
-  console.log("  x402 Research API v1.5.0 — Live");
+  console.log("  x402 Research API v2.0.0 — Live");
   console.log("═══════════════════════════════════════════════════");
   console.log(`  Endpoint:     http://localhost:${PORT}/research`);
   console.log(`  Health:       http://localhost:${PORT}/health`);
