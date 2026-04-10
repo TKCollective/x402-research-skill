@@ -10,6 +10,14 @@
       "use": "@vercel/static"
     },
     {
+      "src": "ao-logo-new.png",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "favicon-32x32.png",
+      "use": "@vercel/static"
+    },
+    {
       "src": "index.js",
       "use": "@vercel/node"
     }
@@ -22,6 +30,14 @@
     {
       "src": "/ao-logo.jpg",
       "dest": "/ao-logo.jpg"
+    },
+    {
+      "src": "/ao-logo-new.png",
+      "dest": "/ao-logo-new.png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "dest": "/favicon-32x32.png"
     },
     {
       "src": "/(.*)",

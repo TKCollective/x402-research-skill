@@ -20,6 +20,7 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
 <link rel="author" href="https://www.perplexity.ai/computer">
 
 <meta charset="UTF-8">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AgentOracle — The Trust Layer for AI Agents | x402 Native</title>
 <meta name="description" content="AgentOracle is the trust layer for agentic AI — evaluate any data with per-claim verification, confidence scoring (0.00–1.00), and x402 payments on Base, SKALE, and Stellar.">
@@ -794,10 +795,7 @@ a:hover { color: var(--color-primary-hover); }
 <header class="header" id="header">
   <div class="container header__inner">
     <a href="#" class="header__brand">
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="AgentOracle logo">
-        <circle cx="16" cy="16" r="15" fill="#0D0D0D" stroke="#C9A96E" stroke-width="1.5"/>
-        <path d="M16 8L10 20h4l-1 4 7-10h-4l1-6z" fill="#C9A96E"/>
-      </svg>
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="AgentOracle logo"><path d="M 25.83 9.12 A 12 12 0 1 1 21.07 5.12" stroke="#C9A96E" stroke-width="3.5" fill="none" stroke-linecap="round"/><circle cx="24.68" cy="5.66" r="2.2" fill="#C9A96E"/></svg>
       <span class="header__wordmark">AgentOracle</span>
     </a>
     <nav class="header__nav" aria-label="Main navigation">
@@ -1681,7 +1679,7 @@ a:hover { color: var(--color-primary-hover); }
     <div class="footer__grid">
       <div class="footer__brand-col">
         <a href="#" class="footer__brand-logo">
-          <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-label="AgentOracle logo" style="display:inline-block"><circle cx="16" cy="16" r="15" fill="#0D0D0D" stroke="#C9A96E" stroke-width="1.5"/><path d="M16 8L10 20h4l-1 4 7-10h-4l1-6z" fill="#C9A96E"/></svg>
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-label="AgentOracle logo" style="display:inline-block"><path d="M 25.83 9.12 A 12 12 0 1 1 21.07 5.12" stroke="#C9A96E" stroke-width="3.5" fill="none" stroke-linecap="round"/><circle cx="24.68" cy="5.66" r="2.2" fill="#C9A96E"/></svg>
           <span>AgentOracle</span>
         </a>
         <p class="footer__tagline">Pay-per-query research for AI agents</p>

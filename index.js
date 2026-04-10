@@ -992,7 +992,7 @@ app.get("/.well-known/x402-manifest.json", (_req, res) => {
 app.get("/health", (_req, res) => {
   res.json({
     status: "ok",
-    version: "2.0.0",
+    version: "2.1.0",
     service: "x402-research-api",
     chain: "base + skale + stellar",
     networks: {
@@ -1004,6 +1004,10 @@ app.get("/health", (_req, res) => {
       "POST /preview": { price: "free", model: PERPLEXITY_MODEL, note: "Live truncated preview, 10/hr" },
       "POST /research": { price: PRICE, model: PERPLEXITY_MODEL, tier_selector: true },
       "POST /deep-research": { price: DEEP_PRICE, model: PERPLEXITY_MODEL_PRO },
+      "POST /evaluate": { price: "$0.02", description: "Per-claim verification with confidence scoring" },
+      "POST /verify-gate": { price: "free (beta)", description: "Bi-directional verification gate — embed trust into any API" },
+      "GET /fingerprints": { price: "free", description: "Claim fingerprint database stats" },
+      "POST /feedback": { price: "free", description: "Report evaluation accuracy to improve reputation" },
     },
     features: {
       trust_layer: true,
@@ -2135,9 +2139,9 @@ async function recordFeedback(fb) {
 
 async function getDbStats() {
   try {
-    const info = await redis.dbsize();
+    const info = await redisCmd("DBSIZE");
     const fbCount = await redisCmd("GET", "feedback:count") || 0;
-    return { total_keys: info, feedback_count: parseInt(fbCount) };
+    return { total_keys: info || 0, feedback_count: parseInt(fbCount) || 0 };
   } catch { return { total_keys: 0, feedback_count: 0 }; }
 }
 
@@ -2354,6 +2358,70 @@ app.get("/fingerprints", async (_req, res) => {
     note: "Individual claim data is proprietary and not exposed via API. Use POST /evaluate to benefit from the accumulated intelligence.",
   });
 });
+// ── Verification Gate API (bi-directional trust) ─────────────────
+// Developers POST data to /verify-gate and get back a pass/fail with confidence
+app.post("/verify-gate", express.json(), async (req, res) => {
+  const { content, min_confidence = 0.5 } = req.body;
+  if (!content) return res.status(400).json({ error: "Provide content to verify", example: { content: "Claims to verify", min_confidence: 0.5 } });
+  try {
+    const text = typeof content === "object" ? JSON.stringify(content) : content;
+    // Run evaluation
+    const startTime = Date.now();
+    const { createHash } = await import("crypto");
+    const textHash = createHash("sha256").update(text).digest("hex").slice(0, 16);
+    const cached = await getCachedEvaluation(textHash);
+    let evalResult;
+    if (cached) {
+      evalResult = cached;
+    } else {
+      // Multi-source verification (same as /evaluate)
+      const [sonarRes, proRes] = await Promise.allSettled([
+        axios.post("https://api.perplexity.ai/chat/completions", { model: PERPLEXITY_MODEL, messages: [{ role: "user", content: `Verify these claims. For each claim, state if it is supported, refuted, or uncertain. Cite sources.\n\n${text}` }], temperature: 0.1 }, { headers: { Authorization: `Bearer ${PERPLEXITY_KEY}` }, timeout: 15000 }),
+        axios.post("https://api.perplexity.ai/chat/completions", { model: PERPLEXITY_MODEL_PRO, messages: [{ role: "user", content: `You are an adversarial fact-checker. Try to DISPROVE the following claims. If you cannot disprove them, state they are likely accurate.\n\n${text}` }], temperature: 0.3 }, { headers: { Authorization: `Bearer ${PERPLEXITY_KEY}` }, timeout: 15000 }),
+      ]);
+      const sonarText = sonarRes.status === "fulfilled" ? sonarRes.value.data.choices?.[0]?.message?.content : "";
+      const proText = proRes.status === "fulfilled" ? proRes.value.data.choices?.[0]?.message?.content : "";
+      const combined = `Sonar verification: ${sonarText}\n\nAdversarial check: ${proText}`;
+      const supportedCount = (combined.match(/supported|confirmed|accurate|true|correct/gi) || []).length;
+      const refutedCount = (combined.match(/refuted|false|incorrect|inaccurate|disproven/gi) || []).length;
+      const totalSignals = supportedCount + refutedCount || 1;
+      const confidence = parseFloat((supportedCount / totalSignals).toFixed(2));
+      const recommendation = confidence >= 0.8 ? "act" : confidence >= 0.5 ? "verify" : "reject";
+      evalResult = { overall_confidence: confidence, recommendation, verification_sources: 2, adversarial_pass: proRes.status === "fulfilled" };
+      try { await cacheEvaluation(textHash, evalResult); } catch {}
+    }
+    const confidence = evalResult.overall_confidence ?? 0;
+    const pass = confidence >= min_confidence;
+    const latency = Date.now() - startTime;
+    res.json({
+      endpoint: "/verify-gate",
+      pass,
+      confidence,
+      min_confidence_required: min_confidence,
+      recommendation: evalResult.recommendation,
+      verification_sources: evalResult.verification_sources || 2,
+      adversarial_pass: evalResult.adversarial_pass ?? true,
+      latency_ms: latency,
+      usage: "Embed trust verification into any API. POST content, get pass/fail with confidence score.",
+      sdk: "npm install @agentoracle/verify — createVerificationGate() middleware for Express",
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Verification failed", message: err.message });
+  }
+});
+
+app.get("/verify-gate", (_req, res) => {
+  res.json({
+    endpoint: "/verify-gate",
+    method: "POST",
+    description: "Bi-directional verification gate. POST any content, get a pass/fail verdict with confidence scoring. Use this to embed trust verification into your own API.",
+    price: "Free (public beta)",
+    sdk: "npm install @agentoracle/verify",
+    body: { content: "Text or JSON to verify", min_confidence: 0.5 },
+    response: { pass: true, confidence: 0.87, recommendation: "act" },
+  });
+});
+
 app.get("/trust", async (_req, res) => {
   res.setHeader("Content-Type","text/html; charset=utf-8");
   try { const fs=await import("fs"); const path=await import("path"); res.send(fs.readFileSync(path.join(process.cwd(),"trust.html"),"utf-8")); }

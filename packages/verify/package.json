@@ -1,0 +1,46 @@
+{
+  "name": "@agentoracle/verify",
+  "version": "1.0.0",
+  "description": "Trust verification SDK for AI agents. Verify claims, check confidence scores, and embed trust into any agent workflow. Powered by AgentOracle.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./middleware": {
+      "import": "./dist/middleware.js",
+      "types": "./dist/middleware.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "node build.js",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "agentoracle",
+    "trust",
+    "verification",
+    "ai-agents",
+    "confidence-scoring",
+    "x402",
+    "claim-verification",
+    "mcp",
+    "stellar",
+    "base",
+    "skale"
+  ],
+  "author": "TKCollective",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TKCollective/x402-research-skill"
+  },
+  "homepage": "https://agentoracle.co",
+  "engines": {
+    "node": ">=18"
+  }
+}
