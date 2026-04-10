@@ -86,8 +86,10 @@ curl -X POST https://agentoracle.co/evaluate \
 | `POST` | `/deep-research` | $0.10 USDC | Deep analysis via Sonar Pro — extended context, higher confidence |
 | `POST` | `/compare` | $0.05 USDC | Side-by-side comparison of two claims or data points |
 | `GET` | `/preview` | Free | Truncated summary + confidence score — no wallet needed |
+| `POST` | `/verify-gate` | Free (beta) | Bi-directional verification gate — embed trust into any API |
 | `POST` | `/feedback` | Free | Report agent outcomes to improve source reputation scores |
 | `GET` | `/reputation` | Free | Source reputation scores from the persistent trust graph |
+| `GET` | `/fingerprints` | Free | Claim fingerprint database stats (374+ keys) |
 | `GET` | `/.well-known/x402-manifest.json` | Free | x402 discovery manifest — pricing, networks, pay-to addresses |
 
 ---
@@ -176,6 +178,42 @@ curl https://agentoracle.co/.well-known/x402-manifest.json
 
 ---
 
+## SDK: @agentoracle/verify
+
+Embed trust verification into any agent or API.
+
+```bash
+npm install @agentoracle/verify
+```
+
+```javascript
+import { verify } from "@agentoracle/verify";
+
+// One line — verify any claim
+const result = await verify("Bitcoin was created in 2009");
+console.log(result.evaluation.overall_confidence); // 0.97
+```
+
+### Verification Gate Middleware
+
+Protect any Express API endpoint with automatic trust verification:
+
+```javascript
+import { createVerificationGate } from "@agentoracle/verify/middleware";
+
+app.post("/api/submit",
+  createVerificationGate({ minConfidence: 0.6 }),
+  (req, res) => {
+    // Only reaches here if content is verified above 0.6 confidence
+    res.json({ accepted: true, verification: req.verification });
+  }
+);
+```
+
+This is the bi-directional shift: agents don't just consume verification — any API can embed it.
+
+---
+
 ## MCP
 
 Use AgentOracle inside Claude, Cursor, or any MCP-compatible client:
@@ -202,6 +240,18 @@ Payment is handled transparently. Set the private key once; the MCP server signs
 
 ---
 
+## Testing
+
+36 tests across 12 suites. CI runs on Node 18/20/22 via GitHub Actions.
+
+```bash
+npm test
+```
+
+Covers: health, discovery, preview, paid endpoints, x402 payment flow validation (Base + SKALE + Stellar), trust layer, fingerprints, cache, error handling, CORS, and static assets.
+
+---
+
 ## The Moat
 
 AgentOracle gets more accurate the more it's used. Four compounding mechanisms:
@@ -220,13 +270,29 @@ Agents report outcomes for free. Did acting on a `"recommendation": "act"` claim
 
 ---
 
+## Traction
+
+- **$4.32 USDC** received on-chain across 30+ paid transactions (Base mainnet)
+- **374+ claim fingerprints** in persistent Redis database, growing daily
+- **Live since March 2026** — production API at agentoracle.co
+- **3 chains** — Base, SKALE (gasless), Stellar (sponsored fees)
+- **MCP server** on npm — works in Claude, Cursor
+- **Product Hunt** launched April 8, 2026
+- **36 tests**, CI on Node 18/20/22
+
+---
+
 ## Links
 
 - Website: [agentoracle.co](https://agentoracle.co)
 - Trust docs: [agentoracle.co/trust](https://agentoracle.co/trust)
+- SDK: [packages/verify](./packages/verify)
 - x402 manifest: [agentoracle.co/.well-known/x402-manifest.json](https://agentoracle.co/.well-known/x402-manifest.json)
+- Fingerprints: [agentoracle.co/fingerprints](https://agentoracle.co/fingerprints)
+- Verify Gate: [agentoracle.co/verify-gate](https://agentoracle.co/verify-gate)
 - GitHub: [TKCollective/x402-research-skill](https://github.com/TKCollective/x402-research-skill)
 - Product Hunt: [AgentOracle on PH](https://www.producthunt.com/posts/agentoracle)
+- npm (MCP): [agentoracle-mcp](https://www.npmjs.com/package/agentoracle-mcp)
 
 ---
 
