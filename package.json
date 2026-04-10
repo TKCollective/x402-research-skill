@@ -1,12 +1,15 @@
 {
   "name": "x402-research-api",
   "version": "1.2.0",
-  "description": "x402 payable real-time research API \u2014 AI agents pay $0.02 USDC per query on Base, SKALE (gasless), or Stellar (Soroban) for structured research powered by Perplexity. No API keys.",
+  "description": "x402 payable real-time research API — AI agents pay $0.02 USDC per query on Base, SKALE (gasless), or Stellar (Soroban) for structured research powered by Perplexity. No API keys.",
   "type": "module",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js"
+    "dev": "node --watch index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [
     "x402",
@@ -37,5 +40,9 @@
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
     "viem": "^2.47.10"
+  },
+  "devDependencies": {
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.4"
   }
 }
