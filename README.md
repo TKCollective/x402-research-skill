@@ -273,7 +273,7 @@ Agents report outcomes for free. Did acting on a `"recommendation": "act"` claim
 ## Traction
 
 - **$4.32 USDC** received on-chain across 30+ paid transactions (Base mainnet)
-- **374+ claim fingerprints** in persistent Redis database, growing daily
+- **1,094+ claim fingerprints** in persistent Redis database, growing daily
 - **Live since March 2026** — production API at agentoracle.co
 - **3 chains** — Base, SKALE (gasless), Stellar (sponsored fees)
 - **MCP server** on npm — works in Claude, Cursor

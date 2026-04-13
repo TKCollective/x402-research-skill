@@ -117,6 +117,89 @@ const SKALE_PRICE_DEEP = {
 const PERPLEXITY_MODEL = "sonar";
 const PERPLEXITY_MODEL_PRO = "sonar-pro";
 
+// ── Gemma 4 (Third verification source via OpenRouter) ──────────
+const GEMMA_KEY = (process.env.GEMMA_API_KEY || process.env.OPENROUTER_API_KEY || "").trim();
+const GEMMA_MODEL = "google/gemma-4-31b-it";
+const GEMMA_MODEL_FALLBACK = "google/gemma-4-26b-a4b-it";
+const GEMMA_URL = "https://openrouter.ai/api/v1/chat/completions";
+
+async function callGemma(systemPrompt, userMessage, timeout = 15000) {
+  if (!GEMMA_KEY) return null;
+  try {
+    const res = await axios.post(GEMMA_URL, {
+      model: GEMMA_MODEL,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage }
+      ],
+      temperature: 0.1
+    }, {
+      headers: { Authorization: `Bearer ${GEMMA_KEY}`, "Content-Type": "application/json" },
+      timeout
+    });
+    const content = res.data?.choices?.[0]?.message?.content || null;
+    if (!content) console.log("[GEMMA] Empty response:", JSON.stringify(res.data).slice(0, 200));
+    return content;
+  } catch (e) {
+    console.log("[GEMMA] Error with", GEMMA_MODEL, ":", e.message);
+    // Fallback to alternate model
+    try {
+      const res2 = await axios.post(GEMMA_URL, {
+        model: GEMMA_MODEL_FALLBACK,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userMessage }
+        ],
+        temperature: 0.1
+      }, {
+        headers: { Authorization: `Bearer ${GEMMA_KEY}`, "Content-Type": "application/json" },
+        timeout
+      });
+      return res2.data?.choices?.[0]?.message?.content || null;
+    } catch (e2) {
+      console.log("[GEMMA] Fallback also failed:", e2.message);
+      return null;
+    }
+  }
+}
+
+async function gemmaDecompose(text) {
+  const result = await callGemma(
+    "You are a claim extraction engine. Break the input into individual factual claims that can be independently verified. Return ONLY a valid JSON array of strings, nothing else.",
+    text
+  );
+  if (!result) return null;
+  try {
+    const cleaned = result.replace(/```json\n?/g, "").replace(/```/g, "").trim();
+    return JSON.parse(cleaned);
+  } catch { return null; }
+}
+
+async function gemmaVerify(claims) {
+  const claimList = Array.isArray(claims) ? claims.map((c, i) => `${i + 1}. ${c}`).join("\n") : claims;
+  const result = await callGemma(
+    "You are an independent fact verification engine. For each claim, assess SUPPORTED, REFUTED, or UNCERTAIN based on your knowledge. Return valid JSON: {\"verdicts\": [{\"claim\": \"...\", \"verdict\": \"SUPPORTED|REFUTED|UNCERTAIN\", \"confidence\": 0.0-1.0}]}",
+    `Verify independently:\n${claimList}`
+  );
+  if (!result) return null;
+  try {
+    const cleaned = result.replace(/```json\n?/g, "").replace(/```/g, "").trim();
+    return JSON.parse(cleaned);
+  } catch { return null; }
+}
+
+async function gemmaCalibrate(sonarResult, proResult, gemmaResult) {
+  const result = await callGemma(
+    "You are a confidence calibration engine. Given three verification results, produce a final calibrated confidence score. Weight agreement: all agree=high, 2/3 agree=moderate, all disagree=low. Return valid JSON: {\"calibrated_confidence\": 0.0-1.0, \"agreement\": \"strong|moderate|weak\", \"recommendation\": \"act|verify|reject\"}",
+    `Source 1 (Sonar): ${sonarResult}\nSource 2 (Sonar Pro adversarial): ${proResult}\nSource 3 (Gemma independent): ${gemmaResult}`
+  );
+  if (!result) return null;
+  try {
+    const cleaned = result.replace(/```json\n?/g, "").replace(/```/g, "").trim();
+    return JSON.parse(cleaned);
+  } catch { return null; }
+}
+
 // ── Rate Limiting (in-memory, per-IP) ────────────────────────────
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const RATE_LIMIT_MAX = 100; // 100 requests per hour per IP
@@ -989,10 +1072,30 @@ app.get("/.well-known/x402-manifest.json", (_req, res) => {
 //  GET /health — Health check with feature flags
 // ═══════════════════════════════════════════════════════════════════
 
+app.get("/gemma-test", async (_req, res) => {
+  const hasKey = !!GEMMA_KEY;
+  const keyPreview = GEMMA_KEY ? GEMMA_KEY.slice(0, 10) + "..." : "NOT SET";
+  if (!hasKey) return res.json({ gemma: false, reason: "GEMMA_API_KEY not set", keyPreview });
+  const start = Date.now();
+  try {
+    const raw = await axios.post(GEMMA_URL, {
+      model: GEMMA_MODEL,
+      messages: [{role:"user",content:"Say hello"}],
+      temperature: 0.1
+    }, {
+      headers: { "Authorization": "Bearer " + GEMMA_KEY, "Content-Type": "application/json", "HTTP-Referer": "https://agentoracle.co", "X-Title": "AgentOracle" },
+      timeout: 10000
+    });
+    return res.json({ gemma: true, keyPreview, model: GEMMA_MODEL, content: raw.data?.choices?.[0]?.message?.content, status: raw.status, ms: Date.now()-start });
+  } catch (e) {
+    return res.json({ gemma: false, keyPreview, model: GEMMA_MODEL, error: e.message, code: e.code, status: e.response?.status, data: e.response?.data ? JSON.stringify(e.response.data).slice(0,300) : null, ms: Date.now()-start });
+  }
+});
+
 app.get("/health", (_req, res) => {
   res.json({
     status: "ok",
-    version: "2.1.0",
+    version: "2.2.0",
     service: "x402-research-api",
     chain: "base + skale + stellar",
     networks: {
@@ -1011,6 +1114,8 @@ app.get("/health", (_req, res) => {
     },
     features: {
       trust_layer: true,
+      gemma_enabled: !!GEMMA_KEY,
+      models: [PERPLEXITY_MODEL, PERPLEXITY_MODEL_PRO, GEMMA_KEY ? GEMMA_MODEL : null].filter(Boolean),
       evaluate: true,
       multi_source_verification: true,
       persistent_storage: "redis",
@@ -2181,8 +2286,17 @@ app.post("/evaluate", async (req, res) => {
 
     const adversarialPrompt = 'You are a skeptical fact-checker whose job is to DISPROVE claims. For each claim in this text, actively search for contradicting evidence. If you cannot find evidence against a claim, mark it as "resistant" (meaning it survived adversarial checking). Respond ONLY in JSON: {"claims":[{"claim":"text","adversarial_verdict":"resistant|vulnerable|contradicted","counter_evidence":"any evidence against this claim or empty string"}]}';
 
-    // Run all 3 in parallel
-    const [sonarRes, proRes, advRes] = await Promise.allSettled([
+    // ── GEMMA: Claim decomposition (preprocessor) ──
+    let decomposedClaims = null;
+    if (GEMMA_KEY) {
+      decomposedClaims = await gemmaDecompose(text);
+      if (decomposedClaims && decomposedClaims.length > 0) {
+        console.log("[GEMMA] Decomposed into", decomposedClaims.length, "claims");
+      }
+    }
+
+    // Run all sources in parallel (Sonar + Sonar Pro + Adversarial + Gemma)
+    const [sonarRes, proRes, advRes, gemmaRes] = await Promise.allSettled([
       axios.post("https://api.perplexity.ai/chat/completions",
         {model:PERPLEXITY_MODEL,stream:false,max_tokens:3000,messages:[{role:"system",content:verifyPrompt},{role:"user",content:text}]},
         {headers:{Authorization:`Bearer ${PERPLEXITY_KEY}`,"Content-Type":"application/json"},timeout:30000}),
@@ -2192,7 +2306,12 @@ app.post("/evaluate", async (req, res) => {
       axios.post("https://api.perplexity.ai/chat/completions",
         {model:PERPLEXITY_MODEL,stream:false,max_tokens:2000,messages:[{role:"system",content:adversarialPrompt},{role:"user",content:text}]},
         {headers:{Authorization:`Bearer ${PERPLEXITY_KEY}`,"Content-Type":"application/json"},timeout:30000}),
+      // Gemma 4: Independent verification (tiebreaker)
+      GEMMA_KEY ? gemmaVerify(decomposedClaims || text) : Promise.resolve(null),
     ]);
+
+    // Parse Gemma verification result
+    const gemmaEval = gemmaRes?.status === "fulfilled" ? gemmaRes.value : null;
 
     function parseEvalResponse(settled) {
       if (settled.status === "rejected") return null;
@@ -2274,6 +2393,20 @@ app.post("/evaluate", async (req, res) => {
       overall = Math.round((ws/total)*100)/100;
     }
 
+    // ── GEMMA: Final confidence calibration ──
+    let gemmaCalibration = null;
+    if (GEMMA_KEY && gemmaEval) {
+      const sonarText = sonarRes.status === "fulfilled" ? (sonarRes.value.data?.choices?.[0]?.message?.content || "").slice(0, 500) : "unavailable";
+      const proText = proRes.status === "fulfilled" ? (proRes.value.data?.choices?.[0]?.message?.content || "").slice(0, 500) : "unavailable";
+      const gemmaText = JSON.stringify(gemmaEval).slice(0, 500);
+      gemmaCalibration = await gemmaCalibrate(sonarText, proText, gemmaText);
+      if (gemmaCalibration && gemmaCalibration.calibrated_confidence) {
+        // Weight: 60% original calculation, 40% Gemma calibration
+        overall = Math.round((overall * 0.6 + gemmaCalibration.calibrated_confidence * 0.4) * 100) / 100;
+        console.log("[GEMMA] Calibrated confidence:", overall, "agreement:", gemmaCalibration.agreement);
+      }
+    }
+
     const threshold = min_confidence ? parseFloat(min_confidence) : 0.8;
     let rec = "verify"; if(overall>=threshold)rec="act"; else if(overall<0.5)rec="reject";
 
@@ -2296,7 +2429,7 @@ app.post("/evaluate", async (req, res) => {
         refuted_claims: refuted,
         unverifiable_claims: total-verified-refuted,
         verification_method: "multi-source",
-        sources_used: [sonarRes.status==="fulfilled"?"sonar":null,proRes.status==="fulfilled"?"sonar-pro":null,advRes.status==="fulfilled"?"adversarial":null].filter(Boolean),
+        sources_used: [sonarRes.status==="fulfilled"?"sonar":null,proRes.status==="fulfilled"?"sonar-pro":null,advRes.status==="fulfilled"?"adversarial":null,gemmaEval?"gemma-4":null].filter(Boolean),
         claims: mergedClaims,
         source_assessment: {
           evaluated_source: source||"unknown",
@@ -2306,6 +2439,8 @@ app.post("/evaluate", async (req, res) => {
           adversarial_flags: flags,
         },
       },
+      gemma_verification: gemmaEval || null,
+      gemma_calibration: gemmaCalibration || null,
       meta: {
         evaluation_time_ms: Date.now()-startTime,
         endpoint: "/evaluate",
@@ -2338,12 +2473,23 @@ app.post("/feedback", express.json(), async (req, res) => {
   return res.json({recorded:true,feedback_id:fb.feedback_id,message:"Feedback recorded — improves scoring for all agents.",total_feedback: feedbackStore.length});
 });
 
+// Reputation cache (1 hour TTL)
+let _repCache = null;
+let _repCacheTime = 0;
+const REP_CACHE_TTL = 3600000; // 1 hour
+
 app.get("/reputation", async (_req, res) => {
+  const now = Date.now();
+  if (_repCache && (now - _repCacheTime) < REP_CACHE_TTL) {
+    return res.json(_repCache);
+  }
   const domains = ["arxiv.org","nature.com","reuters.com","bbc.com","nytimes.com","github.com","wikipedia.org","medium.com","reddit.com","x.com","coindesk.com","techcrunch.com","bloomberg.com"];
   const data = {};
   for (const d of domains) data[d] = await getSourceRep(d);
   const stats = await getDbStats();
-  return res.json({endpoint:"/reputation",description:"Source reputation scores — persistent, improves with every /evaluate call",storage:"persistent (Redis)",total_tracked_domains:Object.keys(data).length,database_stats:stats,scores:data});
+  _repCache = {endpoint:"/reputation",description:"Source reputation scores — persistent, improves with every /evaluate call",storage:"persistent (Redis)",total_tracked_domains:Object.keys(data).length,database_stats:stats,scores:data,cached:true,cache_ttl:"1 hour"};
+  _repCacheTime = now;
+  return res.json(_repCache);
 });
 
 
@@ -2581,3 +2727,4 @@ app.get("/mcp", (_req, res) => {
     tools: MCP_TOOLS.map(t => ({ name: t.name, description: t.description }))
   });
 });
+// deploy 1776123308

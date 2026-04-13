@@ -856,7 +856,7 @@ a:hover { color: var(--color-primary-hover); }
   <div class="container" style="text-align:center;margin-bottom:var(--space-6);">
     <div class="hero__badge fade-in" style="display:inline-flex;">
       <span class="hero__badge-dot"></span>
-      v2.0.0 — Trust Layer · /evaluate · /feedback · Base · SKALE · Stellar
+      v2.2.0 — 4-Source Verification · Gemma 4 · SDK · 1,094 Fingerprints · 36 Tests · Base · SKALE · Stellar
     </div>
   </div>
   <div class="container hero__inner">
@@ -867,7 +867,9 @@ a:hover { color: var(--color-primary-hover); }
       <p class="hero__subtitle fade-in">
         Agents don't just need data — they need to know what to trust. Pass any data through /evaluate and get per-claim verification, confidence scores, and a recommendation: act, verify, or reject. x402 native on Base, SKALE, and Stellar.
       </p>
-      <p class="hero__secondary-tagline fade-in">Get Started in 60 Seconds</p>
+      <p class="hero__secondary-tagline fade-in">Get Started in 60 Seconds</span>
+            <div style="margin:12px 0 8px;padding:10px 20px;background:rgba(100,200,140,0.08);border:1px solid rgba(100,200,140,0.2);border-radius:8px;display:inline-block;font-family:monospace;font-size:14px;color:#64E8A0;letter-spacing:0.3px">npm install @agentoracle/verify</div>
+            <span style="display:none"</p>
       <div class="hero__ctas fade-in">
         <a href="https://agentoracle.co/preview" class="btn btn--primary btn--hero" target="_blank" rel="noopener noreferrer">Try Live Demo &#8594;</a>
         <a href="https://agentoracle.co/.well-known/x402.json" class="btn btn--ghost" target="_blank" rel="noopener noreferrer">View x402 Manifest</a>
