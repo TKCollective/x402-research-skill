@@ -984,8 +984,8 @@ a:hover { color: var(--color-primary-hover); }
     </div>
     <div class="live-stat__divider"></div>
     <div class="live-stat">
-      <div class="live-stat__value" id="statVersion">---</div>
-      <div class="live-stat__label">API Version</div>
+      <div class="live-stat__value" id="statQueries">---</div>
+      <div class="live-stat__label">Queries Today</div>
     </div>
     <div class="live-stat__divider"></div>
     <div class="live-stat">
@@ -1970,14 +1970,18 @@ a:hover { color: var(--color-primary-hover); }
     function fetchStats() {
       Promise.all([
         fetch('https://agentoracle.co/fingerprints', { mode: 'cors' }).then(function(r) { return r.json(); }).catch(function() { return null; }),
-        fetch('https://agentoracle.co/health', { mode: 'cors' }).then(function(r) { return r.json(); }).catch(function() { return null; })
+        fetch('https://agentoracle.co/health', { mode: 'cors' }).then(function(r) { return r.json(); }).catch(function() { return null; }),
+        fetch('https://agentoracle.co/traffic', { mode: 'cors' }).then(function(r) { return r.json(); }).catch(function() { return null; })
       ]).then(function(results) {
-        var fp = results[0], health = results[1];
+        var fp = results[0], health = results[1], traffic = results[2];
         if (fp && fp.database_stats) {
           animateValue(document.getElementById('statFingerprints'), fp.database_stats.total_keys.toLocaleString());
         }
+        if (traffic && traffic.stats && traffic.stats.today) {
+          var total = traffic.stats.today.total || 0;
+          animateValue(document.getElementById('statQueries'), total.toLocaleString());
+        }
         if (health) {
-          animateValue(document.getElementById('statVersion'), 'v' + health.version);
           var models = health.features && health.features.models ? health.features.models.length : 3;
           animateValue(document.getElementById('statSources'), String(models + 1));
           var chains = health.chain ? health.chain.split('+').length : 3;

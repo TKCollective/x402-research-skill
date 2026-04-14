@@ -1119,6 +1119,7 @@ app.get("/gemma-test", async (_req, res) => {
 //  TRAFFIC DASHBOARD — view API usage stats
 // ═══════════════════════════════════════════════════════════════════
 app.get("/traffic", async (_req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
   try {
     const today = new Date().toISOString().split('T')[0];
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
