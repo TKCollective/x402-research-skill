@@ -379,6 +379,82 @@ a:hover { color: var(--color-primary-hover); }
 /* === STATS BAR === */
 .stats-bar { padding-block: var(--space-8); border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); background: var(--color-surface); }
 .stats-bar__inner { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-4); }
+
+/* === LIVE STATS DASHBOARD === */
+.live-stats {
+  padding-block: var(--space-10);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  position: relative;
+  overflow: hidden;
+}
+.live-stats::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%; transform: translateX(-50%);
+  width: 60%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+}
+.live-stats__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+}
+.live-stat {
+  text-align: center;
+  position: relative;
+  min-width: 100px;
+}
+.live-stat__value {
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1.2;
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.live-stat__value--status {
+  font-size: var(--text-sm);
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+.live-stat__value--status.live { color: var(--color-green); }
+.live-stat__value--status.down { color: #EF4444; }
+.live-stat__label {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-1);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.live-stat__divider {
+  width: 1px;
+  height: 40px;
+  background: var(--color-border);
+}
+.live-stat__pulse {
+  position: absolute;
+  top: 4px; left: 50%; transform: translateX(-50%);
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--color-green);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 4px rgba(74, 222, 128, 0.4); opacity: 1; }
+  50% { box-shadow: 0 0 12px rgba(74, 222, 128, 0.8); opacity: 0.7; }
+}
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.live-stat__value.updated {
+  animation: count-up 0.4s ease-out;
+}
 .stat-pill {
   display: inline-flex; align-items: center; gap: var(--space-2);
   padding: var(--space-2) var(--space-5); background: var(--color-surface-2);
@@ -711,6 +787,10 @@ a:hover { color: var(--color-primary-hover); }
   .code-block__body { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .code-block__body pre { font-size: 0.65rem; white-space: pre; min-width: 0; }
   .stats-bar__inner { flex-wrap: wrap; justify-content: center; gap: var(--space-3); }
+  .live-stats__inner { gap: var(--space-4); }
+  .live-stat__divider { display: none; }
+  .live-stat { min-width: 80px; }
+  .live-stat__value { font-size: var(--text-lg); }
   .stat-pill { font-size: var(--text-xs); padding: var(--space-2) var(--space-3); }
   .bento-grid { grid-template-columns: 1fr !important; }
   .bento-card--large { grid-column: 1 !important; }
@@ -895,23 +975,34 @@ a:hover { color: var(--color-primary-hover); }
   </div>
 </section>
 
-<!-- STATS BAR -->
-<div class="stats-bar">
-  <div class="container stats-bar__inner">
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Trust Evaluation</span>
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Confidence Scoring</span>
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> x402 Native</span>
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Base + SKALE + Stellar</span>
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Per-Claim Verification</span>
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> Source Reputation</span>
-    <span class="stat-pill"><span class="stat-pill__icon">&#9670;</span> No API Keys</span>
-  </div>
-</div>
-
-<!-- Social Proof (Cat 6) -->
-<div class="social-proof">
-  <div class="container">
-    <strong>x402</strong> Native &middot; <strong>Base</strong> Mainnet &middot; <strong>$0.02</strong> Per Query
+<!-- LIVE STATS DASHBOARD -->
+<div class="live-stats" id="liveStats">
+  <div class="container live-stats__inner">
+    <div class="live-stat">
+      <div class="live-stat__value" id="statFingerprints">---</div>
+      <div class="live-stat__label">Claim Fingerprints</div>
+    </div>
+    <div class="live-stat__divider"></div>
+    <div class="live-stat">
+      <div class="live-stat__value" id="statVersion">---</div>
+      <div class="live-stat__label">API Version</div>
+    </div>
+    <div class="live-stat__divider"></div>
+    <div class="live-stat">
+      <div class="live-stat__value" id="statSources">---</div>
+      <div class="live-stat__label">Verification Sources</div>
+    </div>
+    <div class="live-stat__divider"></div>
+    <div class="live-stat">
+      <div class="live-stat__value" id="statChains">---</div>
+      <div class="live-stat__label">Chains Supported</div>
+    </div>
+    <div class="live-stat__divider"></div>
+    <div class="live-stat">
+      <div class="live-stat__pulse"></div>
+      <div class="live-stat__value live-stat__value--status" id="statStatus">CHECKING</div>
+      <div class="live-stat__label">System Status</div>
+    </div>
   </div>
 </div>
 
@@ -1863,6 +1954,52 @@ a:hover { color: var(--color-primary-hover); }
       .then(function (res) { if (res.ok) { dot.className = "header__status-dot"; text.textContent = "Online"; } else { dot.className = "header__status-dot header__status-dot--offline"; text.textContent = "Degraded"; } })
       .catch(function () { dot.className = "header__status-dot header__status-dot--offline"; text.textContent = "Offline"; });
     setTimeout(checkApiStatus, 60000);
+  })();
+
+  /* ---- Live Stats Dashboard ---- */
+  (function initLiveStats() {
+    function animateValue(el, newVal) {
+      if (!el) return;
+      var current = el.textContent;
+      if (current === newVal) return;
+      el.textContent = newVal;
+      el.classList.remove('updated');
+      void el.offsetWidth;
+      el.classList.add('updated');
+    }
+    function fetchStats() {
+      Promise.all([
+        fetch('https://agentoracle.co/fingerprints', { mode: 'cors' }).then(function(r) { return r.json(); }).catch(function() { return null; }),
+        fetch('https://agentoracle.co/health', { mode: 'cors' }).then(function(r) { return r.json(); }).catch(function() { return null; })
+      ]).then(function(results) {
+        var fp = results[0], health = results[1];
+        if (fp && fp.database_stats) {
+          animateValue(document.getElementById('statFingerprints'), fp.database_stats.total_keys.toLocaleString());
+        }
+        if (health) {
+          animateValue(document.getElementById('statVersion'), 'v' + health.version);
+          var models = health.features && health.features.models ? health.features.models.length : 3;
+          animateValue(document.getElementById('statSources'), String(models + 1));
+          var chains = health.chain ? health.chain.split('+').length : 3;
+          animateValue(document.getElementById('statChains'), String(chains));
+          var statusEl = document.getElementById('statStatus');
+          var pulseEl = document.querySelector('.live-stat__pulse');
+          if (statusEl) {
+            statusEl.textContent = 'ALL SYSTEMS LIVE';
+            statusEl.className = 'live-stat__value live-stat__value--status live';
+          }
+          if (pulseEl) pulseEl.style.background = 'var(--color-green)';
+        } else {
+          var statusEl2 = document.getElementById('statStatus');
+          if (statusEl2) {
+            statusEl2.textContent = 'DEGRADED';
+            statusEl2.className = 'live-stat__value live-stat__value--status down';
+          }
+        }
+      });
+    }
+    fetchStats();
+    setInterval(fetchStats, 30000);
   })();
 
   /* ---- Back to Top (Cat 5) ---- */
