@@ -936,7 +936,7 @@ a:hover { color: var(--color-primary-hover); }
   <div class="container" style="text-align:center;margin-bottom:var(--space-6);">
     <div class="hero__badge fade-in" style="display:inline-flex;">
       <span class="hero__badge-dot"></span>
-      v2.2.0 — 4-Source Verification · Gemma 4 · SDK · 1,094 Fingerprints · 36 Tests · Base · SKALE · Stellar
+      v2.2.0 — 4-Source Verification · Per-Claim Trust Scoring · x402 Native
     </div>
   </div>
   <div class="container hero__inner">
