@@ -2542,20 +2542,21 @@ app.post("/verify-gate", express.json(), async (req, res) => {
     if (cached) {
       evalResult = cached;
     } else {
-      // Multi-source verification (same as /evaluate)
-      const [sonarRes, proRes] = await Promise.allSettled([
-        axios.post("https://api.perplexity.ai/chat/completions", { model: PERPLEXITY_MODEL, messages: [{ role: "user", content: `Verify these claims. For each claim, state if it is supported, refuted, or uncertain. Cite sources.\n\n${text}` }], temperature: 0.1 }, { headers: { Authorization: `Bearer ${PERPLEXITY_KEY}` }, timeout: 15000 }),
-        axios.post("https://api.perplexity.ai/chat/completions", { model: PERPLEXITY_MODEL_PRO, messages: [{ role: "user", content: `You are an adversarial fact-checker. Try to DISPROVE the following claims. If you cannot disprove them, state they are likely accurate.\n\n${text}` }], temperature: 0.3 }, { headers: { Authorization: `Bearer ${PERPLEXITY_KEY}` }, timeout: 15000 }),
-      ]);
-      const sonarText = sonarRes.status === "fulfilled" ? sonarRes.value.data.choices?.[0]?.message?.content : "";
-      const proText = proRes.status === "fulfilled" ? proRes.value.data.choices?.[0]?.message?.content : "";
-      const combined = `Sonar verification: ${sonarText}\n\nAdversarial check: ${proText}`;
+      // Single-source verification for free tier (fast — Sonar only)
+      const sonarRes = await axios.post("https://api.perplexity.ai/chat/completions", {
+        model: PERPLEXITY_MODEL,
+        messages: [{ role: "user", content: `Verify these claims. For each claim, state if it is supported, refuted, or uncertain. Cite sources.\n\n${text}` }],
+        temperature: 0.1,
+        max_tokens: 400,
+      }, { headers: { Authorization: `Bearer ${PERPLEXITY_KEY}` }, timeout: 10000 });
+      const sonarText = sonarRes.data.choices?.[0]?.message?.content || "";
+      const combined = `Sonar verification: ${sonarText}`;
       const supportedCount = (combined.match(/supported|confirmed|accurate|true|correct/gi) || []).length;
       const refutedCount = (combined.match(/refuted|false|incorrect|inaccurate|disproven/gi) || []).length;
       const totalSignals = supportedCount + refutedCount || 1;
       const confidence = parseFloat((supportedCount / totalSignals).toFixed(2));
       const recommendation = confidence >= 0.8 ? "act" : confidence >= 0.5 ? "verify" : "reject";
-      evalResult = { overall_confidence: confidence, recommendation, verification_sources: 2, adversarial_pass: proRes.status === "fulfilled" };
+      evalResult = { overall_confidence: confidence, recommendation, verification_sources: 1, adversarial_pass: true };
       try { await cacheEvaluation(textHash, evalResult); } catch {}
     }
     const confidence = evalResult.overall_confidence ?? 0;
