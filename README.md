@@ -1,6 +1,7 @@
 # AgentOracle — The Trust Layer for AI Agents
 
 [![npm](https://img.shields.io/npm/v/agentoracle-mcp?label=agentoracle-mcp)](https://www.npmjs.com/package/agentoracle-mcp)
+[![npm](https://img.shields.io/npm/v/agentoracle-verify?label=agentoracle-verify)](https://www.npmjs.com/package/agentoracle-verify)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Base](https://img.shields.io/badge/chain-Base-0052FF?logo=coinbase)](https://base.org)
 [![SKALE](https://img.shields.io/badge/chain-SKALE-gasless-00D395)](https://skale.space)
@@ -178,12 +179,12 @@ curl https://agentoracle.co/.well-known/x402-manifest.json
 
 ---
 
-## SDK: @agentoracle/verify
+## SDK: agentoracle-verify
 
 Embed trust verification into any agent or API.
 
 ```bash
-npm install @agentoracle/verify
+npm install agentoracle-verify
 ```
 
 ```javascript
@@ -297,3 +298,35 @@ Agents report outcomes for free. Did acting on a `"recommendation": "act"` claim
 ---
 
 MIT License
+
+## Framework Integrations
+
+### LangChain
+
+```bash
+pip install langchain-agentoracle
+```
+
+```python
+from langchain_agentoracle import AgentOracleVerifyTool
+
+verify = AgentOracleVerifyTool()
+result = verify.invoke("GPT-5 was released in March 2026")
+```
+
+GitHub: [TKCollective/langchain-agentoracle-tools](https://github.com/TKCollective/langchain-agentoracle-tools)
+
+### CrewAI
+
+```bash
+pip install crewai-agentoracle
+```
+
+```python
+from crewai_agentoracle import AgentOracleVerifyTool
+
+verify_tool = AgentOracleVerifyTool()
+# Add to any CrewAI agent's tools list
+```
+
+GitHub: [TKCollective/crewai-agentoracle](https://github.com/TKCollective/crewai-agentoracle)
