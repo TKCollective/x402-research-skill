@@ -699,6 +699,7 @@ const PREVIEW_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minute cache for preview result
 
 app.post("/preview", async (req, res) => {
   const { query } = req.body;
+  trackRequest(req, "preview");
 
   if (!query || typeof query !== "string" || query.trim().length === 0) {
     return res.status(400).json({
@@ -1114,6 +1115,39 @@ app.get("/gemma-test", async (_req, res) => {
   }
 });
 
+// ═══════════════════════════════════════════════════════════════════
+//  TRAFFIC DASHBOARD — view API usage stats
+// ═══════════════════════════════════════════════════════════════════
+app.get("/traffic", async (_req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    const endpoints = ["preview", "research", "deep-research", "evaluate", "verify-gate"];
+    const stats = { today: {}, yesterday: {}, unique_ips: {} };
+    for (const ep of endpoints) {
+      stats.today[ep] = parseInt(await redisCmd("GET", `traffic:${today}:${ep}`) || 0);
+      stats.yesterday[ep] = parseInt(await redisCmd("GET", `traffic:${yesterday}:${ep}`) || 0);
+    }
+    stats.unique_ips.today = parseInt(await redisCmd("SCARD", `traffic:ips:${today}`) || 0);
+    stats.unique_ips.yesterday = parseInt(await redisCmd("SCARD", `traffic:ips:${yesterday}`) || 0);
+    stats.external = {
+      today: {},
+      yesterday: {},
+      unique_ips_today: parseInt(await redisCmd("SCARD", `traffic:external:ips:${today}`) || 0),
+      unique_ips_yesterday: parseInt(await redisCmd("SCARD", `traffic:external:ips:${yesterday}`) || 0),
+    };
+    for (const ep of endpoints) {
+      stats.external.today[ep] = parseInt(await redisCmd("GET", `traffic:external:${today}:${ep}`) || 0);
+      stats.external.yesterday[ep] = parseInt(await redisCmd("GET", `traffic:external:${yesterday}:${ep}`) || 0);
+    }
+    stats.today.total = Object.values(stats.today).reduce((a,b) => a + (typeof b === 'number' ? b : 0), 0);
+    stats.yesterday.total = Object.values(stats.yesterday).reduce((a,b) => a + (typeof b === 'number' ? b : 0), 0);
+    res.json({ date: today, stats });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get("/health", (_req, res) => {
   res.json({
     status: "ok",
@@ -1177,6 +1211,7 @@ app.get("/health", (_req, res) => {
 
 app.post("/research", async (req, res) => {
   const { query, tier } = req.body;
+  trackRequest(req, "research");
 
   // ── Input validation ────────────────────────────────────────────
   if (!query || typeof query !== "string" || query.trim().length === 0) {
@@ -1931,6 +1966,7 @@ app.get("/demo/video", (_req, res) => {
 
 app.post("/deep-research", async (req, res) => {
   const { query } = req.body;
+  trackRequest(req, "deep-research");
 
   if (!query || typeof query !== "string" || query.trim().length === 0) {
     return res.status(400).json({
@@ -2214,6 +2250,33 @@ async function redisCmd(...args) {
 const localCache = new Map();
 const feedbackStore = [];
 
+// ═══════════════════════════════════════════════════════════════════
+//  API TRAFFIC TRACKING — tracks hits per endpoint per day in Redis
+//  Keys: traffic:{date}:{endpoint} = count
+//         traffic:ips:{date} = set of unique IPs
+//         traffic:external:{date} = count (non-internal IPs)
+// ═══════════════════════════════════════════════════════════════════
+const INTERNAL_IPS = new Set(); // populated at runtime
+const OUR_WALLET = "0x2F8f072219DE491cD163f5a0f82aa9a734f77178".toLowerCase();
+
+async function trackRequest(req, endpoint) {
+  try {
+    const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'unknown';
+    // Count hit
+    await redisCmd("INCR", `traffic:${date}:${endpoint}`);
+    // Track unique IP
+    await redisCmd("SADD", `traffic:ips:${date}`, ip);
+    // Check if external (not our own wallet/test)
+    const paymentHeader = req.headers['x-payment'] || req.headers['payment'] || '';
+    const isInternal = paymentHeader.toLowerCase().includes(OUR_WALLET);
+    if (!isInternal && ip !== '127.0.0.1') {
+      await redisCmd("INCR", `traffic:external:${date}:${endpoint}`);
+      await redisCmd("SADD", `traffic:external:ips:${date}`, ip);
+    }
+  } catch {} // fire-and-forget, never block the response
+}
+
 async function getCachedEvaluation(textHash) {
   try {
     const cached = await redisCmd("GET", "eval:" + textHash);
@@ -2274,6 +2337,7 @@ async function getDbStats() {
 
 app.post("/evaluate", async (req, res) => {
   const { content, url, source, min_confidence } = req.body;
+  trackRequest(req, "evaluate");
   const startTime = Date.now();
   if (!content && !url) return res.status(400).json({error:"Bad Request",message:"Provide content (text/JSON) or url to evaluate.",example:{content:"Some factual claims to verify",source:"exa",min_confidence:0.8}});
   try {
@@ -2529,6 +2593,7 @@ app.get("/fingerprints", async (_req, res) => {
 // ── Verification Gate API (bi-directional trust) ─────────────────
 // Developers POST data to /verify-gate and get back a pass/fail with confidence
 app.post("/verify-gate", express.json(), async (req, res) => {
+  trackRequest(req, "verify-gate");
   const { content, min_confidence = 0.5 } = req.body;
   if (!content) return res.status(400).json({ error: "Provide content to verify", example: { content: "Claims to verify", min_confidence: 0.5 } });
   try {
