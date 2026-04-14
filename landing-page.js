@@ -841,6 +841,9 @@ a:hover { color: var(--color-primary-hover); }
 .playground__btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 1rem; padding: 12px 28px; background: var(--color-primary); color: #111; border: none; border-radius: var(--radius-md); font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: opacity 0.2s; }
 .playground__btn:hover { opacity: 0.9; }
 .playground__btn:disabled { opacity: 0.5; cursor: wait; }
+.playground__spinner { width: 24px; height: 24px; border: 3px solid var(--color-border); border-top-color: var(--color-primary); border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.playground__loading { display: flex; align-items: center; gap: 16px; padding: 1.5rem; background: var(--color-bg); border-radius: var(--radius-md); }
 .playground__result { margin-top: 1.5rem; display: none; }
 .playground__result.active { display: block; }
 .playground__overall { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--color-bg); border-radius: var(--radius-md); margin-bottom: 1rem; }
@@ -883,7 +886,7 @@ a:hover { color: var(--color-primary-hover); }
       <a href="#playground" class="header__nav-link">Try Live</a>
         <a href="#how-it-works" class="header__nav-link">How It Works</a>
       <a href="#pricing" class="header__nav-link">Pricing</a>
-      <a href="#live-demo" class="header__nav-link">Demo</a>
+      <a href="#playground" class="header__nav-link">Demo</a>
       <a href="#specs" class="header__nav-link">Specs</a>
     </nav>
     <div class="header__actions">
@@ -903,7 +906,7 @@ a:hover { color: var(--color-primary-hover); }
     <a href="#features" class="mobile-nav__link" data-mobile-link>Features</a>
     <a href="#how-it-works" class="mobile-nav__link" data-mobile-link>How It Works</a>
     <a href="#pricing" class="mobile-nav__link" data-mobile-link>Pricing</a>
-    <a href="#live-demo" class="mobile-nav__link" data-mobile-link>Demo</a>
+    <a href="#playground" class="mobile-nav__link" data-mobile-link>Demo</a>
     <a href="#specs" class="mobile-nav__link" data-mobile-link>Specs</a>
     <a href="#mcp" class="mobile-nav__link" data-mobile-link>MCP Server</a>
   </nav>
@@ -2111,9 +2114,13 @@ async function runEvaluation() {
   if (!text) return;
 
   btn.disabled = true;
-  btn.textContent = 'Evaluating...';
   result.className = 'playground__result active';
-  result.innerHTML = '<div class="playground__loading">Analyzing claims... this takes 3-5 seconds</div>';
+  var startTime = Date.now();
+  var timerInterval = setInterval(function() {
+    var elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    btn.textContent = 'Evaluating... ' + elapsed + 's';
+    result.innerHTML = '<div class="playground__loading"><div class="playground__spinner"></div><div>Analyzing claims across 4 verification sources...<br><span style="font-family:var(--font-mono);color:var(--color-primary);font-size:1.1rem;">' + elapsed + 's</span></div></div>';
+  }, 100);
 
   try {
     var resp = await fetch('https://agentoracle.co/evaluate', {
@@ -2121,6 +2128,8 @@ async function runEvaluation() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: text, source: 'playground', min_confidence: 0.8 })
     });
+    clearInterval(timerInterval);
+    var totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
     var data = await resp.json();
     var ev = data.evaluation;
 
@@ -2154,9 +2163,10 @@ async function runEvaluation() {
       html += '</div>';
     }
 
-    html += '<div style="text-align:center;margin-top:1.5rem;font-size:0.85rem;color:#9A9590;">Evaluation ID: ' + data.evaluation_id + ' &middot; ' + ev.source_assessment.freshness + '</div>';
+    html += '<div style="text-align:center;margin-top:1.5rem;font-size:0.85rem;color:#9A9590;">Verified in ' + totalTime + 's &middot; Evaluation ID: ' + data.evaluation_id + '</div>';
     result.innerHTML = html;
   } catch (err) {
+    clearInterval(timerInterval);
     result.innerHTML = '<div class="playground__loading" style="color:#EF4444;">Request failed: ' + err.message + '</div>';
   }
 
