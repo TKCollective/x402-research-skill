@@ -400,18 +400,19 @@ app.get("/og-image.png", (_req, res) => {
 // ═══════════════════════════════════════════════════════════════════
 
 // 1. Separate facilitator clients — one per network
-//    xpay is the primary Base facilitator (proven reliable).
-//    CDP is available for Bazaar bootstrapping via /bazaar-bootstrap endpoint.
+//    CDP is now the primary Base facilitator (for Bazaar indexing).
+//    Falls back to xpay if CDP keys are not set.
 const CDP_ENABLED = !!(process.env.CDP_API_KEY_ID && process.env.CDP_API_KEY_SECRET);
 
-const baseFacilitatorClient = new HTTPFacilitatorClient({ url: FACILITATOR_URL });
-console.log("✅ Base facilitator: xpay");
-
+let baseFacilitatorClient;
 let cdpFacilitatorClient = null;
-let cdpResourceServer = null;
 if (CDP_ENABLED) {
   cdpFacilitatorClient = new HTTPFacilitatorClient(cdpFacilitator);
-  console.log("✅ CDP facilitator available (for Bazaar bootstrapping)");
+  baseFacilitatorClient = cdpFacilitatorClient;
+  console.log("✅ Base facilitator: CDP (Bazaar-enabled)");
+} else {
+  baseFacilitatorClient = new HTTPFacilitatorClient({ url: FACILITATOR_URL });
+  console.log("✅ Base facilitator: xpay (CDP keys not set)");
 }
 
 const skaleFacilitator = new HTTPFacilitatorClient({
