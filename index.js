@@ -694,6 +694,8 @@ if (CDP_ENABLED && cdpFacilitatorClient) {
 
 const PREVIEW_RATE_LIMIT = 10;
 const previewRateLimitStore = new Map();
+const previewCache = new Map();
+const PREVIEW_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minute cache for preview results
 
 app.post("/preview", async (req, res) => {
   const { query } = req.body;
@@ -732,6 +734,13 @@ app.post("/preview", async (req, res) => {
   }
 
   try {
+    // Check preview cache first
+    const cacheKey = query.trim().toLowerCase().replace(/\s+/g, ' ');
+    const cachedPreview = previewCache.get(cacheKey);
+    if (cachedPreview && (Date.now() - cachedPreview.ts) < PREVIEW_CACHE_TTL_MS) {
+      return res.json({ ...cachedPreview.data, cached: true, preview_remaining: Math.max(0, PREVIEW_RATE_LIMIT - pEntry.count), preview_limit: `${PREVIEW_RATE_LIMIT}/hour per IP (approximate — serverless instances may vary)` });
+    }
+
     const perplexityResponse = await axios.post(
       "https://api.perplexity.ai/chat/completions",
       {
@@ -797,7 +806,7 @@ app.post("/preview", async (req, res) => {
     const totalFacts = (fullResult.key_facts || []).length;
     const totalSources = (fullResult.sources || []).length;
 
-    return res.json({
+    const previewResponse = {
       preview: true,
       query: query.trim(),
       result: {
@@ -818,6 +827,18 @@ app.post("/preview", async (req, res) => {
         deep: "POST /deep-research — $0.10 USDC (Sonar Pro)",
         how: "See /.well-known/x402.json for payment details",
       },
+    };
+
+    // Cache the preview result
+    previewCache.set(cacheKey, { ts: Date.now(), data: previewResponse });
+    // Evict old entries (keep cache under 500 entries)
+    if (previewCache.size > 500) {
+      const oldest = previewCache.keys().next().value;
+      previewCache.delete(oldest);
+    }
+
+    return res.json({
+      ...previewResponse,
       preview_remaining: Math.max(0, PREVIEW_RATE_LIMIT - pEntry.count),
       preview_limit: `${PREVIEW_RATE_LIMIT}/hour per IP (approximate — serverless instances may vary)`,
     });
@@ -2550,7 +2571,7 @@ app.post("/verify-gate", express.json(), async (req, res) => {
       adversarial_pass: evalResult.adversarial_pass ?? true,
       latency_ms: latency,
       usage: "Embed trust verification into any API. POST content, get pass/fail with confidence score.",
-      sdk: "npm install @agentoracle/verify — createVerificationGate() middleware for Express",
+      sdk: "npm install agentoracle-verify — createVerificationGate() middleware for Express",
     });
   } catch (err) {
     res.status(500).json({ error: "Verification failed", message: err.message });
@@ -2563,7 +2584,7 @@ app.get("/verify-gate", (_req, res) => {
     method: "POST",
     description: "Bi-directional verification gate. POST any content, get a pass/fail verdict with confidence scoring. Use this to embed trust verification into your own API.",
     price: "Free (public beta)",
-    sdk: "npm install @agentoracle/verify",
+    sdk: "npm install agentoracle-verify",
     body: { content: "Text or JSON to verify", min_confidence: 0.5 },
     response: { pass: true, confidence: 0.87, recommendation: "act" },
   });
