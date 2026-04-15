@@ -1919,7 +1919,7 @@ a:hover { color: var(--color-primary-hover); }
 
   /* ---- Copy Buttons ---- */
   var copyTexts = {
-    curl: "curl -X POST https://agentoracle.co/research \\\\\\n  -H \\"Content-Type: application/json\\" \\\\\\n  -H \\"X-PAYMENT: <x402-payment>\\" \\\\\\n  -d '{\\"query\\": \\"Latest AI agent frameworks 2026\\"}\\'",
+    curl: "curl -X POST https://agentoracle.co/research -H Content-Type:application/json -H X-PAYMENT:<x402> -d query:Latest_AI_frameworks",
     mcp: "npx agentoracle-mcp"
   };
   document.querySelectorAll(".copy-btn").forEach(function (btn) {
