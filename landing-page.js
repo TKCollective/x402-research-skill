@@ -5,7 +5,7 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
 <!--
    ______                            __
   / ____/___  ____ ___  ____  __  __/ /____  _____
- / /   / __ \\/ __ \`__ \\/ __ \\/ / / / __/ _ \\/ ___/
+ / /   / __ \\/ __ __ \\/ __ \\/ / / / __/ _ \\/ ___/
 / /___/ /_/ / / / / / / /_/ / /_/ / /_/  __/ /
 \\____/\\____/_/ /_/ /_/ .___/\\__,_/\\__/\\___/_/
                     /_/
@@ -60,11 +60,12 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
 
 /* === DARK MODE === */
 :root, [data-theme="dark"] {
-  --color-bg: #0D0D0D; --color-surface: #131313; --color-surface-2: #1A1A1A;
-  --color-surface-3: #222222; --color-border: #2A2A2A; --color-border-subtle: #1E1E1E;
-  --color-text: #F0ECE2; --color-text-muted: #9A9590; --color-text-faint: #5A5550;
+  --color-bg: #0A0A0A; --color-surface: #111111; --color-surface-2: #161616;
+  --color-surface-3: #1C1C1C; --color-border: rgba(255,255,255,0.06); --color-border-subtle: rgba(255,255,255,0.04);
+  --color-border-mid: rgba(255,255,255,0.1); --gold-dim: rgba(201,169,110,0.08);
+  --color-text: #EDEAE0; --color-text-muted: #7A7670; --color-text-faint: #333333;
   --color-primary: #C9A96E; --color-primary-hover: #D4A850; --color-primary-dim: #A08850;
-  --color-primary-highlight: rgba(201, 169, 110, 0.12);
+  --color-primary-highlight: rgba(201, 169, 110, 0.08);
   --color-primary-glow: rgba(201, 169, 110, 0.06);
   --color-green: #4ADE80; --color-blue: #60A5FA; --color-purple: #A78BFA;
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.3); --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
@@ -100,7 +101,7 @@ html {
 body {
   min-height: 100dvh; line-height: 1.6; font-family: var(--font-body);
   font-size: var(--text-base); color: var(--color-text); background-color: var(--color-bg);
-  overflow-x: hidden;
+  overflow-x: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
 }
 img, picture, video, canvas, svg { display: block; max-width: 100%; height: auto; }
 input, button, textarea, select { font: inherit; color: inherit; }
@@ -134,13 +135,13 @@ a:hover { color: var(--color-primary-hover); }
 .section { padding-block: clamp(var(--space-20), 10vw, var(--space-32)); position: relative; }
 .section--alt { background: var(--color-surface); }
 .section-label {
-  display: inline-block; font-family: var(--font-body); font-size: var(--text-xs);
-  font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
-  color: var(--color-primary); margin-bottom: var(--space-5);
+  display: inline-block; font-family: var(--font-body); font-size: 9.5px;
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.16em;
+  color: rgba(201, 169, 110, 0.6); margin-bottom: var(--space-5);
 }
 .section-title {
   font-family: var(--font-display); font-size: var(--text-2xl); font-weight: 800;
-  color: var(--color-text); line-height: 1.1; margin-bottom: var(--space-5);
+  color: var(--color-text); line-height: 1.1; margin-bottom: var(--space-5); letter-spacing: -0.025em;
 }
 .section-subtitle {
   font-size: var(--text-base); color: var(--color-text-muted); line-height: 1.7;
@@ -177,7 +178,7 @@ a:hover { color: var(--color-primary-hover); }
 .header__nav { display: none; align-items: center; gap: var(--space-8); }
 @media (min-width: 768px) { .header__nav { display: flex; } }
 .header__nav-link {
-  font-size: var(--text-sm); font-weight: 500; color: var(--color-text-muted);
+  font-size: var(--text-sm); font-weight: 400; color: var(--color-text-muted);
   text-decoration: none; letter-spacing: 0.01em; position: relative;
 }
 .header__nav-link:hover { color: var(--color-text); }
@@ -316,7 +317,7 @@ a:hover { color: var(--color-primary-hover); }
 }
 .hero__headline {
   font-family: var(--font-display); font-size: var(--text-3xl); font-weight: 800;
-  line-height: 1.05; color: var(--color-text); margin-bottom: var(--space-6); letter-spacing: -0.02em;
+  line-height: 1.05; color: var(--color-text); margin-bottom: var(--space-4); letter-spacing: -0.04em;
 }
 .gold-text {
   background: linear-gradient(135deg, #C9A96E 0%, #D4A850 50%, #E8C878 100%);
@@ -326,7 +327,7 @@ a:hover { color: var(--color-primary-hover); }
   background: linear-gradient(135deg, #A08840 0%, #8A7530 50%, #B59A48 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.hero__subtitle { font-size: var(--text-base); color: var(--color-text-muted); line-height: 1.7; max-width: 520px; margin-bottom: var(--space-4); }
+.hero__subtitle { font-size: var(--text-base); color: var(--color-text-muted); line-height: 1.8; max-width: 520px; margin-bottom: var(--space-4); font-weight: 400; }
 .hero__secondary-tagline { font-size: var(--text-xs); color: var(--color-primary); font-weight: 600; margin-bottom: var(--space-8); letter-spacing: 0.05em; }
 .hero__ctas { display: flex; flex-wrap: wrap; gap: var(--space-4); }
 
@@ -863,11 +864,93 @@ a:hover { color: var(--color-primary-hover); }
 .playground__loading { text-align: center; padding: 2rem; color: var(--color-text-muted); }
 @media (max-width: 768px) { .playground { padding: 1.25rem; } .playground__input { min-height: 100px; } }
 
+/* === SCROLL REVEAL WITH BLUR (upgraded) === */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  filter: blur(5px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.fade-in.is-visible { opacity: 1; transform: translateY(0); filter: blur(0); }
+@media (prefers-reduced-motion: reduce) {
+  .fade-in { opacity: 1; filter: none; transform: none; }
+}
+
+/* === ANIMATED MESH BACKGROUND === */
+.mesh-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.mesh-blob { position: absolute; border-radius: 50%; filter: blur(120px); }
+.mesh-blob--1 { width: 800px; height: 700px; background: radial-gradient(circle, rgba(201,169,110,0.09), transparent 70%); top: -20%; left: 15%; animation: meshDrift 18s ease-in-out infinite alternate; }
+.mesh-blob--2 { width: 600px; height: 500px; background: radial-gradient(circle, rgba(201,169,110,0.05), transparent 70%); bottom: -10%; right: 0; animation: meshDrift 22s ease-in-out infinite alternate; animation-delay: -10s; }
+@keyframes meshDrift { 0% { transform: translate(0, 0); } 100% { transform: translate(18px, -14px) scale(1.04); } }
+
+/* === ANIMATED LOGO === */
+.logo-ring-circle { animation: logoRingPulse 4s ease-in-out infinite; }
+@keyframes logoRingPulse { 0%, 100% { filter: drop-shadow(0 0 1px rgba(201,169,110,0.3)); } 50% { filter: drop-shadow(0 0 5px rgba(201,169,110,0.7)); } }
+.logo-node-group { animation: logoOrbit 3.5s linear infinite; transform-origin: 14px 14px; }
+@keyframes logoOrbit { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.header__brand:hover .logo-node-group { animation-duration: 1s; }
+
+/* === BUTTON SHIMMER === */
+.btn--primary { position: relative; overflow: hidden; }
+.btn--hero { position: relative; overflow: hidden; }
+.btn--primary::before,
+.btn--hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  animation: btnShimmer 4s ease-in-out infinite;
+}
+@keyframes btnShimmer { 0% { left: -100%; } 60%, 100% { left: 100%; } }
+
+/* === HERO VERIFY TAGLINE === */
+.hero__verify-tagline {
+  font-size: clamp(0.95rem, 1.4vw, 1.1rem);
+  font-weight: 300;
+  font-style: italic;
+  color: rgba(201, 169, 110, 0.7);
+  margin-bottom: var(--space-4);
+  letter-spacing: 0.02em;
+}
+
+/* === STAT COUNTER POP === */
+@keyframes statValuePop { 0% { transform: scale(1.18); color: var(--color-primary); } 100% { transform: scale(1); } }
+.live-stat__value.updated { animation: statValuePop 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* === CARD GLOW HOVER === */
+.feature-row:hover { box-shadow: 0 0 0 1px rgba(201,169,110,0.12), 0 0 28px rgba(201,169,110,0.08); }
+.usecase-card:hover { box-shadow: var(--shadow-card-hover), 0 0 0 1px rgba(201,169,110,0.12), 0 0 28px rgba(201,169,110,0.08) !important; }
+.pricing-card:hover { box-shadow: var(--shadow-card-hover), 0 0 0 1px rgba(201,169,110,0.12), 0 0 28px rgba(201,169,110,0.08) !important; }
+.step:hover { box-shadow: 0 0 0 1px rgba(201,169,110,0.12), 0 0 28px rgba(201,169,110,0.08); }
+.spec-item:hover { box-shadow: 0 0 0 1px rgba(201,169,110,0.12), 0 0 20px rgba(201,169,110,0.06); border-color: rgba(201,169,110,0.2) !important; }
+.error-card:hover { box-shadow: 0 0 0 1px rgba(201,169,110,0.1), 0 0 20px rgba(201,169,110,0.06); }
+.faq-item:hover { box-shadow: 0 0 0 1px rgba(201,169,110,0.1), 0 0 20px rgba(201,169,110,0.06); }
+
+/* === VERDICT TICKER === */
+.verdict-ticker { position: relative; border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); padding: 9px 0; overflow: hidden; background: var(--color-surface); z-index: 2; }
+.verdict-ticker__label { position: absolute; left: 0; top: 0; bottom: 0; width: 110px; background: linear-gradient(to right, var(--color-surface) 60%, transparent); display: flex; align-items: center; padding-left: 24px; z-index: 10; font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(201,169,110,0.5); }
+.verdict-ticker__fade-right { position: absolute; right: 0; top: 0; bottom: 0; width: 80px; background: linear-gradient(to left, var(--color-surface) 60%, transparent); z-index: 10; }
+.verdict-ticker__track { display: flex; gap: 10px; animation: tickerScroll 32s linear infinite; width: max-content; padding-left: 130px; }
+@keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.verdict-ticker__item { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 5px; white-space: nowrap; font-size: 11px; border: 1px solid; }
+.verdict-ticker__item--act { background: rgba(74,222,128,0.05); border-color: rgba(74,222,128,0.12); color: rgba(74,222,128,0.8); }
+.verdict-ticker__item--verify { background: rgba(251,191,36,0.05); border-color: rgba(251,191,36,0.12); color: rgba(251,191,36,0.8); }
+.verdict-ticker__item--reject { background: rgba(239,68,68,0.05); border-color: rgba(239,68,68,0.12); color: rgba(239,68,68,0.8); }
+.verdict-ticker__badge { font-weight: 700; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.08em; }
+.verdict-ticker__score { font-family: var(--font-mono); font-size: 9.5px; opacity: 0.5; margin-left: 4px; }
+
 </style>
 </head>
 <body>
 
-
+<!-- ANIMATED MESH BACKGROUND -->
+<div class="mesh-bg" aria-hidden="true">
+  <div class="mesh-blob mesh-blob--1"></div>
+  <div class="mesh-blob mesh-blob--2"></div>
+</div>
 
 <!-- ANNOUNCEMENT BAR (Cat 6) -->
 <div class="announcement-bar">
@@ -878,7 +961,28 @@ a:hover { color: var(--color-primary-hover); }
 <header class="header" id="header">
   <div class="container header__inner">
     <a href="#" class="header__brand">
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="AgentOracle logo"><path d="M 25.83 9.12 A 12 12 0 1 1 21.07 5.12" stroke="#C9A96E" stroke-width="3.5" fill="none" stroke-linecap="round"/><circle cx="24.68" cy="5.66" r="2.2" fill="#C9A96E"/></svg>
+      <svg width="32" height="32" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="AgentOracle logo">
+        <defs>
+          <linearGradient id="logoRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#E8C878"/>
+            <stop offset="50%" stop-color="#C9A96E"/>
+            <stop offset="100%" stop-color="#A08840"/>
+          </linearGradient>
+          <linearGradient id="logoNodeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FFE0A0"/>
+            <stop offset="100%" stop-color="#C9A96E"/>
+          </linearGradient>
+          <filter id="logoNodeGlow">
+            <feGaussianBlur stdDeviation="1" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <circle cx="14" cy="14" r="9" stroke="url(#logoRingGrad)" stroke-width="2" fill="none" class="logo-ring-circle"/>
+        <g class="logo-node-group">
+          <circle cx="14" cy="5" r="2.5" fill="url(#logoNodeGrad)" filter="url(#logoNodeGlow)"/>
+          <circle cx="14" cy="5" r="3.8" fill="none" stroke="rgba(201,169,110,0.25)" stroke-width="0.8"/>
+        </g>
+      </svg>
       <span class="header__wordmark">AgentOracle</span>
     </a>
     <nav class="header__nav" aria-label="Main navigation">
@@ -913,7 +1017,7 @@ a:hover { color: var(--color-primary-hover); }
 </header>
 
 <!-- HERO -->
-<section class="hero section" style="position:relative;overflow:hidden;">
+<section class="hero section" style="position:relative;overflow:hidden;z-index:2;">
 <canvas id="sparkle-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
   <div class="hero__glow"></div>
   <!-- Enhanced particles (Cat 2) -->
@@ -947,6 +1051,7 @@ a:hover { color: var(--color-primary-hover); }
       <h1 class="hero__headline fade-in">
         The Trust Layer<br>for <span class="gold-text">AI Agents</span>
       </h1>
+      <p class="hero__verify-tagline fade-in">Verify before you act.</p>
       <p class="hero__subtitle fade-in">
         Agents don't just need data — they need to know what to trust. Pass any data through /evaluate and get per-claim verification, confidence scores, and a recommendation: act, verify, or reject. x402 native on Base, SKALE, and Stellar.
       </p>
@@ -1007,6 +1112,13 @@ a:hover { color: var(--color-primary-hover); }
       <div class="live-stat__label">System Status</div>
     </div>
   </div>
+</div>
+
+<!-- VERDICT TICKER -->
+<div class="verdict-ticker" aria-label="Live claim verdicts">
+  <div class="verdict-ticker__label">Live Verdicts</div>
+  <div class="verdict-ticker__fade-right"></div>
+  <div class="verdict-ticker__track" id="verdictTrack"></div>
 </div>
 
 <!-- FEATURES -->
@@ -1804,6 +1916,11 @@ a:hover { color: var(--color-primary-hover); }
 (function () {
   "use strict";
 
+  /* ---- Fade-in safety fallback — reveals all content within 2.5s if IntersectionObserver never fires ---- */
+  setTimeout(function() {
+    document.querySelectorAll('.fade-in').forEach(function(el) { el.classList.add('is-visible'); });
+  }, 2500);
+
   /* ---- Theme Toggle ---- */
   var themeToggle = document.querySelector("[data-theme-toggle]");
   var root = document.documentElement;
@@ -1846,7 +1963,7 @@ a:hover { color: var(--color-primary-hover); }
 
   /* ---- Copy Buttons ---- */
   var copyTexts = {
-    curl: "curl -X POST https://agentoracle.co/research \\\\\\n  -H \\"Content-Type: application/json\\" \\\\\\n  -H \\"X-PAYMENT: <x402-payment>\\" \\\\\\n  -d '{\\"query\\": \\"Latest AI agent frameworks 2026\\"}\\'",
+    curl: "curl -X POST https://agentoracle.co/research -H Content-Type:application/json -H X-PAYMENT:x402 -d query:Latest_AI_frameworks",
     mcp: "npx agentoracle-mcp"
   };
   document.querySelectorAll(".copy-btn").forEach(function (btn) {
@@ -2018,11 +2135,12 @@ a:hover { color: var(--color-primary-hover); }
     backToTop.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
   }
 
-  /* ---- Hero Typing Effect (Cat 2) ---- */
+  /* ---- Hero Typing Effect — cycles two sequences ---- */
   var heroCode = document.getElementById("heroCode");
+  var heroCodeLabel = document.querySelector(".code-block__label");
   if (heroCode) {
-    var lines = [
-      '<span class="ck">// Query AgentOracle \\u2014 one endpoint, one payment</span>',
+    var seqResearch = [
+      '<span class="ck">// Query AgentOracle \u2014 one endpoint, one payment</span>',
       '<span class="ckw">const</span> response = <span class="ckw">await</span> <span class="cf">fetch</span>(<span class="cs">"https://agentoracle.co/research"</span>, {',
       '  <span class="cp">method:</span> <span class="cs">"POST"</span>,',
       '  <span class="cp">headers:</span> {',
@@ -2035,59 +2153,102 @@ a:hover { color: var(--color-primary-hover); }
       '});',
       '',
       '<span class="ckw">const</span> data = <span class="ckw">await</span> response.<span class="cf">json</span>();',
-      '<span class="ck">// \\u2192 structured research with sources</span>'
+      '<span class="ck">// \u2192 structured research with sources + confidence</span>'
     ];
-    var currentLine = 0, currentChar = 0, html = "";
-    function typeChar() {
-      if (currentLine >= lines.length) {
-        heroCode.innerHTML = html;
-        return;
+    var seqEvaluate = [
+      '<span class="ck">// Evaluate any data for trust \u2014 /evaluate endpoint</span>',
+      '<span class="ckw">const</span> result = <span class="ckw">await</span> <span class="cf">fetch</span>(<span class="cs">"https://agentoracle.co/evaluate"</span>, {',
+      '  <span class="cp">method:</span> <span class="cs">"POST"</span>,',
+      '  <span class="cp">headers:</span> { <span class="cs">"Content-Type"</span>: <span class="cs">"application/json"</span> },',
+      '  <span class="cp">body:</span> <span class="cf">JSON.stringify</span>({ <span class="cp">content:</span> rawData })',
+      '});',
+      '',
+      '<span class="ck">// Returns per-claim verdicts:</span>',
+      '<span class="ck">// { verdict: "supported", confidence: 0.96 }</span>',
+      '<span class="ck">// { verdict: "refuted",   confidence: 0.04 }</span>',
+      '<span class="ck">// Recommendation: ACT \u2713</span>'
+    ];
+    var sequences = [
+      { lines: seqResearch, label: 'agent.ts' },
+      { lines: seqEvaluate, label: 'evaluate.ts' }
+    ];
+    var seqIdx = 0;
+    function runSequence() {
+      var seq = sequences[seqIdx];
+      if (heroCodeLabel) heroCodeLabel.textContent = seq.label;
+      var lines = seq.lines;
+      function showLine(idx) {
+        if (idx >= lines.length) {
+          heroCode.innerHTML = lines.join('\\n');
+          setTimeout(function () {
+            heroCode.innerHTML = '';
+            seqIdx = (seqIdx + 1) % sequences.length;
+            setTimeout(runSequence, 300);
+          }, 2800);
+          return;
+        }
+        heroCode.innerHTML = lines.slice(0, idx + 1).join('\\n') + '<span class="typing-cursor"></span>';
+        setTimeout(function () { showLine(idx + 1); }, 55 + Math.random() * 40);
       }
-      var line = lines[currentLine];
-      var plainText = line.replace(/<[^>]+>/g, "");
-      if (currentChar === 0 && currentLine > 0) html += "\\n";
-      if (currentChar >= plainText.length) {
-        html += line.substring(line.lastIndexOf(">") === -1 ? currentChar : 0);
-        if (currentChar === 0) html += line;
-        currentLine++; currentChar = 0;
-        heroCode.innerHTML = html + '<span class="typing-cursor"></span>';
-        setTimeout(typeChar, currentLine < lines.length && lines[currentLine] === "" ? 100 : 40);
-        return;
-      }
-      currentChar++; currentLine++; currentChar = 0;
-      html += line;
-      heroCode.innerHTML = html + '<span class="typing-cursor"></span>';
-      setTimeout(typeChar, Math.random() * 30 + 20);
+      showLine(0);
     }
-    /* Simplified: show all lines with typing cursor at end */
-    var fullHtml = lines.join("\\n");
-    var charIdx = 0;
-    var stripped = fullHtml.replace(/<[^>]+>/g, "");
-    function showLine(idx) {
-      if (idx >= lines.length) { heroCode.innerHTML = lines.join("\\n"); return; }
-      heroCode.innerHTML = lines.slice(0, idx + 1).join("\\n") + '<span class="typing-cursor"></span>';
-      setTimeout(function () { showLine(idx + 1); }, 60 + Math.random() * 40);
-    }
-    showLine(0);
+    runSequence();
   }
+
+  /* ---- Verdict Ticker ---- */
+  (function initVerdictTicker() {
+    var items = [
+      { v: 'ACT',    t: 'x402 protocol created by Coinbase for agent payments', s: '0.97', c: 'act' },
+      { v: 'REJECT', t: 'Anthropic was acquired by Google in 2025',             s: '0.04', c: 'reject' },
+      { v: 'ACT',    t: 'Base network processes x402 micropayments natively',   s: '0.93', c: 'act' },
+      { v: 'VERIFY', t: 'Gemini 3.0 released with native agent tool support',   s: '0.61', c: 'verify' },
+      { v: 'ACT',    t: 'SKALE network offers gasless x402 transactions',       s: '0.95', c: 'act' },
+      { v: 'REJECT', t: 'AgentOracle was founded in New York in 2019',          s: '0.06', c: 'reject' },
+      { v: 'ACT',    t: 'LangGraph supports stateful multi-agent workflows',    s: '0.94', c: 'act' },
+      { v: 'VERIFY', t: 'Exa raised $85M Series B funding in 2026',             s: '0.58', c: 'verify' },
+      { v: 'ACT',    t: 'USDC accepted on Base, SKALE and Stellar networks',    s: '0.99', c: 'act' },
+      { v: 'REJECT', t: 'CrewAI was acquired by Microsoft in 2025',             s: '0.02', c: 'reject' }
+    ];
+    var track = document.getElementById('verdictTrack');
+    if (!track) return;
+    var doubled = items.concat(items);
+    doubled.forEach(function (it) {
+      var el = document.createElement('div');
+      el.className = 'verdict-ticker__item verdict-ticker__item--' + it.c;
+      el.innerHTML = '<span class="verdict-ticker__badge">' + it.v + '</span>' + it.t + '<span class="verdict-ticker__score">' + it.s + '</span>';
+      track.appendChild(el);
+    });
+  })();
+
 })();
-// Sparkle canvas animation
+// Sparkle canvas animation — upgraded with connecting lines
 (function(){
-const c=document.getElementById('sparkle-canvas');
+var c=document.getElementById('sparkle-canvas');
 if(!c)return;
-const ctx=c.getContext('2d');
-let w,h,particles=[];
+var ctx=c.getContext('2d');
+var w,h,particles=[];
 function resize(){w=c.width=c.offsetWidth;h=c.height=c.offsetHeight;}
 window.addEventListener('resize',resize);resize();
-for(let i=0;i<40;i++)particles.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*2+0.5,dx:(Math.random()-0.5)*0.3,dy:(Math.random()-0.5)*0.3,o:Math.random()*0.5+0.1});
+for(var i=0;i<40;i++)particles.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*2+0.5,dx:(Math.random()-0.5)*0.3,dy:(Math.random()-0.5)*0.3,o:Math.random()*0.5+0.1});
 function draw(){
 ctx.clearRect(0,0,w,h);
-particles.forEach(p=>{
+particles.forEach(function(p){
 p.x+=p.dx;p.y+=p.dy;
 if(p.x<0)p.x=w;if(p.x>w)p.x=0;if(p.y<0)p.y=h;if(p.y>h)p.y=0;
 ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
 ctx.fillStyle='rgba(201,169,110,'+p.o+')';ctx.fill();
 });
+for(var i=0;i<particles.length;i++){
+for(var j=i+1;j<particles.length;j++){
+var dx=particles[i].x-particles[j].x;
+var dy=particles[i].y-particles[j].y;
+var dist=Math.sqrt(dx*dx+dy*dy);
+if(dist<110){
+ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);
+ctx.strokeStyle='rgba(201,169,110,'+(0.06*(1-dist/110))+')';ctx.lineWidth=0.35;ctx.stroke();
+}
+}
+}
 requestAnimationFrame(draw);}
 draw();
 })();
