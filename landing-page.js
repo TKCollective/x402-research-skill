@@ -757,17 +757,19 @@ a:hover { color: var(--color-primary-hover); }
 [data-theme="light"] .gold-gradient { background: linear-gradient(135deg, #A08840 0%, #8A7530 50%, #B59A48 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
 /* === SCROLL FADE IN (Cat 5) === */
-.fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-.fade-in.is-visible { opacity: 1; transform: translateY(0); }
-/* Hero elements animate on load, not scroll */
-.hero .fade-in { animation: heroReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-.hero .fade-in:nth-child(1) { animation-delay: 0.1s; }
-.hero .fade-in:nth-child(2) { animation-delay: 0.2s; }
-.hero .fade-in:nth-child(3) { animation-delay: 0.3s; }
-.hero .fade-in:nth-child(4) { animation-delay: 0.4s; }
-.hero .fade-in:nth-child(5) { animation-delay: 0.5s; }
-.hero .fade-in:nth-child(6) { animation-delay: 0.6s; }
-@keyframes heroReveal { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+/* Content visible by default — JS adds animation class after load */
+.fade-in { opacity: 1; transform: translateY(0); }
+.fade-in-ready .fade-in { opacity: 0; transform: translateY(24px); transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
+.fade-in-ready .fade-in.is-visible { opacity: 1; transform: translateY(0); }
+/* Hero always visible with staggered reveal */
+.fade-in-ready .hero .fade-in { animation: heroReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.fade-in-ready .hero .fade-in:nth-child(1) { animation-delay: 0.05s; }
+.fade-in-ready .hero .fade-in:nth-child(2) { animation-delay: 0.1s; }
+.fade-in-ready .hero .fade-in:nth-child(3) { animation-delay: 0.15s; }
+.fade-in-ready .hero .fade-in:nth-child(4) { animation-delay: 0.2s; }
+.fade-in-ready .hero .fade-in:nth-child(5) { animation-delay: 0.25s; }
+.fade-in-ready .hero .fade-in:nth-child(6) { animation-delay: 0.3s; }
+@keyframes heroReveal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
 /* === VERIFICATION FLOW STEPPER === */
 .verification-flow { padding-block: var(--space-12); }
@@ -1936,6 +1938,9 @@ a:hover { color: var(--color-primary-hover); }
   });
 
   /* ---- Scroll Fade-In (Cat 5) ---- */
+  /* Enable fade animations only after JS loads — content visible by default */
+  document.documentElement.classList.add('fade-in-ready');
+
   if ("IntersectionObserver" in window) {
     var fadeObserver = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
