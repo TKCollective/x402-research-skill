@@ -756,20 +756,45 @@ a:hover { color: var(--color-primary-hover); }
 .gold-gradient { background: linear-gradient(135deg, #C9A96E 0%, #D4A850 50%, #E8C878 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 [data-theme="light"] .gold-gradient { background: linear-gradient(135deg, #A08840 0%, #8A7530 50%, #B59A48 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
-/* === SCROLL FADE IN (Cat 5) === */
-/* Content visible by default — JS adds animation class after load */
-.fade-in { opacity: 1; transform: translateY(0); }
-.fade-in-ready .fade-in { opacity: 0; transform: translateY(24px); transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
-.fade-in-ready .fade-in.is-visible { opacity: 1; transform: translateY(0); }
-/* Hero always visible with staggered reveal */
-.fade-in-ready .hero .fade-in { animation: heroReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-.fade-in-ready .hero .fade-in:nth-child(1) { animation-delay: 0.05s; }
-.fade-in-ready .hero .fade-in:nth-child(2) { animation-delay: 0.1s; }
-.fade-in-ready .hero .fade-in:nth-child(3) { animation-delay: 0.15s; }
-.fade-in-ready .hero .fade-in:nth-child(4) { animation-delay: 0.2s; }
-.fade-in-ready .hero .fade-in:nth-child(5) { animation-delay: 0.25s; }
-.fade-in-ready .hero .fade-in:nth-child(6) { animation-delay: 0.3s; }
-@keyframes heroReveal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+/* === SCROLL ANIMATIONS === */
+/* Content visible by default (fallback). CSS scroll-driven animations enhance. */
+.fade-in { opacity: 1; }
+
+/* Hero: staggered entrance on page load (CSS only, no JS dependency) */
+.hero .fade-in {
+  opacity: 0;
+  animation: heroEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.hero .hero__badge { animation-delay: 0s; }
+.hero .hero__headline { animation-delay: 0.1s; }
+.hero .hero__subline { animation-delay: 0.15s; }
+.hero .hero__subtitle { animation-delay: 0.2s; }
+.hero .hero__secondary-tagline { animation-delay: 0.25s; }
+.hero .hero__ctas { animation-delay: 0.3s; }
+.hero .hero__code-wrapper { animation-delay: 0.15s; }
+@keyframes heroEntrance {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Below-fold: CSS scroll-driven reveal (progressive enhancement) */
+@supports (animation-timeline: view()) {
+  .section .fade-in,
+  .live-stats .fade-in,
+  .verification-flow .fade-in {
+    opacity: 0;
+    animation: scrollReveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 80%;
+  }
+}
+@keyframes scrollReveal {
+  from { opacity: 0; filter: blur(4px); }
+  to { opacity: 1; filter: blur(0); }
+}
+
+/* JS-based fallback for browsers without scroll-driven animations */
+.fade-in.is-visible { opacity: 1 !important; filter: none !important; }
 
 /* === VERIFICATION FLOW STEPPER === */
 .verification-flow { padding-block: var(--space-12); }
@@ -1937,24 +1962,22 @@ a:hover { color: var(--color-primary-hover); }
     });
   });
 
-  /* ---- Scroll Fade-In (Cat 5) ---- */
-  /* Enable fade animations only after JS loads — content visible by default */
-  document.documentElement.classList.add('fade-in-ready');
-
-  if ("IntersectionObserver" in window) {
-    var fadeObserver = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) { entry.target.classList.add("is-visible"); fadeObserver.unobserve(entry.target); }
-      });
-    }, { threshold: 0.08, rootMargin: "0px 0px -30px 0px" });
-    document.querySelectorAll(".fade-in").forEach(function (el) { fadeObserver.observe(el); });
-  } else {
-    document.querySelectorAll(".fade-in").forEach(function (el) { el.classList.add("is-visible"); });
-  }
-  /* Safety fallback: force all fade-in elements visible after 3s */
-  setTimeout(function() {
-    document.querySelectorAll('.fade-in').forEach(function(el) { el.classList.add('is-visible'); });
-  }, 3000);
+  /* ---- Scroll Fade-In Fallback ---- */
+  /* CSS scroll-driven animations handle modern browsers. This is fallback. */
+  try {
+    if ("IntersectionObserver" in window) {
+      var fadeObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) { entry.target.classList.add("is-visible"); fadeObserver.unobserve(entry.target); }
+        });
+      }, { threshold: 0.08, rootMargin: "0px 0px -30px 0px" });
+      document.querySelectorAll(".fade-in:not(.hero .fade-in)").forEach(function (el) { fadeObserver.observe(el); });
+    }
+    /* Force everything visible after 2s as safety net */
+    setTimeout(function() {
+      document.querySelectorAll(".fade-in").forEach(function(el) { el.classList.add("is-visible"); });
+    }, 2000);
+  } catch(e) { document.querySelectorAll(".fade-in").forEach(function(el) { el.classList.add("is-visible"); }); }
 
   /* ---- Smooth Scroll ---- */
   document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
