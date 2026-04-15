@@ -773,6 +773,13 @@ a:hover { color: var(--color-primary-hover); }
 .back-to-top:hover { background: var(--color-primary-hover); box-shadow: var(--shadow-gold-glow); }
 
 /* ==== RESPONSIVE / MOBILE ==== */
+/* Mobile: disable blur (causes scroll jank), reduce mesh */
+@media (max-width: 768px) {
+  .fade-in { filter: none !important; }
+  .fade-in.is-visible { filter: none !important; }
+  .mesh-blob--1 { opacity: 0.4; width: 400px; height: 350px; }
+  .mesh-blob--2 { opacity: 0.3; width: 300px; height: 250px; }
+}
 @media (max-width: 640px) {
   .hero__headline { font-size: clamp(2rem, 1rem + 5vw, 3rem); }
   .section-title { font-size: clamp(1.5rem, 1rem + 3vw, 2.5rem); }
@@ -1917,9 +1924,10 @@ a:hover { color: var(--color-primary-hover); }
   "use strict";
 
   /* ---- Fade-in safety fallback — reveals all content within 2.5s if IntersectionObserver never fires ---- */
+  /* Only force-show hero elements immediately; let observer handle the rest */
   setTimeout(function() {
-    document.querySelectorAll('.fade-in').forEach(function(el) { el.classList.add('is-visible'); });
-  }, 2500);
+    document.querySelectorAll('.hero .fade-in').forEach(function(el) { el.classList.add('is-visible'); });
+  }, 800);
 
   /* ---- Theme Toggle ---- */
   var themeToggle = document.querySelector("[data-theme-toggle]");
@@ -2188,7 +2196,7 @@ a:hover { color: var(--color-primary-hover); }
           return;
         }
         heroCode.innerHTML = lines.slice(0, idx + 1).join('\\n') + '<span class="typing-cursor"></span>';
-        setTimeout(function () { showLine(idx + 1); }, 55 + Math.random() * 40);
+        setTimeout(function () { showLine(idx + 1); }, 110 + Math.random() * 50);
       }
       showLine(0);
     }
