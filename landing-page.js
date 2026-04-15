@@ -1946,6 +1946,10 @@ a:hover { color: var(--color-primary-hover); }
   } else {
     document.querySelectorAll(".fade-in").forEach(function (el) { el.classList.add("is-visible"); });
   }
+  /* Safety fallback: force all fade-in elements visible after 3s */
+  setTimeout(function() {
+    document.querySelectorAll('.fade-in').forEach(function(el) { el.classList.add('is-visible'); });
+  }, 3000);
 
   /* ---- Smooth Scroll ---- */
   document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
