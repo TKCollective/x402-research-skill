@@ -759,9 +759,15 @@ a:hover { color: var(--color-primary-hover); }
 /* === SCROLL FADE IN (Cat 5) === */
 .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
 .fade-in.is-visible { opacity: 1; transform: translateY(0); }
-.fade-in:nth-child(2) { transition-delay: 0.1s; }
-.fade-in:nth-child(3) { transition-delay: 0.2s; }
-.fade-in:nth-child(4) { transition-delay: 0.3s; }
+/* Hero elements animate on load, not scroll */
+.hero .fade-in { animation: heroReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.hero .fade-in:nth-child(1) { animation-delay: 0.1s; }
+.hero .fade-in:nth-child(2) { animation-delay: 0.2s; }
+.hero .fade-in:nth-child(3) { animation-delay: 0.3s; }
+.hero .fade-in:nth-child(4) { animation-delay: 0.4s; }
+.hero .fade-in:nth-child(5) { animation-delay: 0.5s; }
+.hero .fade-in:nth-child(6) { animation-delay: 0.6s; }
+@keyframes heroReveal { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
 /* === VERIFICATION FLOW STEPPER === */
 .verification-flow { padding-block: var(--space-12); }
