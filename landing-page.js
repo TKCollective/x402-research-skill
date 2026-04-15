@@ -773,11 +773,12 @@ a:hover { color: var(--color-primary-hover); }
 .back-to-top:hover { background: var(--color-primary-hover); box-shadow: var(--shadow-gold-glow); }
 
 /* ==== RESPONSIVE / MOBILE ==== */
-/* Mobile: disable ALL scroll animations (causes scroll jank), reduce mesh */
+/* Mobile: disable ALL scroll animations (causes scroll jank), reduce mesh, hide typing code block */
 @media (max-width: 768px) {
   .fade-in { opacity: 1 !important; transform: none !important; filter: none !important; transition: none !important; }
   .mesh-blob--1 { opacity: 0.4; width: 400px; height: 350px; }
   .mesh-blob--2 { opacity: 0.3; width: 300px; height: 250px; }
+  .hero__code-wrapper { display: none !important; }
 }
 @media (max-width: 640px) {
   .hero__headline { font-size: clamp(2rem, 1rem + 5vw, 3rem); }
