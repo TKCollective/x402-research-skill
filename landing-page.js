@@ -1924,10 +1924,14 @@ a:hover { color: var(--color-primary-hover); }
   "use strict";
 
   /* ---- Fade-in safety fallback — reveals all content within 2.5s if IntersectionObserver never fires ---- */
-  /* Only force-show hero elements immediately; let observer handle the rest */
+  /* Force-show hero elements immediately; let observer handle the rest */
   setTimeout(function() {
-    document.querySelectorAll('.hero .fade-in').forEach(function(el) { el.classList.add('is-visible'); });
-  }, 800);
+    document.querySelectorAll('.hero .fade-in, .hero__badge, .hero__ctas, .hero__code-wrapper').forEach(function(el) { el.classList.add('is-visible'); });
+  }, 300);
+  /* Safety net: if observer completely fails, show everything after 4s */
+  setTimeout(function() {
+    document.querySelectorAll('.fade-in').forEach(function(el) { el.classList.add('is-visible'); });
+  }, 4000);
 
   /* ---- Theme Toggle ---- */
   var themeToggle = document.querySelector("[data-theme-toggle]");
