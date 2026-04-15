@@ -355,7 +355,7 @@ a:hover { color: var(--color-primary-hover); }
 }
 .copy-btn:hover { color: var(--color-primary); border-color: var(--color-primary); background: var(--color-primary-highlight); }
 .copy-btn.copied { color: var(--color-green); border-color: var(--color-green); }
-.code-block__body { padding: var(--space-5); overflow-x: auto; }
+.code-block__body { padding: var(--space-5); overflow-x: auto; min-height: 200px; }
 .code-block__body pre {
   font-family: var(--font-mono); font-size: clamp(0.72rem, 0.65rem + 0.3vw, 0.82rem);
   line-height: 1.75; color: var(--color-text-muted); white-space: pre; margin: 0; overflow-x: auto;
@@ -2112,7 +2112,7 @@ a:hover { color: var(--color-primary-hover); }
   })();
 
   /* ---- Live Stats Dashboard ---- */
-  (function initLiveStats() {
+  try { (function initLiveStats() {
     function animateValue(el, newVal) {
       if (!el) return;
       var current = el.textContent;
@@ -2159,7 +2159,7 @@ a:hover { color: var(--color-primary-hover); }
     }
     fetchStats();
     setInterval(fetchStats, 30000);
-  })();
+  })(); } catch(e) { console.error('Stats error:', e); }
 
   /* ---- Back to Top (Cat 5) ---- */
   var backToTop = document.getElementById("backToTop");
@@ -2171,6 +2171,7 @@ a:hover { color: var(--color-primary-hover); }
   }
 
   /* ---- Hero Typing Effect (Cat 2) ---- */
+  try {
   var heroCode = document.getElementById("heroCode");
   if (heroCode) {
     var lines = [
@@ -2248,6 +2249,7 @@ a:hover { color: var(--color-primary-hover); }
     }
     cycleSequences();
   }
+  } catch(e) { console.error('Hero typing error:', e); }
 })();
 // Sparkle canvas animation
 (function(){
