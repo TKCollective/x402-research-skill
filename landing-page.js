@@ -773,10 +773,9 @@ a:hover { color: var(--color-primary-hover); }
 .back-to-top:hover { background: var(--color-primary-hover); box-shadow: var(--shadow-gold-glow); }
 
 /* ==== RESPONSIVE / MOBILE ==== */
-/* Mobile: disable blur (causes scroll jank), reduce mesh */
+/* Mobile: disable ALL scroll animations (causes scroll jank), reduce mesh */
 @media (max-width: 768px) {
-  .fade-in { filter: none !important; }
-  .fade-in.is-visible { filter: none !important; }
+  .fade-in { opacity: 1 !important; transform: none !important; filter: none !important; transition: none !important; }
   .mesh-blob--1 { opacity: 0.4; width: 400px; height: 350px; }
   .mesh-blob--2 { opacity: 0.3; width: 300px; height: 250px; }
 }
