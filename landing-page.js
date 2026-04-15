@@ -757,8 +757,27 @@ a:hover { color: var(--color-primary-hover); }
 [data-theme="light"] .gold-gradient { background: linear-gradient(135deg, #A08840 0%, #8A7530 50%, #B59A48 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
 /* === SCROLL FADE IN (Cat 5) === */
-.fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
+.fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
 .fade-in.is-visible { opacity: 1; transform: translateY(0); }
+.fade-in:nth-child(2) { transition-delay: 0.1s; }
+.fade-in:nth-child(3) { transition-delay: 0.2s; }
+.fade-in:nth-child(4) { transition-delay: 0.3s; }
+
+/* === VERIFICATION FLOW STEPPER === */
+.verification-flow { padding-block: var(--space-12); }
+.flow-stepper { display: flex; align-items: flex-start; justify-content: center; gap: var(--space-4); margin: var(--space-8) auto; max-width: 900px; flex-wrap: wrap; }
+.flow-step { text-align: center; cursor: pointer; padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid transparent; transition: all 0.3s ease; flex: 1; min-width: 140px; }
+.flow-step:hover, .flow-step--active { border-color: var(--color-primary); background: rgba(201, 169, 110, 0.05); }
+.flow-step__icon { width: 44px; height: 44px; border-radius: 50%; background: var(--color-surface-2); border: 2px solid var(--color-border); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-3); font-family: var(--font-mono); font-weight: 700; font-size: var(--text-sm); color: var(--color-text-muted); transition: all 0.3s ease; }
+.flow-step--active .flow-step__icon { background: var(--color-primary); color: #111; border-color: var(--color-primary); box-shadow: 0 0 20px rgba(201, 169, 110, 0.3); }
+.flow-step__label { font-family: var(--font-display); font-weight: 700; font-size: var(--text-sm); margin-bottom: var(--space-1); }
+.flow-step__desc { font-size: var(--text-xs); color: var(--color-text-muted); line-height: 1.5; }
+.flow-step__arrow { color: var(--color-border); font-size: 1.5rem; padding-top: var(--space-5); flex-shrink: 0; }
+.flow-detail { margin-top: var(--space-6); max-width: 700px; margin-inline: auto; }
+.flow-detail__terminal { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; text-align: left; }
+.flow-detail__body { padding: var(--space-4); font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.8; color: var(--color-text-muted); min-height: 160px; }
+.flow-log-line { opacity: 0; animation: logFadeIn 0.4s ease forwards; }
+@keyframes logFadeIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
 
 /* Back to Top (Cat 5) */
 .back-to-top {
@@ -791,6 +810,12 @@ a:hover { color: var(--color-primary-hover); }
   .live-stat__divider { display: none; }
   .live-stat { min-width: 80px; }
   .live-stat__value { font-size: var(--text-lg); }
+  .flow-stepper { gap: var(--space-2); }
+  .flow-step { min-width: 70px; padding: var(--space-2); }
+  .flow-step__arrow { display: none; }
+  .flow-step__icon { width: 36px; height: 36px; font-size: var(--text-xs); }
+  .flow-step__desc { display: none; }
+  .flow-detail__body { font-size: 0.7rem; min-height: 120px; }
   .stat-pill { font-size: var(--text-xs); padding: var(--space-2) var(--space-3); }
   .bento-grid { grid-template-columns: 1fr !important; }
   .bento-card--large { grid-column: 1 !important; }
@@ -947,6 +972,7 @@ a:hover { color: var(--color-primary-hover); }
       <h1 class="hero__headline fade-in">
         The Trust Layer<br>for <span class="gold-text">AI Agents</span>
       </h1>
+      <p class="hero__subline fade-in" style="font-family:var(--font-mono);font-size:var(--text-sm);color:var(--color-primary);letter-spacing:0.08em;margin-bottom:var(--space-3);opacity:0.85;">Verify before you act.</p>
       <p class="hero__subtitle fade-in">
         Agents don't just need data — they need to know what to trust. Pass any data through /evaluate and get per-claim verification, confidence scores, and a recommendation: act, verify, or reject. x402 native on Base, SKALE, and Stellar.
       </p>
@@ -1008,6 +1034,45 @@ a:hover { color: var(--color-primary-hover); }
     </div>
   </div>
 </div>
+
+<!-- VERIFICATION FLOW STEPPER -->
+<section class="section verification-flow" id="how-verification-works">
+  <div class="container" style="text-align:center;">
+    <p class="section-label fade-in">HOW IT WORKS</p>
+    <h2 class="section-title fade-in">4-Source Verification in Seconds</h2>
+    <div class="flow-stepper fade-in">
+      <div class="flow-step flow-step--active" data-step="1">
+        <div class="flow-step__icon">1</div>
+        <div class="flow-step__label">Claim Input</div>
+        <div class="flow-step__desc">Agent sends any text or data</div>
+      </div>
+      <div class="flow-step__arrow">&rarr;</div>
+      <div class="flow-step" data-step="2">
+        <div class="flow-step__icon">2</div>
+        <div class="flow-step__label">Decomposition</div>
+        <div class="flow-step__desc">Gemma 4 breaks into individual claims</div>
+      </div>
+      <div class="flow-step__arrow">&rarr;</div>
+      <div class="flow-step" data-step="3">
+        <div class="flow-step__icon">3</div>
+        <div class="flow-step__label">4-Source Verify</div>
+        <div class="flow-step__desc">Sonar + Sonar Pro + Adversarial + Gemma</div>
+      </div>
+      <div class="flow-step__arrow">&rarr;</div>
+      <div class="flow-step" data-step="4">
+        <div class="flow-step__icon">4</div>
+        <div class="flow-step__label">Trust Score</div>
+        <div class="flow-step__desc">Per-claim confidence + recommendation</div>
+      </div>
+    </div>
+    <div class="flow-detail fade-in" id="flowDetail">
+      <div class="flow-detail__terminal">
+        <div class="code-block__header"><div class="code-block__dots"><span class="code-block__dot code-block__dot--red"></span><span class="code-block__dot code-block__dot--yellow"></span><span class="code-block__dot code-block__dot--green"></span></div><span class="code-block__label">verification.log</span></div>
+        <div class="flow-detail__body" id="flowLog"></div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- FEATURES -->
 <section class="section section--alt" id="features">
@@ -1959,6 +2024,78 @@ a:hover { color: var(--color-primary-hover); }
     setTimeout(checkApiStatus, 60000);
   })();
 
+  /* ---- Verification Flow Stepper ---- */
+  (function initFlowStepper() {
+    var steps = document.querySelectorAll('.flow-step');
+    var logEl = document.getElementById('flowLog');
+    if (!steps.length || !logEl) return;
+    var stepLogs = {
+      1: [
+        '<span style="color:#C9A96E">[INPUT]</span> Received: "GPT-5 was released in March 2026. It outperforms all benchmarks."',
+        '<span style="color:#C9A96E">[INPUT]</span> Source: external-agent',
+        '<span style="color:#C9A96E">[INPUT]</span> Routing to decomposition...'
+      ],
+      2: [
+        '<span style="color:#A78BFA">[DECOMPOSE]</span> Gemma 4 analyzing content...',
+        '<span style="color:#A78BFA">[DECOMPOSE]</span> Claim 1: "GPT-5 was released in March 2026"',
+        '<span style="color:#A78BFA">[DECOMPOSE]</span> Claim 2: "It outperforms all benchmarks"',
+        '<span style="color:#A78BFA">[DECOMPOSE]</span> 2 claims extracted, sending to verification...'
+      ],
+      3: [
+        '<span style="color:#60A5FA">[VERIFY]</span> Sonar: researching claim 1... <span style="color:#EF4444">REFUTED</span> (0.08)',
+        '<span style="color:#60A5FA">[VERIFY]</span> Sonar Pro: deep research... <span style="color:#EF4444">REFUTED</span> (0.05)',
+        '<span style="color:#60A5FA">[VERIFY]</span> Adversarial: attempting to confirm... <span style="color:#EF4444">FAILED</span>',
+        '<span style="color:#60A5FA">[VERIFY]</span> Gemma 4: calibrating confidence...',
+        '<span style="color:#60A5FA">[VERIFY]</span> Claim 2: "outperforms all" — <span style="color:#F59E0B">UNVERIFIABLE</span> (0.31)'
+      ],
+      4: [
+        '<span style="color:#4ADE80">[SCORE]</span> Overall confidence: <span style="font-weight:700;color:#EF4444">0.12</span>',
+        '<span style="color:#4ADE80">[SCORE]</span> Recommendation: <span style="font-weight:700;color:#EF4444">REJECT</span>',
+        '<span style="color:#4ADE80">[SCORE]</span> Claims: 2 total, 0 supported, 1 refuted, 1 unverifiable',
+        '<span style="color:#4ADE80">[SCORE]</span> Fingerprint cached: eval_abc123',
+        '<span style="color:#4ADE80">[DONE]</span> Verification complete in 8.2s'
+      ]
+    };
+    var activeStep = 1;
+    function setStep(n) {
+      activeStep = n;
+      steps.forEach(function(s) { s.classList.remove('flow-step--active'); });
+      steps[n - 1].classList.add('flow-step--active');
+      logEl.innerHTML = '';
+      var lines = stepLogs[n];
+      lines.forEach(function(line, i) {
+        setTimeout(function() {
+          var div = document.createElement('div');
+          div.className = 'flow-log-line';
+          div.style.animationDelay = (i * 0.1) + 's';
+          div.innerHTML = line;
+          logEl.appendChild(div);
+        }, i * 300);
+      });
+    }
+    steps.forEach(function(step, i) {
+      step.addEventListener('click', function() { setStep(i + 1); });
+    });
+    /* Auto-cycle through steps */
+    function autoCycle() {
+      setStep(activeStep);
+      setTimeout(function() {
+        activeStep = activeStep >= 4 ? 1 : activeStep + 1;
+        autoCycle();
+      }, 3500);
+    }
+    /* Start auto-cycle when visible */
+    var flowSection = document.getElementById('how-verification-works');
+    var flowStarted = false;
+    var flowObserver = new IntersectionObserver(function(entries) {
+      if (entries[0].isIntersecting && !flowStarted) {
+        flowStarted = true;
+        autoCycle();
+      }
+    }, { threshold: 0.3 });
+    if (flowSection) flowObserver.observe(flowSection);
+  })();
+
   /* ---- Live Stats Dashboard ---- */
   (function initLiveStats() {
     function animateValue(el, newVal) {
@@ -2037,38 +2174,64 @@ a:hover { color: var(--color-primary-hover); }
       '<span class="ckw">const</span> data = <span class="ckw">await</span> response.<span class="cf">json</span>();',
       '<span class="ck">// \\u2192 structured research with sources</span>'
     ];
-    var currentLine = 0, currentChar = 0, html = "";
-    function typeChar() {
-      if (currentLine >= lines.length) {
-        heroCode.innerHTML = html;
-        return;
+    /* Character-by-character typing with multi-sequence cycling */
+    var sequences = [
+      lines,
+      [
+        '<span class="ck">// Verify any claim before your agent acts</span>',
+        '<span class="ckw">const</span> result = <span class="ckw">await</span> <span class="cf">fetch</span>(<span class="cs">"https://agentoracle.co/evaluate"</span>, {',
+        '  <span class="cp">method:</span> <span class="cs">"POST"</span>,',
+        '  <span class="cp">body:</span> <span class="cf">JSON.stringify</span>({',
+        '    <span class="cp">content:</span> <span class="cs">"GPT-5 was released March 2026"</span>,',
+        '    <span class="cp">source:</span> <span class="cs">"my-agent"</span>',
+        '  })',
+        '});',
+        '',
+        '<span class="ck">// \u2192 { confidence: 0.12, recommendation: "reject" }</span>',
+        '<span class="ck">// \u2192 4 sources checked, claim refuted</span>',
+      ],
+      [
+        '<span class="ck">// Add trust to any Express API in 3 lines</span>',
+        '<span class="ckw">import</span> { createVerificationGate } <span class="ckw">from</span> <span class="cs">"agentoracle-verify"</span>;',
+        '',
+        '<span class="ckw">const</span> gate = <span class="cf">createVerificationGate</span>({',
+        '  <span class="cp">minConfidence:</span> <span class="cn">0.7</span>,',
+        '  <span class="cp">baseUrl:</span> <span class="cs">"https://agentoracle.co"</span>',
+        '});',
+        '',
+        'app.<span class="cf">use</span>(<span class="cs">"/api/data"</span>, gate);',
+        '<span class="ck">// \u2192 auto-verifies all incoming data</span>',
+        '<span class="ck">// \u2192 rejects claims below 0.7 confidence</span>',
+      ]
+    ];
+    var seqIdx = 0;
+    function typeSequence(seq, onDone) {
+      var lineIdx = 0;
+      var built = '';
+      function nextLine() {
+        if (lineIdx >= seq.length) {
+          heroCode.innerHTML = built;
+          if (onDone) setTimeout(onDone, 3000);
+          return;
+        }
+        if (lineIdx > 0) built += '\n';
+        built += seq[lineIdx];
+        lineIdx++;
+        heroCode.innerHTML = built + '<span class="typing-cursor"></span>';
+        setTimeout(nextLine, seq[lineIdx - 1] === '' ? 80 : 55 + Math.random() * 35);
       }
-      var line = lines[currentLine];
-      var plainText = line.replace(/<[^>]+>/g, "");
-      if (currentChar === 0 && currentLine > 0) html += "\\n";
-      if (currentChar >= plainText.length) {
-        html += line.substring(line.lastIndexOf(">") === -1 ? currentChar : 0);
-        if (currentChar === 0) html += line;
-        currentLine++; currentChar = 0;
-        heroCode.innerHTML = html + '<span class="typing-cursor"></span>';
-        setTimeout(typeChar, currentLine < lines.length && lines[currentLine] === "" ? 100 : 40);
-        return;
-      }
-      currentChar++; currentLine++; currentChar = 0;
-      html += line;
-      heroCode.innerHTML = html + '<span class="typing-cursor"></span>';
-      setTimeout(typeChar, Math.random() * 30 + 20);
+      nextLine();
     }
-    /* Simplified: show all lines with typing cursor at end */
-    var fullHtml = lines.join("\\n");
-    var charIdx = 0;
-    var stripped = fullHtml.replace(/<[^>]+>/g, "");
-    function showLine(idx) {
-      if (idx >= lines.length) { heroCode.innerHTML = lines.join("\\n"); return; }
-      heroCode.innerHTML = lines.slice(0, idx + 1).join("\\n") + '<span class="typing-cursor"></span>';
-      setTimeout(function () { showLine(idx + 1); }, 60 + Math.random() * 40);
+    function cycleSequences() {
+      heroCode.innerHTML = '<span class="typing-cursor"></span>';
+      setTimeout(function() {
+        typeSequence(sequences[seqIdx % sequences.length], function() {
+          seqIdx++;
+          setTimeout(function() { cycleSequences(); }, 500);
+        });
+      }, 400);
     }
-    showLine(0);
+    cycleSequences();
   }
 })();
 // Sparkle canvas animation
