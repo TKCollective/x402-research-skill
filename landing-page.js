@@ -838,6 +838,14 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
 /* === PRICING === */
 .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 960px; margin: 0 auto; }
 .pricing-card { background: var(--surface); border: 1px solid var(--border-mid); border-radius: 14px; padding: 36px 28px; display: flex; flex-direction: column; gap: 12px; transition: border-color 0.3s, box-shadow 0.3s; }
+.pricing-card--free { border-color: rgba(74,222,128,0.15); }
+.pricing-card--free .pricing-card__price { background: linear-gradient(135deg, #4ADE80, #22C55E); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.pricing-card--free .pricing-card__cta { border-color: rgba(74,222,128,0.3); color: #4ADE80; }
+.pricing-card--free .pricing-card__cta:hover { background: rgba(74,222,128,0.1); }
+.pricing-card--deep { border-color: rgba(139,92,246,0.15); }
+.pricing-card--deep .pricing-card__price { background: linear-gradient(135deg, #A78BFA, #8B5CF6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.pricing-card--deep .pricing-card__cta { border-color: rgba(139,92,246,0.3); color: #A78BFA; }
+.pricing-card--deep .pricing-card__cta:hover { background: rgba(139,92,246,0.1); }
 .pricing-card:hover { border-color: var(--gold-dim); box-shadow: 0 0 0 1px rgba(201,169,110,0.1), 0 0 30px rgba(201,169,110,0.07); }
 .pricing-card--featured { border-color: var(--gold-dim); background: linear-gradient(160deg, rgba(201,169,110,0.04), var(--surface)); position: relative; }
 .pricing-card--featured::before { content: 'MOST USED'; position: absolute; top: -1px; right: 24px; font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.12em; color: #0A0A0A; background: var(--gold); padding: 4px 10px; border-radius: 0 0 6px 6px; }
@@ -880,7 +888,8 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
 .mcp-prefix { color: var(--green); margin-right: 8px; }
 
 /* === SPECS === */
-.specs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.specs-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+@media (max-width: 768px) { .specs-grid { grid-template-columns: repeat(2, 1fr); } }
 .spec-item { background: var(--surface); padding: 20px 24px; display: flex; flex-direction: column; gap: 6px; transition: background 0.3s; }
 .spec-item:hover { background: rgba(201,169,110,0.02); }
 .spec-item__label { font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--text-faint); }
@@ -1278,7 +1287,7 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
     <h2 class="banner__title">Start verifying claims today.</h2>
     <p class="banner__sub">Add trust infrastructure in under five minutes. No API keys. Pay per verification.</p>
     <div class="banner__cta-row">
-      <a href="#" class="btn btn--primary">Try /preview free →</a>
+      <a href="#playground" class="btn btn--primary">Try /preview free →</a>
       <a href="#" class="hero__sub-link" style="align-self:center;">View x402 manifest</a>
     </div>
   </div>
@@ -1523,7 +1532,7 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
       </p>
     </div>
     <div class="pricing-grid reveal">
-      <div class="pricing-card">
+      <div class="pricing-card pricing-card--free">
         <div class="pricing-card__endpoint">/preview</div>
         <div class="pricing-card__price">FREE</div>
         <div class="pricing-card__unit">no payment required</div>
@@ -1548,7 +1557,7 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
         </ul>
         <a href="https://agentoracle.co/.well-known/x402.json" class="pricing-card__cta" target="_blank" rel="noopener noreferrer">View x402 Manifest</a>
       </div>
-      <div class="pricing-card">
+      <div class="pricing-card pricing-card--deep">
         <div class="pricing-card__endpoint">/deep-research</div>
         <div class="pricing-card__price">$0.10</div>
         <div class="pricing-card__unit">per query &middot; USDC &middot; Base &middot; SKALE &middot; Stellar</div>
