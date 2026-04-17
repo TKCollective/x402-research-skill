@@ -2413,10 +2413,22 @@ app.post("/evaluate", async (req, res) => {
     const proEval = parseEvalResponse(proRes);
     const advEval = parseEvalResponse(advRes);
 
-    // Use sonar as primary, pro as secondary verification
-    const primaryClaims = sonarEval?.claims || proEval?.claims || [];
+    // Use sonar as primary, pro as secondary, Gemma as fallback
+    let primaryClaims = sonarEval?.claims || proEval?.claims || [];
     const proClaims = proEval?.claims || [];
     const advClaims = advEval?.claims || [];
+
+    // Fallback: if sonar/pro returned no parseable claims, use Gemma verdicts
+    if (primaryClaims.length === 0 && gemmaEval && gemmaEval.verdicts && gemmaEval.verdicts.length > 0) {
+      console.log("[EVALUATE] Sonar/Pro returned no claims, falling back to Gemma verdicts");
+      primaryClaims = gemmaEval.verdicts.map(v => ({
+        claim: v.claim || v.text || "unknown",
+        verdict: (v.verdict || v.status || "unverifiable").toLowerCase().replace("true", "supported").replace("false", "refuted"),
+        confidence: v.confidence || v.score || 0.5,
+        evidence: v.evidence || v.reasoning || "Verified by Gemma 4",
+        source: "gemma-4"
+      }));
+    }
 
     // Cross-reference claims across sources
     const mergedClaims = primaryClaims.map((claim, i) => {
