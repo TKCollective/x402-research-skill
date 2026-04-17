@@ -1,17 +1,23 @@
 # AgentOracle — The Trust Layer for AI Agents
 
+*Verify before you act.*
+
 [![npm](https://img.shields.io/npm/v/agentoracle-mcp?label=agentoracle-mcp)](https://www.npmjs.com/package/agentoracle-mcp)
 [![npm](https://img.shields.io/npm/v/agentoracle-verify?label=agentoracle-verify)](https://www.npmjs.com/package/agentoracle-verify)
+[![PyPI](https://img.shields.io/pypi/v/langchain-agentoracle?label=langchain-agentoracle)](https://pypi.org/project/langchain-agentoracle/)
+[![PyPI](https://img.shields.io/pypi/v/crewai-agentoracle?label=crewai-agentoracle)](https://pypi.org/project/crewai-agentoracle/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Base](https://img.shields.io/badge/chain-Base-0052FF?logo=coinbase)](https://base.org)
 [![SKALE](https://img.shields.io/badge/chain-SKALE-gasless-00D395)](https://skale.space)
 [![Stellar](https://img.shields.io/badge/chain-Stellar-7B48CC)](https://stellar.org)
 
+![AgentOracle Hero](./hero-screenshot.png)
+
 AI agents hallucinate. AgentOracle doesn't let them act on it.
 
-Every claim an agent produces passes through multi-source verification — Sonar, Sonar Pro, and an adversarial pass — before it gets a `"recommendation": "act"`. No API keys. No accounts. Pay per call via [x402](https://x402.org).
+Every claim passes through 4-source verification — Sonar, Sonar Pro, Adversarial scanning, and Gemma 4 calibration — before it gets a `"recommendation": "act"`. Per-claim confidence scores from 0.00 to 1.00. No API keys. No accounts. Pay $0.01 per claim via [x402](https://x402.org) on Base, SKALE (gasless), and Stellar.
 
-**[agentoracle.co](https://agentoracle.co) · [Trust docs](https://agentoracle.co/trust)**
+**[agentoracle.co](https://agentoracle.co) · [Live Demo](https://agentoracle.co/#playground) · [x402 Manifest](https://agentoracle.co/.well-known/x402.json)**
 
 ---
 
