@@ -179,7 +179,7 @@ async function gemmaVerify(claims) {
   const claimList = Array.isArray(claims) ? claims.map((c, i) => `${i + 1}. ${c}`).join("\n") : claims;
   const result = await callGemma(
     "You are an independent fact verification engine. For each claim: 1) Assess SUPPORTED, REFUTED, or UNCERTAIN. 2) Provide a one-sentence evidence explanation. 3) If REFUTED, provide the correct factual answer. Return valid JSON: {\"verdicts\": [{\"claim\": \"...\", \"verdict\": \"SUPPORTED|REFUTED|UNCERTAIN\", \"confidence\": 0.0-1.0, \"evidence\": \"one sentence explaining why\", \"correction\": \"the correct fact if refuted, or empty string\"}]}",
-    `Verify independently:\n${claimList}`
+    `Today's date is ${new Date().toISOString().split('T')[0]}. Verify independently:\n${claimList}`
   );
   if (!result) return null;
   try {
