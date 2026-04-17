@@ -2400,18 +2400,26 @@ app.post("/evaluate", async (req, res) => {
     // Parse Gemma verification result
     const gemmaEval = gemmaRes?.status === "fulfilled" ? gemmaRes.value : null;
 
-    function parseEvalResponse(settled) {
-      if (settled.status === "rejected") return null;
+    function parseEvalResponse(settled, label) {
+      if (settled.status === "rejected") { console.log(`[EVALUATE] ${label}: rejected`); return null; }
       try {
         const raw = settled.value.data?.choices?.[0]?.message?.content || "{}";
         const cleaned = raw.replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/i,"").trim();
-        return JSON.parse(cleaned);
-      } catch { return null; }
+        // Try parsing the whole thing first
+        try { return JSON.parse(cleaned); } catch {}
+        // If that fails, try extracting JSON from the text
+        const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try { const parsed = JSON.parse(jsonMatch[0]); console.log(`[EVALUATE] ${label}: parsed via extraction, ${(parsed.claims||[]).length} claims`); return parsed; } catch {}
+        }
+        console.log(`[EVALUATE] ${label}: unparseable, raw length=${raw.length}, first 200: ${raw.slice(0,200)}`);
+        return null;
+      } catch(e) { console.log(`[EVALUATE] ${label}: error ${e.message}`); return null; }
     }
 
-    const sonarEval = parseEvalResponse(sonarRes);
-    const proEval = parseEvalResponse(proRes);
-    const advEval = parseEvalResponse(advRes);
+    const sonarEval = parseEvalResponse(sonarRes, "sonar");
+    const proEval = parseEvalResponse(proRes, "sonar-pro");
+    const advEval = parseEvalResponse(advRes, "adversarial");
 
     // Use sonar as primary, pro as secondary, Gemma as fallback
     let primaryClaims = sonarEval?.claims || proEval?.claims || [];
