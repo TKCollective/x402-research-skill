@@ -1804,10 +1804,38 @@ async function runEvaluation() {
   if (btnText) btnText.style.display = 'none';
   result.className = 'playground__result active';
   var startTime = Date.now();
-  var timerInterval = setInterval(function() {
-    var elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    result.innerHTML = '<div class="playground__loading"><div style="width:20px;height:20px;border:2px solid rgba(201,169,110,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;"></div><div>Analyzing claims across 4 verification sources... <span style="font-family:var(--font-mono);color:var(--gold);">' + elapsed + 's</span></div></div>';
-  }, 100);
+
+  // Staged pipeline progress
+  var stages = [
+    { name: 'Gemma 4 decompose', start: 0, end: 2500 },
+    { name: 'Sonar', start: 2500, end: 6000 },
+    { name: 'Sonar Pro', start: 2700, end: 7000 },
+    { name: 'Adversarial', start: 2900, end: 8500 },
+    { name: 'Gemma 4 calibrate', start: 8500, end: 11000 }
+  ];
+  var stageTimers = [];
+  function renderPipeline() {
+    var elapsed = Date.now() - startTime;
+    var html = '<div style="font-family:var(--font-mono);font-size:12px;padding:16px;background:var(--surface);border-radius:10px;border:1px solid var(--border);">';
+    html += '<div style="margin-bottom:10px;color:var(--text-muted);font-size:10px;letter-spacing:0.1em;">VERIFICATION PIPELINE</div>';
+    stages.forEach(function(s) {
+      var dot, color, label;
+      if (elapsed < s.start) { dot = '\u25CB'; color = 'var(--text-faint)'; label = 'waiting'; }
+      else if (elapsed < s.end) { dot = '\u25CF'; color = 'var(--gold)'; label = 'running'; }
+      else { dot = '\u2713'; color = 'var(--green)'; label = 'done'; }
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;color:' + color + ';">';
+      html += '<span style="font-size:14px;width:18px;text-align:center;">' + dot + '</span>';
+      html += '<span style="flex:1;">' + s.name + '</span>';
+      html += '<span style="font-size:10px;opacity:0.6;">' + label + '</span>';
+      html += '</div>';
+    });
+    var secs = (elapsed / 1000).toFixed(1);
+    html += '<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);color:var(--gold);font-size:11px;">' + secs + 's elapsed</div>';
+    html += '</div>';
+    result.innerHTML = html;
+  }
+  renderPipeline();
+  var timerInterval = setInterval(renderPipeline, 80);
   try {
     var resp = await fetch('https://agentoracle.co/evaluate', {
       method: 'POST',
