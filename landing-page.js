@@ -1043,7 +1043,7 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
     </p>
     <div class="hero__cta-row">
       <a href="#playground" class="btn btn--primary">Try the demo →</a>
-      <a href="#" class="hero__sub-link">$ pip install langchain-agentoracle</a>
+      <span class="hero__install-cmd" onclick="navigator.clipboard.writeText('pip install langchain-agentoracle crewai-agentoracle');this.textContent='Copied!';setTimeout(()=>{this.textContent='$ pip install langchain-agentoracle crewai-agentoracle'},1500)" style="cursor:pointer;font-family:var(--font-mono);font-size:13px;color:var(--text-muted);border-bottom:1px dashed var(--border-mid);padding-bottom:2px;" title="Click to copy">$ pip install langchain-agentoracle crewai-agentoracle</span>
     </div>
   </div>
 
