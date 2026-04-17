@@ -1300,7 +1300,7 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
   }
 
   // === EVAL ANIMATION ===
-  var inputText = "Verify these claims:\n1. x402 protocol created by Coinbase\n2. OpenAI acquired Anthropic in early 2026\n3. LangGraph leads agent frameworks\n4. Gemini 3.0 has native agent tools";
+  var inputText = "Verify these claims:\\n1. x402 protocol created by Coinbase\\n2. OpenAI acquired Anthropic in early 2026\\n3. LangGraph leads agent frameworks\\n4. Gemini 3.0 has native agent tools";
   var typedEl = document.getElementById('typedText');
   var pipelineEl = document.getElementById('pipeline');
   var resultsEl = document.getElementById('evalResults');
@@ -1319,11 +1319,11 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
     var typingInterval = setInterval(function() {
       if (charIdx >= inputText.length) {
         clearInterval(typingInterval);
-        typedEl.innerHTML = inputText.replace(/\n/g, '<br>') + '<span class="eval-typed-input__cursor"></span>';
+        typedEl.innerHTML = inputText.replace(/\\n/g, '<br>') + '<span class="eval-typed-input__cursor"></span>';
         setTimeout(runPipeline, 600);
         return;
       }
-      typedEl.innerHTML = inputText.substring(0, charIdx + 1).replace(/\n/g, '<br>') + '<span class="eval-typed-input__cursor"></span>';
+      typedEl.innerHTML = inputText.substring(0, charIdx + 1).replace(/\\n/g, '<br>') + '<span class="eval-typed-input__cursor"></span>';
       charIdx++;
     }, 35);
 
