@@ -1858,7 +1858,7 @@ async function runEvaluation() {
       if (c.correction) html += '<div class="playground__correction">Correction: ' + c.correction + '</div>';
       html += '</div>';
     });
-    html += '<div style="text-align:center;margin-top:1rem;font-family:var(--font-mono);font-size:11px;color:var(--text-faint);">Verified in ' + totalTime + 's &middot; ID: ' + data.evaluation_id + '</div>';
+    html += '<div style="text-align:center;margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:10px;color:var(--text-faint);line-height:1.8;">Verified in ' + totalTime + 's &middot; ID: ' + data.evaluation_id + '<br>0.00\u20130.49 <span style="color:#EF4444;">REJECT</span> &middot; 0.50\u20130.79 <span style="color:#F59E0B;">VERIFY</span> &middot; 0.80\u20131.00 <span style="color:#4ADE80;">ACT</span></div>';
     result.innerHTML = html;
   } catch(err) {
     clearInterval(timerInterval);

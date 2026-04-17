@@ -2421,13 +2421,26 @@ app.post("/evaluate", async (req, res) => {
     // Fallback: if sonar/pro returned no parseable claims, use Gemma verdicts
     if (primaryClaims.length === 0 && gemmaEval && gemmaEval.verdicts && gemmaEval.verdicts.length > 0) {
       console.log("[EVALUATE] Sonar/Pro returned no claims, falling back to Gemma verdicts");
-      primaryClaims = gemmaEval.verdicts.map(v => ({
-        claim: v.claim || v.text || "unknown",
-        verdict: (v.verdict || v.status || "unverifiable").toLowerCase().replace("true", "supported").replace("false", "refuted"),
-        confidence: v.confidence || v.score || 0.5,
-        evidence: v.evidence || v.reasoning || "Verified by Gemma 4",
-        source: "gemma-4"
-      }));
+      primaryClaims = gemmaEval.verdicts.map(v => {
+        var verdict = (v.verdict || v.status || "unverifiable").toLowerCase().replace("true", "supported").replace("false", "refuted");
+        var evidence = v.evidence || v.reasoning || v.explanation || "";
+        if (!evidence && verdict === "refuted") evidence = "No credible sources support this claim.";
+        if (!evidence && verdict === "supported") evidence = "Multiple sources confirm this claim.";
+        if (!evidence) evidence = "Insufficient data to verify.";
+        var result = {
+          claim: v.claim || v.text || "unknown",
+          verdict: verdict,
+          confidence: v.confidence || v.score || 0.5,
+          evidence: evidence + " (Source: Gemma 4 analysis)",
+          source: "gemma-4-fallback"
+        };
+        if (verdict === "refuted" && (v.correction || v.correct_answer || v.actual)) {
+          result.correction = v.correction || v.correct_answer || v.actual;
+        } else if (verdict === "refuted") {
+          result.correction = "This claim could not be verified by any source.";
+        }
+        return result;
+      });
     }
 
     // Cross-reference claims across sources
@@ -2468,12 +2481,35 @@ app.post("/evaluate", async (req, res) => {
         claim.evidence = (claim.evidence || "") + " Note: adversarial check found contradicting evidence.";
       }
 
+      // Ensure evidence is always meaningful
+      var finalEvidence = claim.evidence || "";
+      if (!finalEvidence || finalEvidence === "Verified by Gemma 4") {
+        if (claim.verdict === "supported") finalEvidence = "Confirmed by " + sourcesAgreeing + " of " + sourcesChecked + " verification sources.";
+        else if (claim.verdict === "refuted") finalEvidence = "Contradicted by " + (sourcesChecked - sourcesAgreeing) + " of " + sourcesChecked + " verification sources.";
+        else finalEvidence = "Insufficient consensus across " + sourcesChecked + " sources to determine accuracy.";
+      }
+
+      // Ensure refuted claims always have a correction
+      var finalCorrection = claim.correction || null;
+      if (claim.verdict === "refuted" && !finalCorrection) {
+        if (advMatch && advMatch.counter_evidence) finalCorrection = advMatch.counter_evidence;
+        else if (proMatch && proMatch.correction) finalCorrection = proMatch.correction;
+        else finalCorrection = "This claim is not supported by available evidence.";
+      }
+
+      // Source attribution
+      var sourcesUsed = ["sonar"];
+      if (proMatch) sourcesUsed.push("sonar-pro");
+      if (advMatch) sourcesUsed.push("adversarial");
+      if (claim.source === "gemma-4-fallback") sourcesUsed = ["gemma-4"];
+
       return {
         claim: claim.claim,
         verdict: claim.verdict,
         confidence: crossConfidence,
-        evidence: claim.evidence || "",
-        ...(claim.correction ? {correction: claim.correction} : {}),
+        evidence: finalEvidence,
+        ...(finalCorrection ? {correction: finalCorrection} : {}),
+        sources_used: sourcesUsed,
         sources_checked: sourcesChecked,
         sources_agreeing: sourcesAgreeing,
         adversarial_result: advMatch ? advMatch.adversarial_verdict : "not_checked",
