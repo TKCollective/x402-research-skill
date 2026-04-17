@@ -1853,9 +1853,12 @@ async function runEvaluation() {
     (ev.claims || []).forEach(function(c) {
       var vColor = c.verdict === 'supported' ? 'var(--green)' : c.verdict === 'refuted' ? 'var(--red)' : 'var(--amber)';
       var vIcon = c.verdict === 'supported' ? '&#10003;' : c.verdict === 'refuted' ? '&#10007;' : '?';
-      html += '<div class="playground__claim playground__claim--' + c.verdict + '"><div class="playground__verdict" style="color:' + vColor + '">' + vIcon + ' ' + c.verdict + ' (' + c.confidence + ')</div><div class="playground__claim-text">' + c.claim + '</div>';
-      if (c.evidence) html += '<div class="playground__evidence">' + c.evidence + '</div>';
-      if (c.correction) html += '<div class="playground__correction">Correction: ' + c.correction + '</div>';
+      html += '<div class="playground__claim playground__claim--' + c.verdict + '">';
+      html += '<div class="playground__verdict" style="color:' + vColor + '">' + vIcon + ' ' + c.verdict.toUpperCase() + ' (' + c.confidence + ')</div>';
+      html += '<div class="playground__claim-text">' + c.claim + '</div>';
+      if (c.evidence) html += '<div style="font-size:12px;color:var(--text-muted);margin-top:6px;padding:8px;background:rgba(255,255,255,0.02);border-radius:6px;line-height:1.5;">' + c.evidence + '</div>';
+      if (c.correction) html += '<div style="font-size:12px;color:var(--amber);margin-top:4px;padding:8px;background:rgba(245,158,11,0.05);border-radius:6px;border-left:2px solid var(--amber);">Correction: ' + c.correction + '</div>';
+      if (c.sources_used) html += '<div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap;">' + c.sources_used.map(function(s) { return '<span style="font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.15);color:var(--gold);">' + s + '</span>'; }).join('') + '</div>';
       html += '</div>';
     });
     html += '<div style="text-align:center;margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:10px;color:var(--text-faint);line-height:1.8;">Verified in ' + totalTime + 's &middot; ID: ' + data.evaluation_id + '<br>0.00\u20130.49 <span style="color:#EF4444;">REJECT</span> &middot; 0.50\u20130.79 <span style="color:#F59E0B;">VERIFY</span> &middot; 0.80\u20131.00 <span style="color:#4ADE80;">ACT</span></div>';
