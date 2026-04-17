@@ -1788,6 +1788,9 @@ function loadExample(type) {
   if (input) input.value = examples[type] || '';
 }
 
+// Silent warmup — ping /health on page load to wake the edge function
+fetch('https://agentoracle.co/health', { mode: 'cors' }).catch(function(){});
+
 async function runEvaluation() {
   var input = document.getElementById('pg-input');
   var btn = document.getElementById('pg-btn');
