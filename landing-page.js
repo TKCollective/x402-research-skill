@@ -1434,7 +1434,7 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
       <p class="section-subtitle">Submit any content and get per-claim verification in real time. No payment required to start.</p>
     </div>
     <div class="playground reveal">
-      <textarea id="pg-input" rows="5">LangGraph leads AI agent frameworks in 2026. OpenAI acquired Anthropic in early 2026. Bitcoin was created by Satoshi Nakamoto in 2009. CrewAI was acquired by Google.</textarea>
+      <textarea id="pg-input" rows="3">OpenAI acquired Anthropic in 2026. Bitcoin was created by Satoshi Nakamoto. LangGraph leads agent frameworks.</textarea>
       <div class="playground__examples">
         <button class="playground__example-btn" onclick="loadExample('ai')">AI claims</button>
         <button class="playground__example-btn" onclick="loadExample('crypto')">Crypto claims</button>
@@ -1780,7 +1780,7 @@ window.addEventListener('scroll', function() {
 function loadExample(type) {
   var input = document.getElementById('pg-input');
   var examples = {
-    'ai': 'LangGraph leads AI agent frameworks in 2026 with stateful workflows. OpenAI acquired Anthropic in early 2026. Google released Gemini 3.0 with native agent capabilities.',
+    'ai': 'OpenAI acquired Anthropic in 2026. Bitcoin was created by Satoshi Nakamoto. LangGraph leads agent frameworks.',
     'crypto': 'Bitcoin was created by Satoshi Nakamoto in 2009. Ethereum processes over 1 million transactions per day. Solana reached a market cap of $500 billion in 2026.',
     'health': 'Vitamin D deficiency is linked to increased risk of respiratory infections. Drinking 8 glasses of water daily is required for proper hydration. CRISPR gene therapy cured Type 1 diabetes in 2025.',
     'mixed': 'The x402 protocol was created by Coinbase for agent micropayments. AgentOracle was founded in 2019 in New York. Base network processes 75% of all x402 transactions. Exa raised $85 million in their Series B.'
