@@ -605,17 +605,24 @@ const routeConfig = {
     mimeType: "application/json",
   },
 };
-// v2.8 fix: PayAI facilitator supports BOTH Base (eip155:8453) AND SKALE (eip155:1187947933).
-// Use PayAI as the sole facilitator so syncFacilitatorOnStart validation passes for all networks.
-// xpay only supports Base, which caused RouteConfigurationError with SKALE in the accepts array.
-// Stellar uses x402.org facilitator registered on the same resource server.
-// Unified resource server with ALL facilitators in one array.
-// x402ResourceServer tries each facilitator until one succeeds.
-// PayAI handles EVM (Base + SKALE), x402.org handles Stellar.
-// Single middleware = no conflicts between networks.
-const facilitatorArray = STELLAR_ENABLED
-  ? [skaleFacilitator, stellarFacilitator]
-  : [skaleFacilitator];
+// v2.9 fix: CDP facilitator is REQUIRED for Bazaar auto-indexing on Base mainnet.
+// Order matters — x402ResourceServer tries facilitators in order until one succeeds.
+// 1. CDP first (when keys set) — handles Base payments, triggers Bazaar catalog entry.
+// 2. PayAI second — handles SKALE, acts as Base fallback if CDP is rate-limited/unavailable.
+// 3. Stellar last — handles stellar:* payments.
+// Previous config routed Base payments through PayAI, which does NOT index to Bazaar.
+// That's why agentoracle never showed up on agentic.market despite 5+ real txs.
+const facilitatorArray = [];
+if (CDP_ENABLED && cdpFacilitatorClient) {
+  facilitatorArray.push(cdpFacilitatorClient);
+  console.log("✅ Facilitator priority 1: CDP (Base + Bazaar indexing)");
+}
+facilitatorArray.push(skaleFacilitator);
+console.log(`✅ Facilitator priority ${facilitatorArray.length}: PayAI (SKALE + Base fallback)`);
+if (STELLAR_ENABLED) {
+  facilitatorArray.push(stellarFacilitator);
+  console.log(`✅ Facilitator priority ${facilitatorArray.length}: x402.org (Stellar)`);
+}
 
 const unifiedResourceServer = new x402ResourceServer(facilitatorArray)
   .register("eip155:*", new ExactEvmScheme());
@@ -1118,10 +1125,11 @@ app.get("/gemma-test", async (_req, res) => {
 // ═══════════════════════════════════════════════════════════════════
 //  TRAFFIC DASHBOARD — view API usage stats
 // ═══════════════════════════════════════════════════════════════════
-app.get("/traffic", async (_req, res) => {
+app.get("/traffic", async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     const endpoints = ["preview", "research", "deep-research", "evaluate", "verify-gate"];
     const stats = { today: {}, yesterday: {}, unique_ips: {} };
@@ -1143,7 +1151,72 @@ app.get("/traffic", async (_req, res) => {
     }
     stats.today.total = Object.values(stats.today).reduce((a,b) => a + (typeof b === 'number' ? b : 0), 0);
     stats.yesterday.total = Object.values(stats.yesterday).reduce((a,b) => a + (typeof b === 'number' ? b : 0), 0);
-    res.json({ date: today, stats });
+
+    // NEW: hourly buckets — last `hours` hours (default 48), UTC
+    const hoursWindow = Math.min(parseInt(req.query.hours) || 48, 168);
+    const hourly = {};
+    const externalHourly = {};
+    for (const ep of endpoints) { hourly[ep] = {}; externalHourly[ep] = {}; }
+    for (let i = 0; i < hoursWindow; i++) {
+      const h = new Date(now.getTime() - i * 3600000).toISOString().slice(0, 13);
+      for (const ep of endpoints) {
+        const v = parseInt(await redisCmd("GET", `traffic:hour:${h}:${ep}`) || 0);
+        if (v > 0) hourly[ep][h] = v;
+        const ev = parseInt(await redisCmd("GET", `traffic:external:hour:${h}:${ep}`) || 0);
+        if (ev > 0) externalHourly[ep][h] = ev;
+      }
+    }
+    stats.hourly = hourly;
+    stats.external_hourly = externalHourly;
+
+    // NEW: since=<ISO> window — sum counts for hours >= floor(since, hour)
+    // e.g. /traffic?since=2026-04-20T21:00:00Z for "since 2pm PT yesterday" (21:00 UTC)
+    if (req.query.since) {
+      const sinceDate = new Date(req.query.since);
+      if (!isNaN(sinceDate.getTime())) {
+        const sinceHour = sinceDate.toISOString().slice(0, 13);
+        const sinceStats = {};
+        const sinceExternal = {};
+        for (const ep of endpoints) {
+          sinceStats[ep] = 0;
+          sinceExternal[ep] = 0;
+          for (const [h, v] of Object.entries(hourly[ep] || {})) {
+            if (h >= sinceHour) sinceStats[ep] += v;
+          }
+          for (const [h, v] of Object.entries(externalHourly[ep] || {})) {
+            if (h >= sinceHour) sinceExternal[ep] += v;
+          }
+        }
+        stats.since = { since: sinceDate.toISOString(), total: sinceStats, external: sinceExternal };
+      }
+    }
+
+    // NEW: per-IP detail with first_seen / last_seen for today + yesterday
+    // Classified as datacenter vs unknown based on simple heuristics
+    // (full geo/ASN lookup belongs to an offline cron, not this hot-path handler)
+    const ipDetail = {};
+    for (const day of [today, yesterday]) {
+      const ips = await redisCmd("SMEMBERS", `traffic:ip_index:${day}`) || [];
+      const ipList = Array.isArray(ips) ? ips : [];
+      for (const ip of ipList) {
+        const h = await redisCmd("HGETALL", `traffic:ip_seen:${day}:${ip}`);
+        if (!h) continue;
+        // Upstash returns hgetall as array of [k,v,k,v] — normalize
+        let hash = {};
+        if (Array.isArray(h)) {
+          for (let i = 0; i < h.length; i += 2) hash[h[i]] = h[i + 1];
+        } else if (typeof h === "object") { hash = h; }
+        if (!hash.first_seen) continue;
+        // Simple heuristic tag: /24 seeder block, localhost, unknown
+        let tag = "unknown";
+        if (ip.startsWith("185.223.152.")) tag = "seeder_cron"; // known internal block
+        else if (ip === "127.0.0.1" || ip === "::1") tag = "localhost";
+        ipDetail[ip] = { ...hash, tag, day };
+      }
+    }
+    stats.ip_detail = ipDetail;
+
+    res.json({ date: today, now: now.toISOString(), stats });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -2262,18 +2335,37 @@ const OUR_WALLET = "0x2F8f072219DE491cD163f5a0f82aa9a734f77178".toLowerCase();
 
 async function trackRequest(req, endpoint) {
   try {
-    const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const now = new Date();
+    const date = now.toISOString().split('T')[0];                 // YYYY-MM-DD
+    const hour = now.toISOString().slice(0, 13);                  // YYYY-MM-DDTHH (UTC hour bucket)
+    const ts = now.toISOString();
     const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'unknown';
-    // Count hit
+
+    // Daily counters (existing behaviour)
     await redisCmd("INCR", `traffic:${date}:${endpoint}`);
-    // Track unique IP
     await redisCmd("SADD", `traffic:ips:${date}`, ip);
-    // Check if external (not our own wallet/test)
+
+    // NEW: hourly counters — lets us ask "how many verify-gate hits since 2pm PT yesterday"
+    await redisCmd("INCR", `traffic:hour:${hour}:${endpoint}`);
+    await redisCmd("EXPIRE", `traffic:hour:${hour}:${endpoint}`, "604800"); // 7d TTL
+
+    // NEW: per-IP detail with first_seen / last_seen (HSETNX on first_seen preserves it)
+    const ipKey = `traffic:ip_seen:${date}:${ip}`;
+    await redisCmd("HSETNX", ipKey, "first_seen", ts);
+    await redisCmd("HSET", ipKey, "last_seen", ts, "last_endpoint", endpoint);
+    await redisCmd("HINCRBY", ipKey, `hits_${endpoint}`, "1");
+    await redisCmd("EXPIRE", ipKey, "604800");
+    await redisCmd("SADD", `traffic:ip_index:${date}`, ip);
+    await redisCmd("EXPIRE", `traffic:ip_index:${date}`, "604800");
+
+    // External classification (not our own wallet/test)
     const paymentHeader = req.headers['x-payment'] || req.headers['payment'] || '';
     const isInternal = paymentHeader.toLowerCase().includes(OUR_WALLET);
     if (!isInternal && ip !== '127.0.0.1') {
       await redisCmd("INCR", `traffic:external:${date}:${endpoint}`);
       await redisCmd("SADD", `traffic:external:ips:${date}`, ip);
+      await redisCmd("INCR", `traffic:external:hour:${hour}:${endpoint}`);
+      await redisCmd("EXPIRE", `traffic:external:hour:${hour}:${endpoint}`, "604800");
     }
   } catch {} // fire-and-forget, never block the response
 }
