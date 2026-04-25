@@ -1118,32 +1118,55 @@ app.get("/gemma-test", async (_req, res) => {
 // ═══════════════════════════════════════════════════════════════════
 //  TRAFFIC DASHBOARD — view API usage stats
 // ═══════════════════════════════════════════════════════════════════
-app.get("/traffic", async (_req, res) => {
+app.get("/traffic", async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   try {
     const today = new Date().toISOString().split('T')[0];
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     const endpoints = ["preview", "research", "deep-research", "evaluate", "verify-gate"];
+    const wantLog = req.query.log === 'true' || req.query.log === '1';
+
+    // Build all Redis commands and parallelize them
+    const cmds = [];
+    for (const ep of endpoints) cmds.push(["GET", `traffic:${today}:${ep}`]);
+    for (const ep of endpoints) cmds.push(["GET", `traffic:${yesterday}:${ep}`]);
+    cmds.push(["SCARD", `traffic:ips:${today}`]);
+    cmds.push(["SCARD", `traffic:ips:${yesterday}`]);
+    cmds.push(["SCARD", `traffic:external:ips:${today}`]);
+    cmds.push(["SCARD", `traffic:external:ips:${yesterday}`]);
+    for (const ep of endpoints) cmds.push(["GET", `traffic:external:${today}:${ep}`]);
+    for (const ep of endpoints) cmds.push(["GET", `traffic:external:${yesterday}:${ep}`]);
+    for (const ep of endpoints) cmds.push(["SMEMBERS", `traffic:endpoint:${ep}:ips:${today}`]);
+    if (wantLog) cmds.push(["LRANGE", `traffic:log:${today}`, 0, 99]);
+
+    const results = await Promise.all(cmds.map(c => redisCmd(...c).catch(() => null)));
+
+    // Unpack in order
+    let i = 0;
     const stats = { today: {}, yesterday: {}, unique_ips: {} };
+    for (const ep of endpoints) stats.today[ep] = parseInt(results[i++] || 0);
+    for (const ep of endpoints) stats.yesterday[ep] = parseInt(results[i++] || 0);
+    stats.unique_ips.today = parseInt(results[i++] || 0);
+    stats.unique_ips.yesterday = parseInt(results[i++] || 0);
+    stats.external = { today: {}, yesterday: {}, unique_ips_today: parseInt(results[i++] || 0), unique_ips_yesterday: parseInt(results[i++] || 0) };
+    for (const ep of endpoints) stats.external.today[ep] = parseInt(results[i++] || 0);
+    for (const ep of endpoints) stats.external.yesterday[ep] = parseInt(results[i++] || 0);
+    stats.today.total = endpoints.reduce((a, ep) => a + (stats.today[ep] || 0), 0);
+    stats.yesterday.total = endpoints.reduce((a, ep) => a + (stats.yesterday[ep] || 0), 0);
+
+    const ips_by_endpoint = {};
     for (const ep of endpoints) {
-      stats.today[ep] = parseInt(await redisCmd("GET", `traffic:${today}:${ep}`) || 0);
-      stats.yesterday[ep] = parseInt(await redisCmd("GET", `traffic:${yesterday}:${ep}`) || 0);
+      const ips = results[i++];
+      if (ips && ips.length) ips_by_endpoint[ep] = ips;
     }
-    stats.unique_ips.today = parseInt(await redisCmd("SCARD", `traffic:ips:${today}`) || 0);
-    stats.unique_ips.yesterday = parseInt(await redisCmd("SCARD", `traffic:ips:${yesterday}`) || 0);
-    stats.external = {
-      today: {},
-      yesterday: {},
-      unique_ips_today: parseInt(await redisCmd("SCARD", `traffic:external:ips:${today}`) || 0),
-      unique_ips_yesterday: parseInt(await redisCmd("SCARD", `traffic:external:ips:${yesterday}`) || 0),
-    };
-    for (const ep of endpoints) {
-      stats.external.today[ep] = parseInt(await redisCmd("GET", `traffic:external:${today}:${ep}`) || 0);
-      stats.external.yesterday[ep] = parseInt(await redisCmd("GET", `traffic:external:${yesterday}:${ep}`) || 0);
+
+    let recent_log = undefined;
+    if (wantLog) {
+      const raw = results[i++] || [];
+      recent_log = raw.map(s => { try { return JSON.parse(s); } catch { return null; } }).filter(Boolean);
     }
-    stats.today.total = Object.values(stats.today).reduce((a,b) => a + (typeof b === 'number' ? b : 0), 0);
-    stats.yesterday.total = Object.values(stats.yesterday).reduce((a,b) => a + (typeof b === 'number' ? b : 0), 0);
-    res.json({ date: today, stats });
+
+    res.json({ date: today, stats, ips_by_endpoint, recent_log });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -1164,7 +1187,7 @@ app.get("/health", (_req, res) => {
       "POST /preview": { price: "free", model: PERPLEXITY_MODEL, note: "Live truncated preview, 10/hr" },
       "POST /research": { price: PRICE, model: PERPLEXITY_MODEL, tier_selector: true },
       "POST /deep-research": { price: DEEP_PRICE, model: PERPLEXITY_MODEL_PRO },
-      "POST /evaluate": { price: "$0.02", description: "Per-claim verification with confidence scoring" },
+      "POST /evaluate": { price: "$0.01", description: "Per-claim verification with confidence scoring" },
       "POST /verify-gate": { price: "free (beta)", description: "Bi-directional verification gate — embed trust into any API" },
       "GET /fingerprints": { price: "free", description: "Claim fingerprint database stats" },
       "POST /feedback": { price: "free", description: "Report evaluation accuracy to improve reputation" },
@@ -2256,6 +2279,7 @@ const feedbackStore = [];
 //  Keys: traffic:{date}:{endpoint} = count
 //         traffic:ips:{date} = set of unique IPs
 //         traffic:external:{date} = count (non-internal IPs)
+//         traffic:endpoint:{endpoint}:ips:{date} = set of IPs per endpoint
 // ═══════════════════════════════════════════════════════════════════
 const INTERNAL_IPS = new Set(); // populated at runtime
 const OUR_WALLET = "0x2F8f072219DE491cD163f5a0f82aa9a734f77178".toLowerCase();
@@ -2275,6 +2299,22 @@ async function trackRequest(req, endpoint) {
       await redisCmd("INCR", `traffic:external:${date}:${endpoint}`);
       await redisCmd("SADD", `traffic:external:ips:${date}`, ip);
     }
+    // Per-endpoint IP tracking
+    await redisCmd("SADD", `traffic:endpoint:${endpoint}:ips:${date}`, ip);
+    // Request-level log (referrer + UA + timestamp) — capped at 500 entries/day per endpoint
+    const referer = req.headers['referer'] || req.headers['referrer'] || '';
+    const origin = req.headers['origin'] || '';
+    const ua = (req.headers['user-agent'] || '').slice(0, 200);
+    const logEntry = JSON.stringify({
+      ts: new Date().toISOString(),
+      ip,
+      endpoint,
+      referer: referer.slice(0, 300),
+      origin: origin.slice(0, 200),
+      ua,
+    });
+    await redisCmd("LPUSH", `traffic:log:${date}`, logEntry);
+    await redisCmd("LTRIM", `traffic:log:${date}`, 0, 9999); // keep last 10k per day
   } catch {} // fire-and-forget, never block the response
 }
 
@@ -2374,16 +2414,31 @@ app.post("/evaluate", async (req, res) => {
     const adversarialPrompt = 'You are a skeptical fact-checker whose job is to DISPROVE claims. For each claim in this text, actively search for contradicting evidence. If you cannot find evidence against a claim, mark it as "resistant" (meaning it survived adversarial checking). Respond ONLY in JSON: {"claims":[{"claim":"text","adversarial_verdict":"resistant|vulnerable|contradicted","counter_evidence":"any evidence against this claim or empty string"}]}';
 
     // ── GEMMA: Claim decomposition (preprocessor) ──
+    // Hard-capped at 4s; if it stalls, we fall back to passing raw text through.
     let decomposedClaims = null;
     if (GEMMA_KEY) {
-      decomposedClaims = await gemmaDecompose(text);
-      if (decomposedClaims && decomposedClaims.length > 0) {
-        console.log("[GEMMA] Decomposed into", decomposedClaims.length, "claims");
+      try {
+        decomposedClaims = await Promise.race([
+          gemmaDecompose(text),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("decompose_budget_exceeded")), 4000))
+        ]);
+        if (decomposedClaims && decomposedClaims.length > 0) {
+          console.log("[GEMMA] Decomposed into", decomposedClaims.length, "claims");
+        }
+      } catch (e) {
+        console.log(`[GEMMA] Decomposition skipped: ${e.message}`);
+        decomposedClaims = null;
       }
     }
 
     // Run all sources in parallel (Sonar + Sonar Pro + Adversarial + Gemma)
-    const [sonarRes, proRes, advRes, gemmaRes] = await Promise.allSettled([
+    // Hard 20s budget: bail early once 3 of 4 have settled, or hard cap at 20s.
+    // Stragglers are recorded as `rejected` with reason "budget_exceeded".
+    // Total request budget anchored to request entry (startTime), NOT to LLM block start.
+    // This prevents cumulative slowness across decompose + parallel + calibration + persist.
+    const EVAL_BUDGET_MS = parseInt(process.env.EVAL_BUDGET_MS || "20000", 10);
+    const evalStart = startTime;
+    const sources = [
       axios.post("https://api.perplexity.ai/chat/completions",
         {model:PERPLEXITY_MODEL,stream:false,max_tokens:3000,messages:[{role:"system",content:verifyPrompt},{role:"user",content:text}]},
         {headers:{Authorization:`Bearer ${PERPLEXITY_KEY}`,"Content-Type":"application/json"},timeout:30000}),
@@ -2393,9 +2448,33 @@ app.post("/evaluate", async (req, res) => {
       axios.post("https://api.perplexity.ai/chat/completions",
         {model:PERPLEXITY_MODEL,stream:false,max_tokens:2000,messages:[{role:"system",content:adversarialPrompt},{role:"user",content:text}]},
         {headers:{Authorization:`Bearer ${PERPLEXITY_KEY}`,"Content-Type":"application/json"},timeout:30000}),
-      // Gemma 4: Independent verification (tiebreaker)
       GEMMA_KEY ? gemmaVerify(decomposedClaims || text) : Promise.resolve(null),
-    ]);
+    ];
+    const labels = ["sonar", "sonar-pro", "adversarial", "gemma"];
+    const settled = new Array(sources.length).fill(null);
+    let settledCount = 0;
+    await new Promise(resolve => {
+      let done = false;
+      const finish = () => { if (!done) { done = true; resolve(); } };
+      const budgetTimer = setTimeout(() => {
+        const elapsed = Date.now() - evalStart;
+        for (let i = 0; i < sources.length; i++) {
+          if (settled[i] === null) {
+            settled[i] = { status: "rejected", reason: "budget_exceeded" };
+            console.log(`[EVALUATE] ${labels[i]}: budget exceeded at ${elapsed}ms`);
+          }
+        }
+        finish();
+      }, EVAL_BUDGET_MS);
+      sources.forEach((p, i) => {
+        Promise.resolve(p).then(
+          v => { if (settled[i] === null) { settled[i] = { status: "fulfilled", value: v }; settledCount++; if (settledCount >= 3) { clearTimeout(budgetTimer); finish(); } } },
+          e => { if (settled[i] === null) { settled[i] = { status: "rejected", reason: e }; settledCount++; if (settledCount >= 3) { clearTimeout(budgetTimer); finish(); } } }
+        );
+      });
+    });
+    const [sonarRes, proRes, advRes, gemmaRes] = settled;
+    console.log(`[EVALUATE] settled in ${Date.now()-evalStart}ms (${settledCount}/4 sources, budget=${EVAL_BUDGET_MS}ms)`);
 
     // Parse Gemma verification result
     const gemmaEval = gemmaRes?.status === "fulfilled" ? gemmaRes.value : null;
@@ -2537,17 +2616,29 @@ app.post("/evaluate", async (req, res) => {
     }
 
     // ── GEMMA: Final confidence calibration ──
+    // Strict residual-budget gate: only run if we have headroom under the total 20s budget.
     let gemmaCalibration = null;
-    if (GEMMA_KEY && gemmaEval) {
+    const elapsedSoFar = Date.now() - evalStart;
+    const calibrationBudget = Math.max(0, EVAL_BUDGET_MS - elapsedSoFar - 500); // 500ms buffer for response serialization
+    if (GEMMA_KEY && gemmaEval && calibrationBudget >= 3000) {
       const sonarText = sonarRes.status === "fulfilled" ? (sonarRes.value.data?.choices?.[0]?.message?.content || "").slice(0, 500) : "unavailable";
       const proText = proRes.status === "fulfilled" ? (proRes.value.data?.choices?.[0]?.message?.content || "").slice(0, 500) : "unavailable";
       const gemmaText = JSON.stringify(gemmaEval).slice(0, 500);
-      gemmaCalibration = await gemmaCalibrate(sonarText, proText, gemmaText);
-      if (gemmaCalibration && gemmaCalibration.calibrated_confidence) {
-        // Weight: 60% original calculation, 40% Gemma calibration
-        overall = Math.round((overall * 0.6 + gemmaCalibration.calibrated_confidence * 0.4) * 100) / 100;
-        console.log("[GEMMA] Calibrated confidence:", overall, "agreement:", gemmaCalibration.agreement);
+      try {
+        gemmaCalibration = await Promise.race([
+          gemmaCalibrate(sonarText, proText, gemmaText),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("calibration_budget_exceeded")), calibrationBudget))
+        ]);
+        if (gemmaCalibration && gemmaCalibration.calibrated_confidence) {
+          // Weight: 60% original calculation, 40% Gemma calibration
+          overall = Math.round((overall * 0.6 + gemmaCalibration.calibrated_confidence * 0.4) * 100) / 100;
+          console.log("[GEMMA] Calibrated confidence:", overall, "agreement:", gemmaCalibration.agreement);
+        }
+      } catch (e) {
+        console.log(`[GEMMA] Calibration skipped: ${e.message} (budget=${calibrationBudget}ms)`);
       }
+    } else if (GEMMA_KEY && gemmaEval) {
+      console.log(`[GEMMA] Calibration skipped: insufficient budget (elapsed=${elapsedSoFar}ms, remaining=${calibrationBudget}ms)`);
     }
 
     const threshold = min_confidence ? parseFloat(min_confidence) : 0.8;
@@ -2556,6 +2647,15 @@ app.post("/evaluate", async (req, res) => {
     const assessment = sonarEval?.content_assessment || proEval?.content_assessment || {};
     const flags = (assessment.adversarial_flags||[]).filter(f=>f!=="");
     if(flags.length>0){overall=Math.round(Math.max(0,overall-flags.length*0.1)*100)/100;if(overall<0.5)rec="reject";}
+
+    // Plain-English recommendation for developers new to the API
+    function buildRecommendationText(conf, rec, flags){
+      const flagNote = flags && flags.length > 0 ? ` Adversarial layer raised ${flags.length} flag${flags.length===1?"":"s"}: ${flags.slice(0,3).join(", ")}.` : "";
+      if (rec === "reject" || conf < 0.50) return `Do not act. This claim is likely false or unsupported (confidence ${conf.toFixed(2)}).${flagNote}`;
+      if (rec === "verify" || conf < 0.80) return `Verify with a human before acting. Claim is partially supported but not conclusive (confidence ${conf.toFixed(2)}).${flagNote}`;
+      return `Safe to act. Claim is well-supported by multiple sources (confidence ${conf.toFixed(2)}).${flagNote}`;
+    }
+    const recText = buildRecommendationText(overall, rec, flags);
 
     if(url){try{updateSourceRep(new URL(url).hostname.replace("www.",""),overall);}catch{}}
 
@@ -2566,6 +2666,7 @@ app.post("/evaluate", async (req, res) => {
       evaluation: {
         overall_confidence: overall,
         recommendation: rec,
+        recommendation_text: recText,
         threshold_applied: threshold,
         total_claims: total,
         verified_claims: verified,
@@ -2595,12 +2696,30 @@ app.post("/evaluate", async (req, res) => {
     };
 
     // ── STORE IN CLAIM CACHE ──
-    await setCachedEvaluation(textHash, response);
-    // Also fingerprint individual claims
-    for (const c of mergedClaims) {
-      const claimHash = Buffer.from(c.claim.toLowerCase().trim()).toString("base64").slice(0, 24);
-      const existing = await getClaimFingerprint(claimHash);
-      await setClaimFingerprint(claimHash, { verdict: c.verdict, confidence: c.confidence, last_verified: new Date().toISOString(), times_seen: (existing?.times_seen || 0) + 1 });
+    // Parallelize all Redis writes (was 1 + 2N sequential round-trips, now 1 batch)
+    // and gate on residual budget so persistence cannot blow past the 20s SLO.
+    const persistElapsed = Date.now() - evalStart;
+    const persistBudget = Math.max(0, EVAL_BUDGET_MS - persistElapsed - 250); // 250ms response buffer
+    if (persistBudget >= 500) {
+      try {
+        await Promise.race([
+          (async () => {
+            await Promise.all([
+              setCachedEvaluation(textHash, response),
+              ...mergedClaims.map(async (c) => {
+                const claimHash = Buffer.from(c.claim.toLowerCase().trim()).toString("base64").slice(0, 24);
+                const existing = await getClaimFingerprint(claimHash);
+                await setClaimFingerprint(claimHash, { verdict: c.verdict, confidence: c.confidence, last_verified: new Date().toISOString(), times_seen: (existing?.times_seen || 0) + 1 });
+              })
+            ]);
+          })(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("persist_budget_exceeded")), persistBudget))
+        ]);
+      } catch (e) {
+        console.log(`[EVALUATE] Persist incomplete: ${e.message} (budget=${persistBudget}ms)`);
+      }
+    } else {
+      console.log(`[EVALUATE] Persist skipped: insufficient budget (elapsed=${persistElapsed}ms)`);
     }
 
     return res.json(response);
