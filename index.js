@@ -627,8 +627,62 @@ if (STELLAR_ENABLED) {
 
 unifiedResourceServer.registerExtension(bazaarResourceServerExtension);
 
-app.use(paymentMiddleware(routeConfig, unifiedResourceServer));
+// ─── Aggregator-Visible 402 Body Mirror ───
+// The @x402/express SDK ships the payment challenge in a `payment-required` HTTP
+// header (base64 JSON). x402scan, agentic.market, and Bazaar crawlers parse the
+// 402 response BODY, not headers — so we appear unindexable to them. This wrapper
+// intercepts every 402 from the SDK, decodes the header, downgrades the v2 schema
+// to the v1 form aggregators expect, and writes it as the response body. The
+// header is still set so existing v2 clients keep working.
+function wrapPaymentMiddlewareForAggregators(originalMiddleware) {
+  return (req, res, next) => {
+    const originalJson = res.json.bind(res);
+    res.json = function (body) {
+      // Only rewrite empty 402 bodies that have a payment-required header set
+      if (res.statusCode === 402) {
+        const headerB64 = res.getHeader("payment-required");
+        const isEmpty = !body || (typeof body === "object" && Object.keys(body).length === 0);
+        if (headerB64 && isEmpty) {
+          try {
+            const decoded = JSON.parse(Buffer.from(String(headerB64), "base64").toString("utf8"));
+            // Downgrade v2 → v1 fields aggregators expect
+            const accepts = (decoded.accepts || []).map((a) => {
+              const out = { ...a };
+              // amount → maxAmountRequired
+              if (out.amount !== undefined && out.maxAmountRequired === undefined) {
+                out.maxAmountRequired = out.amount;
+              }
+              // network: "eip155:8453" → "base" (aggregators want simple labels)
+              if (out.network === "eip155:8453") out.network = "base";
+              else if (out.network === "eip155:1187947933") out.network = "skale";
+              // resource URL on each accept (Archonics-shaped)
+              if (decoded.resource?.url && !out.resource) out.resource = decoded.resource.url;
+              if (decoded.resource?.description && !out.description) out.description = decoded.resource.description;
+              if (decoded.resource?.mimeType && !out.mimeType) out.mimeType = decoded.resource.mimeType;
+              return out;
+            });
+            const aggregatorBody = {
+              x402Version: 1, // aggregators are still on v1 of the discovery shape
+              error: decoded.error || "Payment required",
+              accepts,
+              extensions: decoded.extensions,
+            };
+            return originalJson(aggregatorBody);
+          } catch (e) {
+            // If decode fails, fall through to the SDK's empty body
+            console.log(`[402-mirror] decode failed: ${e.message}`);
+          }
+        }
+      }
+      return originalJson(body);
+    };
+    return originalMiddleware(req, res, next);
+  };
+}
+
+app.use(wrapPaymentMiddlewareForAggregators(paymentMiddleware(routeConfig, unifiedResourceServer)));
 console.log(`✅ Unified payment middleware: single instance, all chains via facilitator array`);
+console.log(`✅ 402 body mirror: aggregator-visible challenge in response body`);
 
 // ── Bazaar Bootstrap: direct CDP verify+settle for discovery indexing ──
 if (CDP_ENABLED && cdpFacilitatorClient) {
