@@ -896,15 +896,268 @@ app.get("/preview", (_req, res) => {
 //  Static Discovery — .well-known/x402 + .well-known/x402.json
 // ═══════════════════════════════════════════════════════════════════
 
+// USDC contract on Base mainnet (canonical)
+const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+const CDP_FACILITATOR_URL = "https://api.cdp.coinbase.com/platform/v2/x402";
+
+// ─── x402 v2 / x402scan-compatible discovery document ───
+// Schema reference: https://x402.org/schemas/discovery.json
+// Format follows the current x402.org spec with `service`, `resources[]`, and `accepts[]` blocks.
+// Verified against working example: https://audits.archonics.ai/.well-known/x402.json
 const x402Manifest = {
+  $schema: "https://x402.org/schemas/discovery.json",
   x402Version: 2,
   version: "x402/1.0",
+  service: {
+    name: "AgentOracle",
+    legal_name: "AgentOracle",
+    tagline: "Pre-action truth oracle for AI agents.",
+    description:
+      "AgentOracle is a pay-per-query verification API for AI agents. " +
+      "Four-source adversarial verification (Sonar + Sonar Pro + Adversarial + Gemma 4) " +
+      "returns confidence scores, refuted claims, and plain-English recommendations " +
+      "so agents can refuse to act on hallucinated facts. " +
+      "Also offers pay-per-query real-time research (standard $0.02, deep $0.10). " +
+      "No API keys needed — pay with USDC on Base via x402. " +
+      "Cached results within 24hrs at 50% off.",
+    operator: "AgentOracle",
+    mission:
+      "Make truth a first-class primitive in agent infrastructure: " +
+      "verify before you act, with cryptographic-grade payment receipts and per-claim confidence.",
+    website: "https://agentoracle.co",
+    docs: "https://github.com/TKCollective/x402-research-skill",
+    free_tier: "https://www.npmjs.com/package/agentoracle-mcp",
+    github: "https://github.com/TKCollective/agentoracle-mcp",
+    contact: "mailto:hello@agentoracle.co",
+    tags: [
+      "x402",
+      "x402-v2",
+      "verification",
+      "truth-oracle",
+      "hallucination-detection",
+      "fact-checking",
+      "agent-trust",
+      "agent-safety",
+      "llm",
+      "ai-agents",
+      "mcp",
+      "research",
+      "perplexity",
+      "sonar",
+    ],
+    environment: "apex",
+    origin: "https://agentoracle.co",
+  },
+  resources: [
+    {
+      path: "/evaluate",
+      url: "https://agentoracle.co/evaluate",
+      method: "POST",
+      description:
+        "Verify factual claims with 4-source adversarial verification. " +
+        "Returns per-claim confidence, refuted/verified/unverifiable verdicts, " +
+        "plain-English recommendation_text, and an audit-trail evaluation_id. " +
+        "FREE during beta.",
+      mimeType: "application/json",
+      outputSchema: {
+        input: {
+          type: "object",
+          required: ["content"],
+          properties: {
+            content: { type: "string", maxLength: 8000, description: "Text containing claims to verify." },
+            min_confidence: { type: "number", description: "Threshold for the act/verify/reject recommendation. Default 0.8." },
+            url: { type: "string", description: "Optional source URL associated with the claims." },
+          },
+        },
+        output: {
+          type: "object",
+          properties: {
+            evaluation_id: { type: "string" },
+            evaluation: {
+              type: "object",
+              properties: {
+                overall_confidence: { type: "number" },
+                recommendation: { type: "string", enum: ["act", "verify", "reject"] },
+                recommendation_text: { type: "string" },
+                total_claims: { type: "number" },
+                verified_claims: { type: "number" },
+                refuted_claims: { type: "number" },
+                claims: { type: "array" },
+                sources_used: { type: "array" },
+              },
+            },
+          },
+        },
+      },
+      accepts: [],
+      links: {
+        playground: "https://agentoracle.co",
+        docs: "https://github.com/TKCollective/x402-research-skill",
+        free_tier_mcp: "https://www.npmjs.com/package/agentoracle-mcp",
+      },
+    },
+    {
+      path: "/research",
+      url: "https://agentoracle.co/research",
+      method: "POST",
+      description:
+        "Real-time research — natural-language question in, structured JSON out with summary, key facts, citations, and confidence score. " +
+        "Powered by Perplexity Sonar. Pass tier='deep' to upgrade to Sonar Pro at $0.10.",
+      mimeType: "application/json",
+      outputSchema: {
+        input: {
+          type: "object",
+          required: ["query"],
+          properties: {
+            query: { type: "string", maxLength: 2000, description: "Natural-language research question" },
+            tier: { type: "string", enum: ["standard", "deep"], default: "standard" },
+          },
+        },
+        output: {
+          type: "object",
+          properties: {
+            summary: { type: "string" },
+            key_facts: { type: "array" },
+            sources: { type: "array" },
+            confidence_score: { type: "number" },
+            confidence_level: { type: "string", enum: ["high", "medium", "low"] },
+            freshness: { type: "string" },
+            response_time_ms: { type: "number" },
+          },
+        },
+      },
+      accepts: [
+        {
+          scheme: "exact",
+          network: "eip155:8453",
+          network_label: "base-mainnet",
+          price: "$0.02",
+          payTo: PAY_TO,
+          asset: USDC_BASE,
+          asset_symbol: "USDC",
+          facilitator: "cdp",
+          facilitator_url: CDP_FACILITATOR_URL,
+        },
+      ],
+      links: {
+        free_tier_mcp: "https://www.npmjs.com/package/agentoracle-mcp",
+      },
+    },
+    {
+      path: "/deep-research",
+      url: "https://agentoracle.co/deep-research",
+      method: "POST",
+      description:
+        "Deep research with comprehensive analysis — detailed JSON with expert findings, powered by Perplexity Sonar Pro.",
+      mimeType: "application/json",
+      outputSchema: {
+        input: {
+          type: "object",
+          required: ["query"],
+          properties: {
+            query: { type: "string", maxLength: 4000, description: "Natural-language research question for deep analysis" },
+          },
+        },
+        output: {
+          type: "object",
+          properties: {
+            summary: { type: "string" },
+            key_facts: { type: "array" },
+            analysis: { type: "string" },
+            sources: { type: "array" },
+            confidence_score: { type: "number" },
+            freshness: { type: "string" },
+            response_time_ms: { type: "number" },
+          },
+        },
+      },
+      accepts: [
+        {
+          scheme: "exact",
+          network: "eip155:8453",
+          network_label: "base-mainnet",
+          price: "$0.10",
+          payTo: PAY_TO,
+          asset: USDC_BASE,
+          asset_symbol: "USDC",
+          facilitator: "cdp",
+          facilitator_url: CDP_FACILITATOR_URL,
+        },
+      ],
+      links: {
+        free_tier_mcp: "https://www.npmjs.com/package/agentoracle-mcp",
+      },
+    },
+    {
+      path: "/research/batch",
+      url: "https://agentoracle.co/research/batch",
+      method: "POST",
+      description:
+        "Batch research — submit up to 5 queries in one request, processed in parallel. Returns array of structured results.",
+      mimeType: "application/json",
+      outputSchema: {
+        input: {
+          type: "object",
+          required: ["queries"],
+          properties: {
+            queries: { type: "array", maxItems: 5, items: { type: "string", maxLength: 2000 } },
+            tier: { type: "string", enum: ["standard", "deep"], default: "standard" },
+          },
+        },
+        output: {
+          type: "object",
+          properties: {
+            batch: { type: "object" },
+            results: { type: "array" },
+          },
+        },
+      },
+      accepts: [
+        {
+          scheme: "exact",
+          network: "eip155:8453",
+          network_label: "base-mainnet",
+          price: "$0.10",
+          payTo: PAY_TO,
+          asset: USDC_BASE,
+          asset_symbol: "USDC",
+          facilitator: "cdp",
+          facilitator_url: CDP_FACILITATOR_URL,
+        },
+      ],
+    },
+    {
+      path: "/preview",
+      url: "https://agentoracle.co/preview",
+      method: "POST",
+      description:
+        "Free live preview — returns truncated summary (200 chars), 2 key facts, confidence score. No sources. Rate-limited to 10 requests/hour per IP.",
+      mimeType: "application/json",
+      outputSchema: {
+        input: {
+          type: "object",
+          required: ["query"],
+          properties: {
+            query: { type: "string", maxLength: 2000 },
+          },
+        },
+        output: {
+          type: "object",
+          properties: {
+            summary: { type: "string" },
+            key_facts: { type: "array" },
+            confidence_score: { type: "number" },
+          },
+        },
+      },
+      accepts: [],
+    },
+  ],
+  // ── Legacy fields preserved for backward compatibility with older Bazaar / x402 v1 consumers ──
+  // These are non-canonical but kept so we don't regress Decixa's daily probe or any other existing client.
   name: "AgentOracle Research API",
   description:
-    "Pay-per-query real-time research powered by Perplexity Sonar. " +
-    "Two tiers: standard ($0.02) and deep ($0.10). Structured JSON " +
-    "with citations, key facts, and confidence scores. No API keys " +
-    "needed — just pay with USDC on Base. Repeat queries within 24hrs served from cache at 50% off.",
+    "Pay-per-query verification + research API for AI agents. Verify before you act with 4-source adversarial confidence scoring, or run real-time Sonar/Sonar Pro queries with structured JSON output. No API keys — pay with USDC on Base via x402.",
   endpoints: [
     {
       path: "/preview",
@@ -1043,7 +1296,7 @@ const x402Manifest = {
   ],
   facilitators: {
     base: { name: "xpay", url: FACILITATOR_URL },
-    base_cdp: { name: "cdp", url: "https://api.cdp.coinbase.com/platform/v2/x402", note: "Coinbase CDP facilitator — Bazaar discovery enabled" },
+    base_cdp: { name: "cdp", url: CDP_FACILITATOR_URL, note: "Coinbase CDP facilitator — Bazaar discovery enabled" },
     skale_base: { name: "payai", url: SKALE_FACILITATOR_URL },
   },
   networks: {
@@ -1071,15 +1324,30 @@ const x402Manifest = {
   pay_to: PAY_TO,
 };
 
-// x402scan and other discovery tools look for /.well-known/x402 (no extension)
+// ─── /.well-known/x402 (no extension) returns the SIMPLE v1 summary ───
+// Per CyberSapper's x402scan analysis: registerFromOrigin fetches this path
+// FIRST, and expects a small {version, resources} document. If we return the
+// rich form here, x402scan reports `noDiscovery`. The rich form lives at .json.
+const x402SimpleSummary = {
+  version: 1,
+  resources: [
+    "POST /evaluate",
+    "POST /research",
+    "POST /deep-research",
+    "POST /research/batch",
+    "POST /preview",
+  ],
+};
 app.get("/.well-known/x402", (_req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.setHeader("Cache-Control", "public, max-age=3600");
-  res.json(x402Manifest);
+  res.json(x402SimpleSummary);
 });
 
-// Also serve at /.well-known/x402.json for backward compatibility
+// Rich discovery document (x402 v2 + x402.org schema-compliant)
 app.get("/.well-known/x402.json", (_req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.setHeader("Cache-Control", "public, max-age=3600");
   res.json(x402Manifest);
 });
 
