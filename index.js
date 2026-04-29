@@ -387,7 +387,7 @@ app.get("/apple-touch-icon.png", (_req, res) => {
   res.send(APPLE_TOUCH);
 });
 app.get("/og-image.png", (_req, res) => {
-  res.setHeader("Content-Type", "image/jpeg");
+  res.setHeader("Content-Type", "image/png");
   res.setHeader("Cache-Control", "public, max-age=3600");
   res.send(OG_IMAGE);
 });
