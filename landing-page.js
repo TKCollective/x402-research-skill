@@ -5,6 +5,38 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AgentOracle — The Trust Layer for AI Agents | x402 Native</title>
+<meta name="description" content="Pay-per-query research API for AI agents. x402 protocol on Base mainnet + SKALE (gasless). Verify before you act — JWS-signed receipts, FEVER-calibrated confidence, USDC payments.">
+<link rel="canonical" href="https://agentoracle.co/">
+
+<!-- Open Graph (Facebook, LinkedIn, Discord, Slack) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AgentOracle">
+<meta property="og:url" content="https://agentoracle.co/">
+<meta property="og:title" content="AgentOracle — The Trust Layer for AI Agents">
+<meta property="og:description" content="Pay-per-query research API for AI agents. x402 on Base + SKALE. Verify before you act.">
+<meta property="og:image" content="https://agentoracle.co/og-image.png">
+<meta property="og:image:secure_url" content="https://agentoracle.co/og-image.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="AgentOracle — Research API for AI Agents — POST /research, $0.02 USDC, Base">
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@AgentOracleAI">
+<meta name="twitter:creator" content="@AgentOracleAI">
+<meta name="twitter:url" content="https://agentoracle.co/">
+<meta name="twitter:title" content="AgentOracle — The Trust Layer for AI Agents">
+<meta name="twitter:description" content="Pay-per-query research API for AI agents. x402 on Base + SKALE. Verify before you act.">
+<meta name="twitter:image" content="https://agentoracle.co/og-image.png">
+<meta name="twitter:image:alt" content="AgentOracle — Research API for AI Agents">
+
+<!-- Theme + favicons -->
+<meta name="theme-color" content="#0A0A0A">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1043,7 +1075,12 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
     </p>
     <div class="hero__cta-row">
       <a href="#playground" class="btn btn--primary">Try free — no wallet needed →</a>
-      <span class="hero__install-cmd" onclick="navigator.clipboard.writeText('pip install langchain-agentoracle crewai-agentoracle');this.textContent='Copied!';setTimeout(()=>{this.textContent='$ pip install langchain-agentoracle crewai-agentoracle'},1500)" style="cursor:pointer;font-family:var(--font-mono);font-size:13px;color:var(--text-muted);border-bottom:1px dashed var(--border-mid);padding-bottom:2px;" title="Click to copy">$ pip install langchain-agentoracle crewai-agentoracle</span>
+      <span class="hero__install-cmd" onclick="navigator.clipboard.writeText('npx agentoracle-mcp');this.textContent='Copied!';setTimeout(()=>{this.textContent='$ npx agentoracle-mcp'},1500)" style="cursor:pointer;font-family:var(--font-mono);font-size:14px;color:var(--gold);border-bottom:1px dashed var(--gold-dim);padding-bottom:2px;font-weight:600;" title="Click to copy">$ npx agentoracle-mcp</span>
+    </div>
+    <p style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);margin-top:10px;letter-spacing:0.02em;">Works with Claude Desktop, Cursor, and Windsurf. Verify before you act.</p>
+    <div style="margin-top:8px;display:flex;gap:16px;flex-wrap:wrap;">
+      <span onclick="navigator.clipboard.writeText('pip install langchain-agentoracle');this.textContent='Copied!';setTimeout(()=>{this.textContent='pip install langchain-agentoracle'},1500)" style="cursor:pointer;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);" title="Click to copy">pip install langchain-agentoracle</span>
+      <span onclick="navigator.clipboard.writeText('npm install agentoracle-verify');this.textContent='Copied!';setTimeout(()=>{this.textContent='npm install agentoracle-verify'},1500)" style="cursor:pointer;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);" title="Click to copy">npm install agentoracle-verify</span>
     </div>
   </div>
 
@@ -1125,7 +1162,7 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
             </div>
             <div class="eval-results__breakdown">
               <span>4</span> claims · <span>3</span> supported · <span>1</span> unverifiable<br>
-              evaluated in <span>1.4s</span> · cost <span>$0.01 USDC</span>
+              evaluated in <span>1.4s</span> · <span>free during beta</span>
             </div>
           </div>
         </div>
@@ -1544,10 +1581,10 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
         </ul>
         <a href="https://agentoracle.co/preview" class="pricing-card__cta" target="_blank" rel="noopener noreferrer">Try /preview</a>
       </div>
-      <div class="pricing-card pricing-card--featured">
+      <div class="pricing-card pricing-card--free">
         <div class="pricing-card__endpoint">/evaluate</div>
-        <div class="pricing-card__price">$0.01</div>
-        <div class="pricing-card__unit">per claim &middot; USDC &middot; Base &middot; SKALE &middot; Stellar</div>
+        <div class="pricing-card__price">FREE</div>
+        <div class="pricing-card__unit">beta &middot; paid tiers coming soon</div>
         <ul class="pricing-card__features">
           <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Full 4-source claim verification</li>
           <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Per-claim verdicts + evidence</li>
@@ -1698,7 +1735,7 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
       <div class="faq-item"><button class="faq-item__trigger" onclick="this.closest('.faq-item').classList.toggle('is-open')">Do I need a crypto wallet?<svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-item__body"><div class="faq-item__answer">Yes, your agent needs a wallet with USDC on Base. The <code>/preview</code> endpoint is completely free and requires no wallet — use it to test first. Most agent frameworks support wallet integration through Coinbase CDP.</div></div></div>
       <div class="faq-item"><button class="faq-item__trigger" onclick="this.closest('.faq-item').classList.toggle('is-open')">What chains and currencies are supported?<svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-item__body"><div class="faq-item__answer">USDC on Base (L2), USDC.e on SKALE Base (zero gas fees), and native USDC on Stellar. Same endpoint — agent picks the cheapest chain. EURC is also accepted on Base.</div></div></div>
       <div class="faq-item"><button class="faq-item__trigger" onclick="this.closest('.faq-item').classList.toggle('is-open')">How is this different from Perplexity directly?<svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-item__body"><div class="faq-item__answer">Perplexity's API requires API keys and billing setup. AgentOracle wraps the same research engine in an agent-native payment layer — your agent discovers pricing via the x402 manifest, pays per query with USDC, and gets per-claim verdicts. Zero human setup required.</div></div></div>
-      <div class="faq-item"><button class="faq-item__trigger" onclick="this.closest('.faq-item').classList.toggle('is-open')">What's the difference between /evaluate and /research?<svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-item__body"><div class="faq-item__answer"><code>/evaluate</code> ($0.01) verifies claims you already have — input any text, get per-claim ACT/VERIFY/REJECT verdicts. <code>/research</code> ($0.02) fetches new information from the web and returns structured results with confidence scoring.</div></div></div>
+      <div class="faq-item"><button class="faq-item__trigger" onclick="this.closest('.faq-item').classList.toggle('is-open')">What's the difference between /evaluate and /research?<svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-item__body"><div class="faq-item__answer"><code>/evaluate</code> (free during beta) verifies claims you already have — input any text, get per-claim ACT/VERIFY/REJECT verdicts. <code>/research</code> ($0.02) fetches new information from the web and returns structured results with confidence scoring.</div></div></div>
       <div class="faq-item"><button class="faq-item__trigger" onclick="this.closest('.faq-item').classList.toggle('is-open')">Is there a rate limit?<svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-item__body"><div class="faq-item__answer">100 requests per hour per IP for paid endpoints. 20 requests per hour for the free <code>/preview</code> endpoint. Rate limit headers are included on every response.</div></div></div>
     </div>
   </div>
