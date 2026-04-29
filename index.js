@@ -1414,6 +1414,31 @@ app.get("/.well-known/x402-manifest.json", (_req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════
+//  /.well-known/jwks.json — Ed25519 public key for receipt verification
+//  Published in support of the Verification Receipt Format spec (draft v0.1):
+//  https://github.com/TKCollective/agentoracle-receipt-spec
+//  Verifiable offline under RFC 7517 / RFC 8037 / standard JOSE libraries.
+// ═══════════════════════════════════════════════════════════════════
+const AGENT_ORACLE_JWKS = {
+  keys: [
+    {
+      crv: "Ed25519",
+      x: "2Efot7Ae74yp8yjv1L0rbS_KCfcjuS4xp_O11pcEEPQ",
+      kty: "OKP",
+      kid: "ao-receipt-2026-04-ed25519-f2753b7c",
+      alg: "EdDSA",
+      use: "sig"
+    }
+  ]
+};
+app.get("/.well-known/jwks.json", (_req, res) => {
+  res.setHeader("Content-Type", "application/jwk-set+json");
+  res.setHeader("Cache-Control", "public, max-age=3600");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.json(AGENT_ORACLE_JWKS);
+});
+
+// ═══════════════════════════════════════════════════════════════════
 //  GET /health — Health check with feature flags
 // ═══════════════════════════════════════════════════════════════════
 
