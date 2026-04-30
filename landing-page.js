@@ -1002,7 +1002,7 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
 .compare-note { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); margin-top: 16px; text-align: center; }
 .footer { border-top: 1px solid var(--border); background: #060606; padding: 60px 40px 40px; position: relative; z-index: 2; }
 .footer__inner { max-width: 1240px; margin: 0 auto; }
-.footer__grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
+.footer__grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
 .footer__brand { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .footer__brand-name { font-weight: 700; font-size: 16px; letter-spacing: -0.02em; color: var(--gold); }
 .footer__tagline { font-size: 13px; color: var(--text-faint); margin-bottom: 20px; }
@@ -1770,6 +1770,7 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
       <div><h4 class="footer__col-title">Product</h4><ul class="footer__col-links"><li><a href="#features">Features</a></li><li><a href="#pricing">Pricing</a></li><li><a href="https://agentoracle.co/.well-known/x402.json" target="_blank" rel="noopener noreferrer">Docs</a></li><li><a href="#playground">Demo</a></li></ul></div>
       <div><h4 class="footer__col-title">Community</h4><ul class="footer__col-links"><li><a href="https://x.com/AgentOracle_AI" target="_blank" rel="noopener noreferrer">X / Twitter</a></li><li><a href="https://github.com/TKCollective/x402-research-skill" target="_blank" rel="noopener noreferrer">GitHub</a></li></ul></div>
       <div><h4 class="footer__col-title">Built With</h4><ul class="footer__col-links"><li><a href="https://www.coinbase.com/developer-platform" target="_blank" rel="noopener noreferrer">x402 Protocol</a></li><li><a href="https://base.org" target="_blank" rel="noopener noreferrer">Base Network</a></li><li><a href="https://skale.space" target="_blank" rel="noopener noreferrer">SKALE</a></li><li><a href="https://stellar.org" target="_blank" rel="noopener noreferrer">Stellar</a></li></ul></div>
+      <div><h4 class="footer__col-title">Trust</h4><ul class="footer__col-links"><li><a href="/trust">Trust Center</a></li><li><a href="/privacy">Privacy &amp; Data</a></li><li><a href="https://github.com/TKCollective/agentoracle-receipt-spec" target="_blank" rel="noopener noreferrer">Receipt Spec</a></li><li><a href="/.well-known/jwks.json" target="_blank" rel="noopener noreferrer">JWKS</a></li></ul></div>
     </div>
     <div class="footer__bottom">
       <span class="footer__copy">&copy; 2026 TK Collective LLC. All rights reserved.</span>

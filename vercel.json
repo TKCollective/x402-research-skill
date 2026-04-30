@@ -6,6 +6,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "privacy.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "ao-logo.jpg",
       "use": "@vercel/static"
     },
@@ -27,6 +31,10 @@
     {
       "src": "/trust",
       "dest": "/trust.html"
+    },
+    {
+      "src": "/privacy",
+      "dest": "/privacy.html"
     },
     {
       "src": "/ao-logo.jpg",

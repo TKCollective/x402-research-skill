@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy & Data Handling — AgentOracle</title>
+<meta name="description" content="How AgentOracle handles claim text, who can access it, whether it's used for training, and which third parties process it. Written from what the system actually does today.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://agentoracle.co/privacy">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AgentOracle">
+<meta property="og:url" content="https://agentoracle.co/privacy">
+<meta property="og:title" content="Privacy & Data Handling — AgentOracle">
+<meta property="og:description" content="How AgentOracle handles claim text, who can access it, whether it's used for training, and which third parties process it.">
+<meta property="og:image" content="https://agentoracle.co/og-image.png?v=2">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Privacy & Data Handling — AgentOracle">
+<meta name="twitter:description" content="How AgentOracle handles claim text, who can access it, whether it's used for training, and which third parties process it.">
+<meta name="twitter:image" content="https://agentoracle.co/og-image.png?v=2">
+
+<meta name="theme-color" content="#0D0D0D">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+<style>
+@import url('https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800&f[]=general-sans@400,500,600,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--fd:'Cabinet Grotesk','Helvetica Neue',Arial,sans-serif;--fb:'General Sans','Helvetica Neue',Arial,sans-serif;--fm:'JetBrains Mono','SF Mono','Consolas',monospace;--bg:#0D0D0D;--sf:#131313;--sf2:#1A1A1A;--bd:#2A2A2A;--bd2:#1E1E1E;--tx:#F0ECE2;--mu:#9A9590;--fa:#5A5550;--gd:#C9A96E;--gn:#4ADE80;--rd:#EF4444;--yw:#FBBF24;--pu:#A78BFA;--r:16px;--t:180ms cubic-bezier(.16,1,.3,1)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth;scroll-padding-top:72px}
+body{min-height:100dvh;font-family:var(--fb);font-size:1rem;line-height:1.6;color:var(--tx);background:var(--bg);overflow-x:hidden}
+h1,h2,h3,h4{font-family:var(--fd);line-height:1.15;letter-spacing:-0.01em}
+a{color:var(--gd);text-decoration:none}a:hover{color:#D4A850;text-decoration:underline}
+::selection{background:rgba(201,169,110,.12);color:var(--tx)}
+:focus-visible{outline:2px solid var(--gd);outline-offset:3px;border-radius:4px}
+
+/* layout */
+.c{width:100%;max-width:820px;margin:0 auto;padding-inline:1.25rem}
+@media(min-width:768px){.c{padding-inline:2rem}}
+.sec{padding-block:clamp(3rem,6vw,5rem);border-bottom:1px solid var(--bd2);position:relative}
+.sec:last-of-type{border-bottom:none}
+
+/* typography */
+.lbl{display:inline-block;font-family:var(--fb);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--gd);margin-bottom:1rem}
+.h1{font-family:var(--fd);font-size:clamp(1.9rem,5vw,3rem);font-weight:800;color:var(--tx);line-height:1.08;margin-bottom:1rem}
+.ttl{font-family:var(--fd);font-size:clamp(1.35rem,2.6vw,1.85rem);font-weight:800;color:var(--tx);line-height:1.15;margin-bottom:1rem}
+.h3{font-family:var(--fd);font-size:1.05rem;font-weight:700;color:var(--tx);margin-top:1.5rem;margin-bottom:.5rem}
+.sub{font-size:.9375rem;color:var(--mu);line-height:1.7;margin-bottom:1.25rem}
+.p{font-size:.95rem;color:var(--tx);line-height:1.75;margin-bottom:1rem}
+.p--mu{color:var(--mu)}
+.mono{font-family:var(--fm);font-size:.85rem;background:var(--sf2);color:var(--gd);padding:.12rem .4rem;border-radius:6px;border:1px solid var(--bd)}
+.strong{color:var(--tx);font-weight:600}
+
+/* header */
+.hdr{position:sticky;top:0;z-index:100;background:rgba(13,13,13,.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--bd2)}
+.hi{display:flex;align-items:center;justify-content:space-between;height:64px;max-width:1040px;margin:0 auto;padding-inline:1.25rem}
+@media(min-width:768px){.hi{padding-inline:2rem}}
+.brand{display:flex;align-items:center;gap:.6rem;color:var(--tx);text-decoration:none}
+.brand:hover{text-decoration:none}
+.brand-dot{width:20px;height:20px;border:1.5px solid var(--gd);border-radius:50%;position:relative;display:inline-flex;align-items:center;justify-content:center}
+.brand-dot::after{content:'';width:6px;height:6px;border-radius:50%;background:var(--gd)}
+.wm{font-family:var(--fd);font-weight:700;font-size:.9375rem;letter-spacing:.02em;color:var(--gd)}
+.hn{display:none;align-items:center;gap:1.5rem;list-style:none}
+@media(min-width:768px){.hn{display:flex}}
+.hn a{font-size:.8125rem;font-weight:500;color:var(--mu);transition:color var(--t)}
+.hn a:hover{color:var(--tx);text-decoration:none}
+.hn a.cur{color:var(--gd)}
+
+/* hero */
+.hero{padding-block:clamp(3rem,7vw,5rem);background:linear-gradient(180deg,#0D0D0D 0%,#0F0D09 100%);border-bottom:1px solid var(--bd2)}
+.meta{display:flex;flex-wrap:wrap;gap:1rem 1.75rem;margin-top:1.5rem;font-family:var(--fm);font-size:.78rem;color:var(--mu);letter-spacing:.02em}
+.meta span strong{color:var(--tx);font-weight:500}
+
+/* answer card — the 4 answers front and center */
+.tldr{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:clamp(1.25rem,2.8vw,2rem);margin-top:1.75rem}
+.tldr-hd{display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;font-family:var(--fm);font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--gd)}
+.tldr-hd::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--gn);box-shadow:0 0 6px var(--gn)}
+.tldr ol{list-style:none;counter-reset:q;padding:0;margin:0}
+.tldr li{counter-increment:q;padding:1rem 0;border-top:1px solid var(--bd2);display:flex;gap:.85rem}
+.tldr li:first-child{border-top:none;padding-top:.25rem}
+.tldr li:last-child{padding-bottom:.25rem}
+.tldr li::before{content:counter(q);font-family:var(--fm);font-size:.8rem;color:var(--gd);min-width:1.5rem;padding-top:.1rem}
+.tldr-q{display:block;color:var(--tx);font-weight:600;font-size:.95rem;margin-bottom:.35rem}
+.tldr-a{display:block;color:var(--mu);font-size:.9rem;line-height:1.6}
+
+/* table */
+.tbl{width:100%;border-collapse:collapse;margin-top:1rem;font-size:.88rem;display:block;overflow-x:auto}
+.tbl table{min-width:560px;border-collapse:collapse}
+.tbl th,.tbl td{text-align:left;padding:.7rem .85rem;border-bottom:1px solid var(--bd2);vertical-align:top}
+.tbl th{font-family:var(--fb);font-weight:600;color:var(--gd);font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;background:var(--sf2);border-bottom:1px solid var(--bd)}
+.tbl td{color:var(--tx)}
+.tbl td .mu{color:var(--mu);font-size:.82rem;display:block;margin-top:.2rem}
+
+/* callout */
+.note{background:var(--sf);border:1px solid var(--bd);border-left:3px solid var(--gd);border-radius:8px;padding:1rem 1.15rem;font-size:.9rem;color:var(--mu);margin:1.25rem 0}
+.note strong{color:var(--tx)}
+
+/* list */
+.ul{list-style:none;padding:0;margin:1rem 0}
+.ul li{position:relative;padding-left:1.25rem;margin-bottom:.55rem;color:var(--tx);line-height:1.7;font-size:.935rem}
+.ul li::before{content:'';position:absolute;left:0;top:.65rem;width:6px;height:6px;border-radius:50%;background:var(--gd)}
+
+/* footer */
+footer{padding-block:2.5rem;border-top:1px solid var(--bd2);text-align:center;color:var(--fa);font-size:.8rem}
+footer p{margin-bottom:.75rem}
+.fl{display:flex;justify-content:center;flex-wrap:wrap;gap:1.25rem;list-style:none}
+.fl a{color:var(--mu);font-size:.8rem}
+.fl a:hover{color:var(--gd);text-decoration:none}
+
+/* contact block */
+.contact{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:1.5rem;margin-top:1rem}
+.contact a{font-family:var(--fm);font-size:.9rem}
+
+/* small screens */
+@media(max-width:640px){
+  .meta{gap:.5rem 1rem;font-size:.72rem}
+  .tldr li{font-size:.875rem}
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hi">
+    <a href="/" class="brand">
+      <span class="brand-dot"></span>
+      <span class="wm">AgentOracle</span>
+    </a>
+    <ul class="hn">
+      <li><a href="/">Home</a></li>
+      <li><a href="/trust">Trust</a></li>
+      <li><a class="cur" href="/privacy">Privacy</a></li>
+      <li><a href="https://github.com/TKCollective/agentoracle-receipt-spec" target="_blank" rel="noopener noreferrer">Receipts</a></li>
+    </ul>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="c">
+    <span class="lbl">Privacy &amp; Data Handling</span>
+    <h1 class="h1">What we actually do<br>with claim text.</h1>
+    <p class="sub">Written from what the system does today — not how we wish it worked. If something here reads honest-to-a-fault, that is intentional. Procurement teams asked the four questions below. These are the answers.</p>
+    <div class="meta">
+      <span>Last updated: <strong>April 29, 2026</strong></span>
+      <span>Status: <strong>Draft — not yet a formal policy</strong></span>
+      <span>Service: <strong>AgentOracle /evaluate &amp; /research</strong></span>
+    </div>
+
+    <div class="tldr">
+      <div class="tldr-hd">Four questions, answered</div>
+      <ol>
+        <li>
+          <span>
+            <span class="tldr-q">Is claim text stored after verification completes, or deleted?</span>
+            <span class="tldr-a">Derived artifacts (evaluation result keyed by SHA-256 hash, claim fingerprints keyed by normalized-text hash) persist in Redis. Raw request bodies are not persisted to a separate log. Evaluation cache expires after <span class="mono">24h</span>. Claim fingerprints persist indefinitely to power the network-effect claim database.</span>
+          </span>
+        </li>
+        <li>
+          <span>
+            <span class="tldr-q">Who at AgentOracle can access submitted claims?</span>
+            <span class="tldr-a">The operator (Joe Krausz, founder). Our hosting and database providers have operational access to their systems (Vercel, Upstash). No other AgentOracle personnel today — there are none.</span>
+          </span>
+        </li>
+        <li>
+          <span>
+            <span class="tldr-q">Is submitted data used to train any models?</span>
+            <span class="tldr-a">AgentOracle does not train models on submitted claims. Claim text is forwarded to sub-processors (Perplexity, OpenRouter) whose own terms determine what, if anything, they do with it. We do not enable opt-in training where the provider offers it as a toggle.</span>
+          </span>
+        </li>
+        <li>
+          <span>
+            <span class="tldr-q">Where are servers located and which third parties process the data?</span>
+            <span class="tldr-a">Vercel (US-default, multi-region edge), Upstash Redis (US), Perplexity (US), OpenRouter (US), Coinbase CDP for payments (US). No EU data residency commitment today. Full sub-processor list below.</span>
+          </span>
+        </li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- Q1 — Storage / retention -->
+<section class="sec">
+  <div class="c">
+    <span class="lbl">Question 1</span>
+    <h2 class="ttl">What happens to claim text after verification.</h2>
+    <p class="p">When you call <span class="mono">POST /evaluate</span> or <span class="mono">POST /research</span>, the submitted content follows this path:</p>
+
+    <h3 class="h3">1. In-flight</h3>
+    <p class="p">The raw request body is held in process memory for the duration of the call (typically 3&ndash;8 seconds for <span class="mono">/evaluate</span>, up to 20 seconds for <span class="mono">/research</span>). It is sent to each of our verification sources in parallel and is not written to any persistent log keyed by raw text.</p>
+
+    <h3 class="h3">2. At completion (persistent artifacts)</h3>
+    <p class="p">Two derived artifacts persist in Upstash Redis:</p>
+    <ul class="ul">
+      <li><span class="strong">Evaluation cache</span> &mdash; keyed by the first 16 characters of the SHA-256 hash of the submitted text. Value is the full evaluation response (verdicts, confidence scores, citations, source URLs). <span class="strong">TTL: 86,400 seconds (24 hours)</span> after which it is removed automatically.</li>
+      <li><span class="strong">Claim fingerprints</span> &mdash; keyed by the first 24 characters of a base64-encoded lowercased-and-trimmed claim string. Value is <span class="mono">{verdict, confidence, last_verified, times_seen}</span>. <span class="strong">No TTL &mdash; persists indefinitely</span> to power the cross-agent claim memory that makes repeat verifications faster and cheaper.</li>
+    </ul>
+    <div class="note"><strong>Honest note on the fingerprint key.</strong> Truncated base64 of normalized text is a weak one-way function. For a short or distinctive claim, it is theoretically reversible via dictionary attack against the 24-character keyspace. We will migrate to a full SHA-256 keyed fingerprint in v2.3. Until then: if you would not publish your claim text in plain sight, treat the fingerprint database the same way.</div>
+
+    <h3 class="h3">3. Traffic log</h3>
+    <p class="p">For each request we append a minimal entry to a daily traffic log in Redis: request path, truncated origin, user-agent (truncated to 200 chars), truncated source IP, timestamp. <span class="strong">The claim text is not included in the traffic log.</span> Trimmed to the most recent 10,000 entries per day.</p>
+
+    <h3 class="h3">4. Deletion on request</h3>
+    <p class="p">Email <a href="mailto:privacy@agentoracle.co">privacy@agentoracle.co</a> with the claim text (or a unique portion of it) and we will manually remove the matching cache and fingerprint entries within 48 hours of the email. We will acknowledge in writing when the deletion is complete.</p>
+  </div>
+</section>
+
+<!-- Q2 — Access -->
+<section class="sec" style="background:var(--sf)">
+  <div class="c">
+    <span class="lbl">Question 2</span>
+    <h2 class="ttl">Who has access.</h2>
+    <p class="p">AgentOracle is operated by a single person today: Joe Krausz (founder, TKCollective). Operational access to stored data is limited to:</p>
+    <ul class="ul">
+      <li><span class="strong">Joe Krausz</span> &mdash; the operator. Full access via Upstash Redis console and Vercel dashboard.</li>
+      <li><span class="strong">Upstash</span> (our Redis host) &mdash; operational access to the database infrastructure per their standard cloud provider role.</li>
+      <li><span class="strong">Vercel</span> (our hosting) &mdash; operational access to running process memory and platform logs per their standard cloud provider role.</li>
+    </ul>
+    <p class="p">No other AgentOracle personnel today. No contractors, no support team, no sales team. If that changes we will publish a sub-processor update here.</p>
+    <div class="note">As the team grows, access will be scoped by role (dev, ops, support) with audit logging before granting any team member database access. That policy is not yet written down; we will add it here when it is.</div>
+  </div>
+</section>
+
+<!-- Q3 — Training -->
+<section class="sec">
+  <div class="c">
+    <span class="lbl">Question 3</span>
+    <h2 class="ttl">Training.</h2>
+    <p class="p"><span class="strong">AgentOracle does not train machine learning models.</span> We operate an inference pipeline; no model weights are produced or fine-tuned on our infrastructure from user submissions.</p>
+    <p class="p">However, your claim text <em>is</em> forwarded to third-party LLM providers to produce the verification. Whether those providers use your text for training depends on their terms and your chosen tier of our service:</p>
+
+    <div class="tbl">
+    <table>
+      <thead>
+        <tr><th>Sub-processor</th><th>Our API tier</th><th>Training disposition</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Perplexity Sonar / Sonar Pro<span class="mu">Primary verification source</span></td>
+          <td>API / pay-as-you-go<span class="mu">Reviewed Apr 2026</span></td>
+          <td>Per Perplexity's <a href="https://www.perplexity.ai/hub/legal/privacy-policy" target="_blank" rel="noopener noreferrer">current privacy policy</a>, API inputs are covered by different terms than the consumer product. We do not enable any training-opt-in setting Perplexity exposes. Enterprise customers requiring a no-training commitment should require we move to a dedicated Perplexity enterprise tier as part of contract.</td>
+        </tr>
+        <tr>
+          <td>OpenRouter &rarr; Gemma 4<span class="mu">Adversarial refutation model</span></td>
+          <td>OpenRouter API<span class="mu">Routing to Google Gemma</span></td>
+          <td>We set <span class="mono">HTTP-Referer: agentoracle.co</span>. Training disposition depends on OpenRouter's current <a href="https://openrouter.ai/terms" target="_blank" rel="noopener noreferrer">terms</a> and the underlying model provider's data use. We do not enable training-opt-in where exposed.</td>
+        </tr>
+        <tr>
+          <td>Coinbase CDP<span class="mu">x402 payment facilitation</span></td>
+          <td>CDP API</td>
+          <td>Payment metadata only &mdash; wallet address, amount, chain. No claim text passes to Coinbase.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="note"><strong>Bottom line.</strong> We don't train. We can't make unilateral promises about what Perplexity or OpenRouter do with inputs under their API terms. If an enterprise agreement requires a written no-training commitment for all sub-processors, we can move to enterprise-tier contracts with them and put it in writing; that is a pilot-scope conversation, not a default of the free or pay-per-query tier.</div>
+  </div>
+</section>
+
+<!-- Q4 — Servers & processors -->
+<section class="sec" style="background:var(--sf)">
+  <div class="c">
+    <span class="lbl">Question 4</span>
+    <h2 class="ttl">Servers and sub-processors.</h2>
+    <p class="p">AgentOracle runs on the following infrastructure. All sub-processors have their own privacy and security posture, linked below.</p>
+
+    <div class="tbl">
+    <table>
+      <thead>
+        <tr><th>Sub-processor</th><th>Role</th><th>Data processed</th><th>Region</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">Vercel</a></td>
+          <td>Hosting &amp; edge compute</td>
+          <td>All request / response bodies in-flight; platform logs</td>
+          <td>US default, multi-region edge</td>
+        </tr>
+        <tr>
+          <td><a href="https://upstash.com/trust/privacy.pdf" target="_blank" rel="noopener noreferrer">Upstash</a></td>
+          <td>Redis database</td>
+          <td>Evaluation cache (24h TTL); claim fingerprints; traffic log metadata</td>
+          <td>US (us-east-1)</td>
+        </tr>
+        <tr>
+          <td><a href="https://www.perplexity.ai/hub/legal/privacy-policy" target="_blank" rel="noopener noreferrer">Perplexity</a></td>
+          <td>Primary verification (Sonar / Sonar Pro)</td>
+          <td>Claim text forwarded as API prompt</td>
+          <td>US</td>
+        </tr>
+        <tr>
+          <td><a href="https://openrouter.ai/privacy" target="_blank" rel="noopener noreferrer">OpenRouter</a></td>
+          <td>Adversarial refutation (Gemma 4)</td>
+          <td>Claim text forwarded as API prompt</td>
+          <td>US</td>
+        </tr>
+        <tr>
+          <td><a href="https://www.coinbase.com/legal/privacy" target="_blank" rel="noopener noreferrer">Coinbase CDP</a></td>
+          <td>x402 facilitator (Base mainnet)</td>
+          <td>Wallet address, amount, payment metadata only</td>
+          <td>US</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3 class="h3">Data residency</h3>
+    <p class="p">No EU, UK, or Canada data residency commitment today. Traffic from any region routes through our US-region providers above. An enterprise agreement that requires regional residency is scoped at pilot time; we cannot unilaterally promise it on the default tier.</p>
+
+    <h3 class="h3">Security</h3>
+    <ul class="ul">
+      <li>TLS 1.2+ for all inbound and outbound traffic</li>
+      <li>Secrets stored as Vercel sensitive environment variables (not in source control)</li>
+      <li>Private signing keys for <a href="/.well-known/jwks.json">receipt verification</a> live only in the issuer environment; the public JWK set is published at <span class="mono">/.well-known/jwks.json</span></li>
+      <li><span class="mono">security.txt</span> at <span class="mono">/.well-known/security.txt</span> for responsible disclosure (coming this week)</li>
+    </ul>
+
+    <div class="note"><strong>What we do not have yet.</strong> SOC 2 Type II. ISO 27001. Formal Data Processing Agreement. Written incident response runbook. Penetration test report. Written breach notification SLA. These are documented as gaps rather than papered over &mdash; ask during a pilot conversation and we will tell you our timeline for each.</div>
+  </div>
+</section>
+
+<!-- Requests / Contact -->
+<section class="sec" style="background:var(--sf)">
+  <div class="c">
+    <span class="lbl">Getting in touch</span>
+    <h2 class="ttl">Data requests and questions.</h2>
+    <p class="p">For any of the following, email <a href="mailto:privacy@agentoracle.co">privacy@agentoracle.co</a>:</p>
+    <ul class="ul">
+      <li>Request deletion of a specific claim or fingerprint</li>
+      <li>Request a copy of what we have about a specific claim</li>
+      <li>Request a Data Processing Agreement (DPA) &mdash; available on commercial agreement</li>
+      <li>Report a security issue or suspected misuse</li>
+      <li>Ask anything on this page that is unclear</li>
+    </ul>
+    <p class="p">We respond in writing, usually within one business day.</p>
+
+    <div class="contact">
+      <p class="p" style="margin:0"><span class="strong">Operator:</span> Joe Krausz (founder, TKCollective)<br>
+      <span class="strong">Contact:</span> <a href="mailto:privacy@agentoracle.co">privacy@agentoracle.co</a><br>
+      <span class="strong">Operating entity:</span> TKCollective (d/b/a AgentOracle)</p>
+    </div>
+  </div>
+</section>
+
+<!-- Disclaimer / status -->
+<section class="sec">
+  <div class="c">
+    <span class="lbl">Status</span>
+    <h2 class="ttl">What this page is &mdash; and isn't.</h2>
+    <p class="p">This document describes how AgentOracle handles data <em>today</em>. It is a truthful data-handling disclosure written to answer specific procurement questions. It is:</p>
+    <ul class="ul">
+      <li><span class="strong">Not</span> a GDPR-compliant privacy policy</li>
+      <li><span class="strong">Not</span> a CCPA-compliant privacy policy</li>
+      <li><span class="strong">Not</span> a Data Processing Agreement</li>
+      <li><span class="strong">Not</span> a Terms of Service</li>
+    </ul>
+    <p class="p">Those documents are scoped at enterprise-pilot time so they can reflect the actual commitments we sign. Committing to a formal policy we cannot yet operationally prove would be worse than publishing what we actually do.</p>
+    <p class="p p--mu">If you're a procurement / security / compliance reviewer evaluating AgentOracle: this page was written for you. Everything above can be verified against running system behavior on request.</p>
+  </div>
+</section>
+
+<footer>
+  <p>&copy; 2026 AgentOracle &middot; Trust infrastructure for agentic AI</p>
+  <ul class="fl">
+    <li><a href="/">Home</a></li>
+    <li><a href="/trust">Trust</a></li>
+    <li><a href="/privacy">Privacy</a></li>
+    <li><a href="https://github.com/TKCollective/agentoracle-receipt-spec" target="_blank" rel="noopener noreferrer">Receipt Spec</a></li>
+    <li><a href="/.well-known/jwks.json" target="_blank" rel="noopener noreferrer">JWKS</a></li>
+    <li><a href="mailto:privacy@agentoracle.co">Contact</a></li>
+  </ul>
+</footer>
+
+</body>
+</html>
