@@ -487,6 +487,44 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
 .data-cell__value.updated { animation: valuePop 0.5s cubic-bezier(0.16,1,0.3,1); }
 @keyframes valuePop { 0% { transform: scale(1.12); color: var(--gold-bright); } 100% { transform: scale(1); } }
 
+/* === WHAT'S NEW TICKER (beneath hero eyebrow) === */
+.whats-new { display:inline-flex; align-items:center; gap:8px; margin-bottom:10px; padding:6px 12px; background:rgba(201,169,110,.06); border:1px solid rgba(201,169,110,.18); border-radius:999px; font-family:var(--font-mono); font-size:11px; color:var(--text-muted); letter-spacing:.04em; max-width:100%; overflow:hidden; }
+.whats-new__pulse { width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); flex-shrink:0; animation: pulseDot 2s ease-in-out infinite; }
+@keyframes pulseDot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.85)} }
+.whats-new__label { color:var(--gold); font-weight:700; text-transform:uppercase; letter-spacing:.12em; font-size:10px; flex-shrink:0; }
+.whats-new__track { position:relative; overflow:hidden; height:14px; flex:1; min-width:200px; }
+.whats-new__item { position:absolute; inset:0; display:flex; align-items:center; gap:10px; white-space:nowrap; opacity:0; transition:opacity .6s ease; }
+.whats-new__item.active { opacity:1; }
+.whats-new__date { color:var(--text-faint); font-size:10px; }
+.whats-new__text { color:var(--text); }
+.whats-new__link { color:var(--gold); text-decoration:none; transition: color .15s; }
+.whats-new__link:hover { color:var(--gold-bright); text-decoration:underline; }
+@media (max-width: 640px) {
+  .whats-new__track { min-width: 160px; }
+  .whats-new__item { gap:6px; font-size:10px; }
+}
+
+/* === VERIFIABLE RECEIPTS TRUST STRIP === */
+.verify-strip { background: linear-gradient(180deg, #080807 0%, #0B0A08 100%); border-bottom: 1px solid var(--border); padding: 80px 40px; }
+.verify-strip__inner { max-width: 1240px; margin: 0 auto; }
+.verify-strip__hd { text-align: center; margin-bottom: 48px; }
+.verify-strip__eyebrow { display:inline-flex; align-items:center; gap:8px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--gold); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 14px; padding: 4px 10px; background: rgba(201,169,110,.06); border: 1px solid rgba(201,169,110,.2); border-radius: 4px; }
+.verify-strip__eyebrow::before { content:''; width:5px; height:5px; border-radius:50%; background: var(--gold); }
+.verify-strip__title { font-size: clamp(1.6rem, 3.4vw, 2.2rem); font-weight: 800; color: var(--text); letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 14px; }
+.verify-strip__title-gold { color: var(--gold); }
+.verify-strip__sub { font-size: 15px; color: var(--text-muted); max-width: 640px; margin: 0 auto; line-height: 1.65; }
+.verify-strip__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+@media (max-width: 820px) { .verify-strip__grid { grid-template-columns: 1fr; gap: 12px; } }
+.verify-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 10px; transition: border-color .2s, transform .2s; text-decoration: none; color: inherit; position: relative; }
+.verify-card:hover { border-color: var(--gold-dim); transform: translateY(-2px); }
+.verify-card__label { font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; color: var(--gold); }
+.verify-card__title { font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; line-height: 1.25; }
+.verify-card__desc { font-size: 13px; color: var(--text-muted); line-height: 1.55; margin-bottom: 4px; }
+.verify-card__mono { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); background: #050505; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-2, var(--border)); overflow-x: auto; white-space: nowrap; }
+.verify-card__arrow { font-family: var(--font-mono); font-size: 12px; color: var(--gold); margin-top: 4px; letter-spacing: 0.04em; }
+.verify-strip__footer { text-align: center; font-size: 12px; color: var(--text-faint); font-family: var(--font-mono); letter-spacing: 0.04em; }
+.verify-strip__footer strong { color: var(--text-muted); font-weight: 500; }
+
 /* === SECTIONS === */
 .section { max-width: 1240px; margin: 0 auto; padding: 120px 40px; }
 .section-eyebrow {
@@ -1066,6 +1104,16 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
 <section class="hero">
   <div>
     <div class="hero__eyebrow">trust infrastructure</div>
+    <div class="whats-new" aria-label="What's new">
+      <span class="whats-new__pulse"></span>
+      <span class="whats-new__label">New</span>
+      <span class="whats-new__track" id="whatsNewTrack">
+        <span class="whats-new__item active" data-idx="0"><span class="whats-new__date">Apr 30</span><span class="whats-new__text">Privacy &amp; data-handling page → <a class="whats-new__link" href="/privacy">/privacy</a></span></span>
+        <span class="whats-new__item" data-idx="1"><span class="whats-new__date">Apr 29</span><span class="whats-new__text">JWS receipt spec v0.1 public → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-receipt-spec" target="_blank" rel="noopener noreferrer">github</a></span></span>
+        <span class="whats-new__item" data-idx="2"><span class="whats-new__date">Apr 29</span><span class="whats-new__text">JWKS endpoint live → <a class="whats-new__link" href="/.well-known/jwks.json" target="_blank" rel="noopener noreferrer">/.well-known/jwks.json</a></span></span>
+        <span class="whats-new__item" data-idx="3"><span class="whats-new__date">Apr 28</span><span class="whats-new__text">MCP v2.1.2 on npm → <a class="whats-new__link" href="https://www.npmjs.com/package/agentoracle-mcp" target="_blank" rel="noopener noreferrer">agentoracle-mcp</a></span></span>
+      </span>
+    </div>
     <h1 class="hero__headline">
       The trust layer for <span class="hero__headline-gold">AI agents.</span>
     </h1>
@@ -1237,6 +1285,40 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
     </div>
   </div>
 </div>
+
+<section class="verify-strip" id="receipts">
+  <div class="verify-strip__inner">
+    <div class="verify-strip__hd">
+      <span class="verify-strip__eyebrow">verifiable receipts</span>
+      <h2 class="verify-strip__title">Verify <span class="verify-strip__title-gold">the verifier.</span></h2>
+      <p class="verify-strip__sub">Every <code style="font-family:var(--font-mono);color:var(--gold);font-size:14px;">/evaluate</code> response is committed to a published JWS receipt format. Anyone can verify offline against our public JWKS — no AgentOracle service required.</p>
+    </div>
+    <div class="verify-strip__grid">
+      <a class="verify-card" href="/.well-known/jwks.json" target="_blank" rel="noopener noreferrer">
+        <span class="verify-card__label">Public Key Set</span>
+        <span class="verify-card__title">Live JWKS endpoint</span>
+        <span class="verify-card__desc">Ed25519 public key, RFC 7517 / 8037 compliant, CORS open. Fetch from any verifier.</span>
+        <span class="verify-card__mono">GET /.well-known/jwks.json</span>
+        <span class="verify-card__arrow">View JWKS →</span>
+      </a>
+      <a class="verify-card" href="https://github.com/TKCollective/agentoracle-receipt-spec" target="_blank" rel="noopener noreferrer">
+        <span class="verify-card__label">Open Spec</span>
+        <span class="verify-card__title">Receipt format v0.1</span>
+        <span class="verify-card__desc">Three-axis freshness (signature · calibration · evidence). Aligned with W3C VC Confidence Method.</span>
+        <span class="verify-card__mono">verification.* per W3C VC CM</span>
+        <span class="verify-card__arrow">View on GitHub →</span>
+      </a>
+      <a class="verify-card" href="https://github.com/TKCollective/agentoracle-receipt-spec/tree/main/examples" target="_blank" rel="noopener noreferrer">
+        <span class="verify-card__label">Working Code</span>
+        <span class="verify-card__title">Verify in 3 lines</span>
+        <span class="verify-card__desc">Sample receipts + verifying examples in Node (jose) and Python (joserfc). Cross-language byte-stable.</span>
+        <span class="verify-card__mono">node verify_node.mjs → VERIFIED OK</span>
+        <span class="verify-card__arrow">View examples →</span>
+      </a>
+    </div>
+    <p class="verify-strip__footer">Built on open standards: <strong>RFC 7515 / 7517 / 8037 (JWS · JWK · EdDSA)</strong> · <strong>W3C Verifiable Credentials Confidence Method</strong> · <strong>x402 on Base + SKALE</strong></p>
+  </div>
+</section>
 
 <section class="section" id="how-it-works">
   <div class="reveal">
@@ -1442,6 +1524,18 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
   }
   fetchLiveStats();
   setInterval(fetchLiveStats, 30000);
+
+  // What's New ticker rotation
+  (function rotateWhatsNew() {
+    var items = document.querySelectorAll('#whatsNewTrack .whats-new__item');
+    if (items.length < 2) return;
+    var idx = 0;
+    setInterval(function() {
+      items[idx].classList.remove('active');
+      idx = (idx + 1) % items.length;
+      items[idx].classList.add('active');
+    }, 4500);
+  })();
 
   // Safety: reveal all .reveal elements after 300ms (handles appended sections)
   setTimeout(function() {
