@@ -14,8 +14,8 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
 <meta property="og:url" content="https://agentoracle.co/">
 <meta property="og:title" content="AgentOracle — The Trust Layer for AI Agents">
 <meta property="og:description" content="Pay-per-query research API for AI agents. x402 on Base + SKALE. Verify before you act.">
-<meta property="og:image" content="https://agentoracle.co/og-image.png?v=2">
-<meta property="og:image:secure_url" content="https://agentoracle.co/og-image.png?v=2">
+<meta property="og:image" content="https://agentoracle.co/og-image.png">
+<meta property="og:image:secure_url" content="https://agentoracle.co/og-image.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -28,7 +28,7 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
 <meta name="twitter:url" content="https://agentoracle.co/">
 <meta name="twitter:title" content="AgentOracle — The Trust Layer for AI Agents">
 <meta name="twitter:description" content="Pay-per-query research API for AI agents. x402 on Base + SKALE. Verify before you act.">
-<meta name="twitter:image" content="https://agentoracle.co/og-image.png?v=2">
+<meta name="twitter:image" content="https://agentoracle.co/og-image.png">
 <meta name="twitter:image:alt" content="AgentOracle — Research API for AI Agents">
 
 <!-- Theme + favicons -->
