@@ -982,7 +982,7 @@ const x402Manifest = {
     docs: "https://github.com/TKCollective/x402-research-skill",
     free_tier: "https://www.npmjs.com/package/agentoracle-mcp",
     github: "https://github.com/TKCollective/agentoracle-mcp",
-    contact: "mailto:hello@agentoracle.co",
+    contact: "mailto:joe@agentoracle.co",
     tags: [
       "x402",
       "x402-v2",
