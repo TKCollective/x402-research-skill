@@ -679,6 +679,36 @@ function wrapPaymentMiddlewareForAggregators(originalMiddleware) {
   };
 }
 
+// Pre-middleware diagnostic: log every X-PAYMENT request so we can see what the
+// signed body contains and what status comes back from the @x402/express middleware.
+app.use((req, res, next) => {
+  const xpay = req.header("x-payment") || req.header("X-PAYMENT");
+  if (xpay) {
+    console.log(`[x402-trace] ${req.method} ${req.path} — X-PAYMENT length=${xpay.length}, first 80=${xpay.slice(0, 80)}`);
+    try {
+      const decoded = JSON.parse(Buffer.from(xpay, "base64").toString("utf8"));
+      console.log(`[x402-trace]   payload network=${decoded.network} scheme=${decoded.scheme} payload.from=${decoded?.payload?.authorization?.from || "?"} value=${decoded?.payload?.authorization?.value || "?"}`);
+    } catch (e) {
+      console.log(`[x402-trace]   decode failed: ${e.message}`);
+    }
+    // Capture the actual SDK response so we know WHY the second 402 is being returned
+    const originalStatus = res.status.bind(res);
+    const originalJson = res.json.bind(res);
+    let capturedStatus = 200;
+    res.status = function (code) { capturedStatus = code; return originalStatus(code); };
+    res.json = function (body) {
+      if (capturedStatus === 402 || capturedStatus >= 400) {
+        console.log(`[x402-trace] response ${capturedStatus} body keys=${Object.keys(body || {}).join(",")}`);
+        if (body && body.error) console.log(`[x402-trace]   error: ${body.error}`);
+        if (body && body.message) console.log(`[x402-trace]   message: ${body.message}`);
+      } else {
+        console.log(`[x402-trace] response ${capturedStatus} — success`);
+      }
+      return originalJson(body);
+    };
+  }
+  next();
+});
 app.use(wrapPaymentMiddlewareForAggregators(paymentMiddleware(routeConfig, unifiedResourceServer)));
 console.log(`✅ Unified payment middleware: single instance, all chains via facilitator array`);
 console.log(`✅ 402 body mirror: aggregator-visible challenge in response body`);
