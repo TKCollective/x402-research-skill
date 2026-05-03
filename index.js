@@ -603,6 +603,7 @@ const routeConfig = {
       "Batch research endpoint. Submit up to 5 queries in a single request, processed in parallel. " +
       "$0.10 USDC per batch (up to 5 queries). Returns an array of structured results. Base + SKALE (zero gas).",
     mimeType: "application/json",
+    extensions: { ...bazaarResearch },
   },
 };
 // v2.8 fix: PayAI facilitator supports BOTH Base (eip155:8453) AND SKALE (eip155:1187947933).
