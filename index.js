@@ -554,17 +554,16 @@ const bazaarDeep = declareDiscoveryExtension({
 //    Both Base and SKALE accepts in the same array. The x402 SDK
 //    matches the payment to whichever network the agent pays on.
 //    Cleaner than the smart router, and the standard x402 approach.
-// All networks in unified accepts: PayAI handles EVM, x402.org handles Stellar
+// Bazaar-discoverable routes (/research, /deep-research, /research/batch)
+// must advertise ONLY networks that the CDP Facilitator supports. SKALE
+// and Stellar are NOT in CDP's network enum, and including them in accepts
+// causes Bazaar to refuse the route from indexing even though Base is valid.
+//
+// Therefore: these three routes are Base-only.  SKALE and Stellar accept
+// definitions are preserved (skaleAcceptResearch / stellarAcceptResearch /
+// skaleAcceptDeep / stellarAcceptDeep) for use on dedicated future routes.
 const researchAccepts = [baseAcceptResearch];
 const deepAccepts = [baseAcceptDeep];
-if (SKALE_FACILITATOR_READY) {
-  researchAccepts.push(skaleAcceptResearch);
-  deepAccepts.push(skaleAcceptDeep);
-}
-if (STELLAR_ENABLED) {
-  researchAccepts.push(stellarAcceptResearch);
-  deepAccepts.push(stellarAcceptDeep);
-}
 
 // Batch pricing: $0.10 for up to 5 queries (same price structure as deep)
 const BATCH_PRICE = "$0.10";
@@ -575,9 +574,8 @@ const SKALE_PRICE_BATCH = {
 };
 const baseAcceptBatch = { scheme: "exact", price: BATCH_PRICE, network: NETWORK, payTo: PAY_TO };
 const skaleAcceptBatch = { scheme: "exact", price: SKALE_PRICE_BATCH, network: SKALE_NETWORK, payTo: PAY_TO };
+// Same Bazaar constraint: batch is Base-only for CDP/Bazaar compatibility.
 const batchAccepts = [baseAcceptBatch];
-if (SKALE_FACILITATOR_READY) batchAccepts.push(skaleAcceptBatch);
-if (STELLAR_ENABLED) batchAccepts.push(stellarAcceptBatch);
 
 const routeConfig = {
   "POST /research": {
@@ -585,7 +583,7 @@ const routeConfig = {
     description:
       "Real-time research API for AI agents. Send any natural-language question, " +
       "get structured JSON with summary, key facts, sources, and confidence scoring. " +
-      "Powered by Perplexity Sonar. $0.02 USDC per query. Base + SKALE (zero gas).",
+      "Powered by Perplexity Sonar. $0.02 USDC per query on Base mainnet via x402.",
     mimeType: "application/json",
     extensions: { ...bazaarResearch },
   },
@@ -593,7 +591,7 @@ const routeConfig = {
     accepts: deepAccepts,
     description:
       "Deep research with comprehensive multi-step analysis. Returns detailed findings " +
-      "with expert-level synthesis, powered by Perplexity Sonar Pro. $0.10 USDC per query. Base + SKALE.",
+      "with expert-level synthesis, powered by Perplexity Sonar Pro. $0.10 USDC per query on Base.",
     mimeType: "application/json",
     extensions: { ...bazaarDeep },
   },
@@ -601,7 +599,7 @@ const routeConfig = {
     accepts: batchAccepts,
     description:
       "Batch research endpoint. Submit up to 5 queries in a single request, processed in parallel. " +
-      "$0.10 USDC per batch (up to 5 queries). Returns an array of structured results. Base + SKALE (zero gas).",
+      "$0.10 USDC per batch (up to 5 queries). Returns an array of structured results on Base mainnet.",
     mimeType: "application/json",
     extensions: { ...bazaarResearch },
   },
