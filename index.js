@@ -743,9 +743,12 @@ if (CDP_ENABLED && cdpFacilitatorClient) {
       catch { paymentPayload = JSON.parse(paymentHeader); }
 
       const requirements = {
-        scheme: "exact", network: NETWORK, amount: "20000",
+        scheme: "exact", network: NETWORK, amount: "20000", maxAmountRequired: "20000",
         asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
         payTo: PAY_TO, maxTimeoutSeconds: 300,
+        resource: "https://agentoracle.co/research",
+        description: "Real-time research API for AI agents. $0.02 USDC per query on Base.",
+        mimeType: "application/json",
         extra: { name: "USD Coin", version: "2" },
       };
       const verifyRes = await cdpFacilitatorClient.verify(paymentPayload, requirements);
@@ -3368,3 +3371,4 @@ app.get("/mcp", (_req, res) => {
   });
 });
 // deploy 1776123308
+ 1776123308
