@@ -742,15 +742,19 @@ if (CDP_ENABLED && cdpFacilitatorClient) {
       try { paymentPayload = JSON.parse(Buffer.from(paymentHeader, "base64").toString()); }
       catch { paymentPayload = JSON.parse(paymentHeader); }
 
-      // CDP facilitator registers exact@base (label form), not exact@eip155:8453 (chain-id form).
-      // Always pass label form to verify/settle.
+      // CDP facilitator strict-validates paymentRequirements against canonical x402 schema.
+      // Required fields: scheme, network (label form), maxAmountRequired, resource, description,
+      // mimeType, payTo, maxTimeoutSeconds, asset. Do NOT include legacy 'amount' — schema rejects it.
       const requirements = {
-        scheme: "exact", network: "base", amount: "20000", maxAmountRequired: "20000",
-        asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-        payTo: PAY_TO, maxTimeoutSeconds: 300,
+        scheme: "exact",
+        network: "base",
+        maxAmountRequired: "20000",
         resource: "https://agentoracle.co/research",
         description: "Real-time research API for AI agents. $0.02 USDC per query on Base.",
         mimeType: "application/json",
+        payTo: PAY_TO,
+        maxTimeoutSeconds: 300,
+        asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
         extra: { name: "USD Coin", version: "2" },
       };
       // Normalize the incoming payload too — client may have signed with either form
