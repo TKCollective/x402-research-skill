@@ -74,11 +74,10 @@ const FACILITATOR_URL =
   "https://facilitator.xpay.sh";
 
 // Base mainnet CAIP-2 identifier
-// CAIP-2 chain-id form, used by Stellar / SKALE accept configs that follow the spec strictly.
-const NETWORK_CAIP = "eip155:8453";
-// CDP facilitator + x402 SDKs accept ONLY label form ("base") for verify/settle on Base.
-// All Base accept configs and the bazaar challenge use this label.
-const NETWORK = "base";
+// CAIP-2 chain-id form expected by @x402/express paymentMiddleware at construction time.
+// The wrapPaymentMiddlewareForAggregators wrapper transforms it to "base" in the
+// outgoing 402 body so aggregators (Bazaar, agentic.market, x402scan) see the label form.
+const NETWORK = "eip155:8453";
 
 // SKALE Base — gasless agent payments
 // PayAI facilitator supports both SKALE mainnet and testnet
