@@ -550,6 +550,110 @@ const bazaarDeep = declareDiscoveryExtension({
   },
 });
 
+// 4b. Public seller-side discovery manifest (/.well-known/x402 and /info)
+// Canonical x402 v2 shape so Bazaar / agentic.market / x402scan crawlers can
+// fetch our resource list directly. Mirrors CDP's GET /discovery/resources.
+function buildDiscoveryManifest() {
+  const lastUpdated = Math.floor(Date.now() / 1000);
+  const items = [
+    {
+      resource: "https://agentoracle.co/research",
+      type: "http",
+      x402Version: 1,
+      accepts: [{
+        scheme: "exact",
+        network: "base",
+        maxAmountRequired: "20000",
+        asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        payTo: PAY_TO,
+        maxTimeoutSeconds: 300,
+        resource: "https://agentoracle.co/research",
+        description: "Real-time research API for AI agents. Send any natural-language question, get structured JSON with summary, key facts, sources, and confidence scoring. Powered by Perplexity Sonar. $0.02 USDC per query on Base.",
+        mimeType: "application/json",
+        extra: { name: "USD Coin", version: "2" },
+      }],
+      lastUpdated,
+      metadata: {
+        category: "research",
+        provider: "AgentOracle (TKCollective LLC)",
+        tags: ["research", "perplexity", "agents", "rag", "verifiable"],
+        method: "POST", bodyType: "json",
+        homepage: "https://agentoracle.co",
+        jwks: "https://agentoracle.co/.well-known/jwks.json",
+      },
+      extensions: { bazaar: bazaarResearch },
+    },
+    {
+      resource: "https://agentoracle.co/deep-research",
+      type: "http",
+      x402Version: 1,
+      accepts: [{
+        scheme: "exact", network: "base",
+        maxAmountRequired: "100000",
+        asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        payTo: PAY_TO, maxTimeoutSeconds: 300,
+        resource: "https://agentoracle.co/deep-research",
+        description: "Deep research mode powered by Sonar Pro. $0.10 USDC per query on Base.",
+        mimeType: "application/json",
+        extra: { name: "USD Coin", version: "2" },
+      }],
+      lastUpdated,
+      metadata: {
+        category: "research",
+        provider: "AgentOracle (TKCollective LLC)",
+        tags: ["research", "deep", "perplexity-pro", "agents"],
+        method: "POST", bodyType: "json",
+      },
+      extensions: { bazaar: bazaarDeep },
+    },
+    {
+      resource: "https://agentoracle.co/research/batch",
+      type: "http",
+      x402Version: 1,
+      accepts: [{
+        scheme: "exact", network: "base",
+        maxAmountRequired: "100000",
+        asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        payTo: PAY_TO, maxTimeoutSeconds: 300,
+        resource: "https://agentoracle.co/research/batch",
+        description: "Batch research API \u2014 up to 5 queries per call. $0.10 USDC per batch on Base.",
+        mimeType: "application/json",
+        extra: { name: "USD Coin", version: "2" },
+      }],
+      lastUpdated,
+      metadata: {
+        category: "research",
+        provider: "AgentOracle (TKCollective LLC)",
+        tags: ["research", "batch", "agents"],
+        method: "POST", bodyType: "json",
+      },
+      extensions: { bazaar: bazaarResearch },
+    },
+  ];
+  return {
+    x402Version: 1,
+    seller: {
+      name: "AgentOracle",
+      operator: "TKCollective LLC",
+      homepage: "https://agentoracle.co",
+      contact: "joe@agentoracle.co",
+      jwks: "https://agentoracle.co/.well-known/jwks.json",
+    },
+    items,
+    pagination: { limit: items.length, offset: 0, total: items.length },
+  };
+}
+app.get("/.well-known/x402", (_req, res) => {
+  res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.json(buildDiscoveryManifest());
+});
+app.get("/info", (_req, res) => {
+  res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.json(buildDiscoveryManifest());
+});
+
 // 5. UNIFIED PAYMENT MIDDLEWARE — Sawyer's accepts-array pattern
 //    Both Base and SKALE accepts in the same array. The x402 SDK
 //    matches the payment to whichever network the agent pays on.
