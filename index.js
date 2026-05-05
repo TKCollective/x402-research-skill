@@ -742,8 +742,10 @@ if (CDP_ENABLED && cdpFacilitatorClient) {
       try { paymentPayload = JSON.parse(Buffer.from(paymentHeader, "base64").toString()); }
       catch { paymentPayload = JSON.parse(paymentHeader); }
 
+      // CDP facilitator registers exact@base (label form), not exact@eip155:8453 (chain-id form).
+      // Always pass label form to verify/settle.
       const requirements = {
-        scheme: "exact", network: NETWORK, amount: "20000", maxAmountRequired: "20000",
+        scheme: "exact", network: "base", amount: "20000", maxAmountRequired: "20000",
         asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
         payTo: PAY_TO, maxTimeoutSeconds: 300,
         resource: "https://agentoracle.co/research",
@@ -751,6 +753,8 @@ if (CDP_ENABLED && cdpFacilitatorClient) {
         mimeType: "application/json",
         extra: { name: "USD Coin", version: "2" },
       };
+      // Normalize the incoming payload too — client may have signed with either form
+      if (paymentPayload && paymentPayload.network === "eip155:8453") paymentPayload.network = "base";
       const verifyRes = await cdpFacilitatorClient.verify(paymentPayload, requirements);
       if (!verifyRes.isValid) return res.status(402).json({ error: "Verification failed", reason: verifyRes.invalidReason });
       const settleRes = await cdpFacilitatorClient.settle(paymentPayload, requirements);
