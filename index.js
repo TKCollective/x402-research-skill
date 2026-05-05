@@ -74,10 +74,10 @@ const FACILITATOR_URL =
   "https://facilitator.xpay.sh";
 
 // Base mainnet CAIP-2 identifier
-// CAIP-2 chain-id form, used by Stellar / SKALE accept configs that follow the spec strictly.
-const NETWORK_CAIP = "eip155:8453";
-// CDP facilitator + x402 SDKs accept ONLY label form ("base") for verify/settle on Base.
-// All Base accept configs and the bazaar challenge use this label.
+// CDP facilitator + x402 SDKs require label form ("base"), not chain-id form ("eip155:8453").
+// Tonight's bazaar_bootstrap fix proved this: passing eip155:8453 to verify/settle
+// returned invalid_network with registered list = exact@base, exact@base-sepolia, ...
+// /research, /deep-research, /research/batch were all silently failing for the same reason.
 const NETWORK = "base";
 
 // SKALE Base — gasless agent payments
