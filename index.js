@@ -682,28 +682,26 @@ const skaleAcceptBatch = { scheme: "exact", price: SKALE_PRICE_BATCH, network: S
 const batchAccepts = [baseAcceptBatch];
 
 const routeConfig = {
+  // CDP facilitator silently rejects paymentPayloads referencing requirements
+  // whose description exceeds an internal schema length cap ("No matching
+  // payment requirements"). Confirmed by AFX (x402scan/agentic.market) on
+  // May 5 in #x402 Discord — short descriptions only on the wire challenge.
+  // Long marketing copy stays on the /info + /.well-known/x402 manifest.
   "POST /research": {
     accepts: researchAccepts,
-    description:
-      "Real-time research API for AI agents. Send any natural-language question, " +
-      "get structured JSON with summary, key facts, sources, and confidence scoring. " +
-      "Powered by Perplexity Sonar. $0.02 USDC per query on Base mainnet via x402.",
+    description: "Research API. $0.02 USDC per query on Base.",
     mimeType: "application/json",
     extensions: { ...bazaarResearch },
   },
   "POST /deep-research": {
     accepts: deepAccepts,
-    description:
-      "Deep research with comprehensive multi-step analysis. Returns detailed findings " +
-      "with expert-level synthesis, powered by Perplexity Sonar Pro. $0.10 USDC per query on Base.",
+    description: "Deep research API. $0.10 USDC per query on Base.",
     mimeType: "application/json",
     extensions: { ...bazaarDeep },
   },
   "POST /research/batch": {
     accepts: batchAccepts,
-    description:
-      "Batch research endpoint. Submit up to 5 queries in a single request, processed in parallel. " +
-      "$0.10 USDC per batch (up to 5 queries). Returns an array of structured results on Base mainnet.",
+    description: "Batch research API. $0.10 USDC per batch on Base.",
     mimeType: "application/json",
     extensions: { ...bazaarResearch },
   },
