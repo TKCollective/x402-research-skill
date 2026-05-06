@@ -682,28 +682,28 @@ const skaleAcceptBatch = { scheme: "exact", price: SKALE_PRICE_BATCH, network: S
 const batchAccepts = [baseAcceptBatch];
 
 const routeConfig = {
-  // CDP facilitator silently rejects paymentPayloads referencing requirements
-  // whose description exceeds an internal schema length cap ("No matching
-  // payment requirements"). Confirmed by AFX (x402scan/agentic.market) on
-  // May 5 in #x402 Discord — short descriptions only on the wire challenge.
-  // Long marketing copy stays on the /info + /.well-known/x402 manifest.
+  // CDP facilitator validates the FULL requirements object (including any
+  // nested extension schemas) when verifying a signed paymentPayload. Long
+  // descriptions or deeply-nested schemas trip an internal cap and produce
+  // 'No matching payment requirements' (AFX, x402scan, May 5 #x402 Discord).
+  //
+  // Wire-side: keep description short, drop extensions entirely.
+  // Discovery: full bazaar extension + descriptions live on /info and
+  // /.well-known/x402, which crawlers (Bazaar, agentic.market, x402scan) read.
   "POST /research": {
     accepts: researchAccepts,
     description: "Research API. $0.02 USDC per query on Base.",
     mimeType: "application/json",
-    extensions: { ...bazaarResearch },
   },
   "POST /deep-research": {
     accepts: deepAccepts,
     description: "Deep research API. $0.10 USDC per query on Base.",
     mimeType: "application/json",
-    extensions: { ...bazaarDeep },
   },
   "POST /research/batch": {
     accepts: batchAccepts,
     description: "Batch research API. $0.10 USDC per batch on Base.",
     mimeType: "application/json",
-    extensions: { ...bazaarResearch },
   },
 };
 // v2.8 fix: PayAI facilitator supports BOTH Base (eip155:8453) AND SKALE (eip155:1187947933).
