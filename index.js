@@ -693,23 +693,25 @@ const routeConfig = {
   // and the merchant never appears in /discovery/resources.
   // (ethanoroshiba in x402-foundation/x402#2207 also confirmed: extensions.bazaar
   // must be present in the 402 challenge for discovery.)
+  // declareDiscoveryExtension() returns { bazaar: { info, schema } }, so spread
+  // it directly into `extensions` to avoid extensions.bazaar.bazaar double-wrap.
   "POST /research": {
     accepts: researchAccepts,
     description: "Research API. $0.02 USDC per query on Base.",
     mimeType: "application/json",
-    extensions: { bazaar: bazaarResearch },
+    extensions: { ...bazaarResearch },
   },
   "POST /deep-research": {
     accepts: deepAccepts,
     description: "Deep research API. $0.10 USDC per query on Base.",
     mimeType: "application/json",
-    extensions: { bazaar: bazaarDeep },
+    extensions: { ...bazaarDeep },
   },
   "POST /research/batch": {
     accepts: batchAccepts,
     description: "Batch research API. $0.10 USDC per batch on Base.",
     mimeType: "application/json",
-    extensions: { bazaar: bazaarResearch },
+    extensions: { ...bazaarResearch },
   },
 };
 // v2.8 fix: PayAI facilitator supports BOTH Base (eip155:8453) AND SKALE (eip155:1187947933).
