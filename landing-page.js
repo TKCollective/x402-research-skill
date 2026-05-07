@@ -23,8 +23,8 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
 
 <!-- Twitter / X -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:site" content="@AgentOracleAI">
-<meta name="twitter:creator" content="@AgentOracleAI">
+<meta name="twitter:site" content="@AgentOracle_AI">
+<meta name="twitter:creator" content="@AgentOracle_AI">
 <meta name="twitter:url" content="https://agentoracle.co/">
 <meta name="twitter:title" content="AgentOracle — The Trust Layer for AI Agents">
 <meta name="twitter:description" content="Pay-per-query research API for AI agents. x402 on Base + SKALE. Verify before you act.">
