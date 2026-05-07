@@ -485,7 +485,11 @@ const stellarAcceptBatch = {
 };
 
 // 4. Bazaar discovery extensions for Base routes
+// Per ethanoroshiba (Coinbase, x402-foundation/x402#2207) on May 7:
+// - method is REQUIRED on info.input per the bazaar.md spec
+// - the legacy `discoverable: true` field is invalid and causes failed discovery
 const bazaarResearch = declareDiscoveryExtension({
+  method: "POST",
   input: { query: "What is the current price of Bitcoin?" },
   inputSchema: {
     properties: {
@@ -519,6 +523,7 @@ const bazaarResearch = declareDiscoveryExtension({
 });
 
 const bazaarDeep = declareDiscoveryExtension({
+  method: "POST",
   input: { query: "Comprehensive analysis of DeFi yield strategies on Base network" },
   inputSchema: {
     properties: {
