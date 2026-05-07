@@ -1108,10 +1108,10 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
       <span class="whats-new__pulse"></span>
       <span class="whats-new__label">New</span>
       <span class="whats-new__track" id="whatsNewTrack">
-        <span class="whats-new__item active" data-idx="0"><span class="whats-new__date">Apr 30</span><span class="whats-new__text">Privacy &amp; data-handling page → <a class="whats-new__link" href="/privacy">/privacy</a></span></span>
-        <span class="whats-new__item" data-idx="1"><span class="whats-new__date">Apr 29</span><span class="whats-new__text">JWS receipt spec v0.1 public → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-receipt-spec" target="_blank" rel="noopener noreferrer">github</a></span></span>
-        <span class="whats-new__item" data-idx="2"><span class="whats-new__date">Apr 29</span><span class="whats-new__text">JWKS endpoint live → <a class="whats-new__link" href="/.well-known/jwks.json" target="_blank" rel="noopener noreferrer">/.well-known/jwks.json</a></span></span>
-        <span class="whats-new__item" data-idx="3"><span class="whats-new__date">Apr 28</span><span class="whats-new__text">MCP v2.1.2 on npm → <a class="whats-new__link" href="https://www.npmjs.com/package/agentoracle-mcp" target="_blank" rel="noopener noreferrer">agentoracle-mcp</a></span></span>
+        <span class="whats-new__item active" data-idx="0"><span class="whats-new__date">May 4</span><span class="whats-new__text">First on-chain x402 settlements live on Base → <a class="whats-new__link" href="https://basescan.org/tx/0x4c5cf98c9462638015b89348c65dbe71995b56df9cda5905c4264963dc34dd03" target="_blank" rel="noopener noreferrer">basescan</a></span></span>
+        <span class="whats-new__item" data-idx="1"><span class="whats-new__date">May 4</span><span class="whats-new__text">Bazaar discovery manifest live → <a class="whats-new__link" href="/.well-known/x402" target="_blank" rel="noopener noreferrer">/.well-known/x402</a></span></span>
+        <span class="whats-new__item" data-idx="2"><span class="whats-new__date">Apr 30</span><span class="whats-new__text">Privacy &amp; data-handling page → <a class="whats-new__link" href="/privacy">/privacy</a></span></span>
+        <span class="whats-new__item" data-idx="3"><span class="whats-new__date">Apr 29</span><span class="whats-new__text">JWS receipt spec v0.1 public → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-receipt-spec" target="_blank" rel="noopener noreferrer">github</a></span></span>
       </span>
     </div>
     <h1 class="hero__headline">
@@ -1593,19 +1593,19 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
         <div class="usecase-card__title">Market Intelligence</div>
         <p class="usecase-card__desc">Agent researches competitor pricing and market positioning across three dimensions.</p>
         <ul class="usecase-card__queries"><li>"Competitor X pricing model 2026"</li><li>"Market share AI API providers"</li><li>"Developer API pricing trends"</li></ul>
-        <div class="usecase-card__cost"><span class="usecase-card__cost-label">3 queries &middot; /research</span><span class="usecase-card__cost-value">$0.06</span></div>
+        <div class="usecase-card__cost"><span class="usecase-card__cost-label">3 × $0.02 &middot; /research</span><span class="usecase-card__cost-value">$0.06</span></div>
       </div>
       <div class="usecase-card">
         <div class="usecase-card__title">Due Diligence</div>
         <p class="usecase-card__desc">Agent verifies a company's claims and cross-references with public records.</p>
         <ul class="usecase-card__queries"><li>"Company Y revenue claims verification"</li><li>"Company Y regulatory filings analysis"</li></ul>
-        <div class="usecase-card__cost"><span class="usecase-card__cost-label">2 queries &middot; /deep-research</span><span class="usecase-card__cost-value">$0.20</span></div>
+        <div class="usecase-card__cost"><span class="usecase-card__cost-label">2 × $0.10 &middot; /deep-research</span><span class="usecase-card__cost-value">$0.20</span></div>
       </div>
       <div class="usecase-card">
         <div class="usecase-card__title">Real-Time News</div>
         <p class="usecase-card__desc">Agent monitors breaking developments and synthesizes updates across multiple topics.</p>
         <ul class="usecase-card__queries"><li>"AI regulation updates today"</li><li>"x402 protocol adoption updates"</li><li>"Agent framework releases 2026"</li></ul>
-        <div class="usecase-card__cost"><span class="usecase-card__cost-label">5 queries &middot; /research</span><span class="usecase-card__cost-value">$0.10</span></div>
+        <div class="usecase-card__cost"><span class="usecase-card__cost-label">5 × $0.02 &middot; /research</span><span class="usecase-card__cost-value">$0.10</span></div>
       </div>
     </div>
   </div>
