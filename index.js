@@ -687,28 +687,29 @@ const skaleAcceptBatch = { scheme: "exact", price: SKALE_PRICE_BATCH, network: S
 const batchAccepts = [baseAcceptBatch];
 
 const routeConfig = {
-  // CDP facilitator validates the FULL requirements object (including any
-  // nested extension schemas) when verifying a signed paymentPayload. Long
-  // descriptions or deeply-nested schemas trip an internal cap and produce
-  // 'No matching payment requirements' (AFX, x402scan, May 5 #x402 Discord).
-  //
-  // Wire-side: keep description short, drop extensions entirely.
-  // Discovery: full bazaar extension + descriptions live on /info and
-  // /.well-known/x402, which crawlers (Bazaar, agentic.market, x402scan) read.
+  // BAZAAR EXTENSIONS RESTORED on May 7 after agentic.market/validate confirmed
+  // they were the indexing blocker. The extensions are REQUIRED in the 402
+  // wire response — without them, CDP's indexer cannot see the bazaar advert
+  // and the merchant never appears in /discovery/resources.
+  // (ethanoroshiba in x402-foundation/x402#2207 also confirmed: extensions.bazaar
+  // must be present in the 402 challenge for discovery.)
   "POST /research": {
     accepts: researchAccepts,
     description: "Research API. $0.02 USDC per query on Base.",
     mimeType: "application/json",
+    extensions: { bazaar: bazaarResearch },
   },
   "POST /deep-research": {
     accepts: deepAccepts,
     description: "Deep research API. $0.10 USDC per query on Base.",
     mimeType: "application/json",
+    extensions: { bazaar: bazaarDeep },
   },
   "POST /research/batch": {
     accepts: batchAccepts,
     description: "Batch research API. $0.10 USDC per batch on Base.",
     mimeType: "application/json",
+    extensions: { bazaar: bazaarResearch },
   },
 };
 // v2.8 fix: PayAI facilitator supports BOTH Base (eip155:8453) AND SKALE (eip155:1187947933).
