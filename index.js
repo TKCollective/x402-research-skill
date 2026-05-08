@@ -737,49 +737,99 @@ if (STELLAR_ENABLED) {
 
 unifiedResourceServer.registerExtension(bazaarResourceServerExtension);
 
-// ─── Aggregator-Visible 402 Body Mirror ───
+// ─── Aggregator-Visible 402 Body Mirror (PaymentRequiredV2 shape) ───
 // The @x402/express SDK ships the payment challenge in a `payment-required` HTTP
 // header (base64 JSON). x402scan, agentic.market, and Bazaar crawlers parse the
-// 402 response BODY, not headers — so we appear unindexable to them. This wrapper
-// intercepts every 402 from the SDK, decodes the header, downgrades the v2 schema
-// to the v1 form aggregators expect, and writes it as the response body. The
-// header is still set so existing v2 clients keep working.
+// 402 response BODY, not headers. This wrapper intercepts every 402, decodes the
+// header, and writes the body in canonical PaymentRequiredV2 shape per
+// `@x402/core/schemas/PaymentRequiredV2Schema`:
+//   - `x402Version: 2`
+//   - top-level `resource: {url, description, mimeType}` (NOT inlined into accepts)
+//   - `accepts[]` contains ONLY: scheme, network (CAIP-2), amount, asset, payTo,
+//     maxTimeoutSeconds, extra (no resource/description/mimeType)
+//   - `extensions.bazaar: {info, schema}` not double-wrapped
+//
+// Why: ethanoroshiba (Coinbase eng) on x402-foundation/x402#2207 (May 8 2026)
+// confirmed v1/v2 conflation breaks discovery indexing and surfaces as
+// "discovery request validation failed" in EXTENSION-RESPONSES. AsaiShota
+// (issue OP) hit identical bug, fixed his side same day, marketplace adopted
+// PaymentRequiredV2Schema verbatim (commit 5315c3b on x402-market).
 function wrapPaymentMiddlewareForAggregators(originalMiddleware) {
   return (req, res, next) => {
     const originalJson = res.json.bind(res);
     res.json = function (body) {
-      // Only rewrite empty 402 bodies that have a payment-required header set
       if (res.statusCode === 402) {
         const headerB64 = res.getHeader("payment-required");
         const isEmpty = !body || (typeof body === "object" && Object.keys(body).length === 0);
         if (headerB64 && isEmpty) {
           try {
             const decoded = JSON.parse(Buffer.from(String(headerB64), "base64").toString("utf8"));
-            // Downgrade v2 → v1 fields aggregators expect
+            // Pull resource metadata from whichever shape the SDK gave us:
+            //  - decoded.resource may be an object {url, description, mimeType}
+            //  - or per-route description/mimeType may live on accepts[0]
+            //  - or a string url somewhere
+            const firstAccept = (decoded.accepts && decoded.accepts[0]) || {};
+            const resourceUrl =
+              decoded.resource?.url ||
+              (typeof decoded.resource === "string" ? decoded.resource : undefined) ||
+              firstAccept.resource ||
+              `https://${req.headers.host}${req.path}`;
+            const resourceDescription =
+              decoded.resource?.description ||
+              decoded.description ||
+              firstAccept.description;
+            const resourceMimeType =
+              decoded.resource?.mimeType ||
+              decoded.mimeType ||
+              firstAccept.mimeType ||
+              "application/json";
+
+            // Strip v1-style fields off accepts[] (per ethanoroshiba's diagnosis,
+            // resource/description/mimeType MUST NOT appear here in v2)
             const accepts = (decoded.accepts || []).map((a) => {
-              const out = { ...a };
-              // amount → maxAmountRequired
-              if (out.amount !== undefined && out.maxAmountRequired === undefined) {
-                out.maxAmountRequired = out.amount;
+              const {
+                resource: _r,
+                description: _d,
+                mimeType: _m,
+                amount: rawAmount,
+                maxAmountRequired,
+                network,
+                ...rest
+              } = a;
+              const cleaned = { ...rest };
+              // amount field: keep as `amount` per v2 schema; some SDK versions
+              // emit `maxAmountRequired` only — coalesce.
+              if (rawAmount !== undefined) cleaned.amount = String(rawAmount);
+              else if (maxAmountRequired !== undefined) cleaned.amount = String(maxAmountRequired);
+              // CAIP-2 network. Validators/CDP indexer expect chain-id form.
+              if (network) {
+                if (network === "base") cleaned.network = "eip155:8453";
+                else if (network === "skale") cleaned.network = "eip155:1187947933";
+                else cleaned.network = network; // already CAIP-2 or other label
               }
-              // network: "eip155:8453" → "base" (aggregators want simple labels)
-              if (out.network === "eip155:8453") out.network = "base";
-              else if (out.network === "eip155:1187947933") out.network = "skale";
-              // resource URL on each accept (Archonics-shaped)
-              if (decoded.resource?.url && !out.resource) out.resource = decoded.resource.url;
-              if (decoded.resource?.description && !out.description) out.description = decoded.resource.description;
-              if (decoded.resource?.mimeType && !out.mimeType) out.mimeType = decoded.resource.mimeType;
-              return out;
+              return cleaned;
             });
+
+            // Strip any double-wrap in extensions.bazaar (defensive — should never
+            // happen now, but historically tripped us up)
+            let extensions = decoded.extensions;
+            if (extensions?.bazaar?.bazaar && !extensions.bazaar.info) {
+              extensions = { ...extensions, bazaar: extensions.bazaar.bazaar };
+            }
+
             const aggregatorBody = {
-              x402Version: 1, // aggregators are still on v1 of the discovery shape
+              x402Version: 2,
               error: decoded.error || "Payment required",
+              resource: {
+                url: resourceUrl,
+                ...(resourceDescription ? { description: resourceDescription } : {}),
+                mimeType: resourceMimeType,
+              },
               accepts,
-              extensions: decoded.extensions,
+              ...(extensions ? { extensions } : {}),
             };
             return originalJson(aggregatorBody);
           } catch (e) {
-            // If decode fails, fall through to the SDK's empty body
             console.log(`[402-mirror] decode failed: ${e.message}`);
           }
         }
