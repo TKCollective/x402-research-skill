@@ -887,11 +887,19 @@ app.use((req, res, next) => {
         mutated = true;
         console.log(`[resource-inject] ${req.path} — injected resource.url=${decoded.resource.url}`);
       }
-      if (mutated) {
-        const reencoded = Buffer.from(JSON.stringify(decoded)).toString("base64");
-        req.headers["x-payment"] = reencoded;
-        if (req.headers["X-PAYMENT"]) req.headers["X-PAYMENT"] = reencoded;
-      }
+      const finalEncoded = mutated
+        ? Buffer.from(JSON.stringify(decoded)).toString("base64")
+        : xpay;
+      // Mirror to BOTH header names so SDK can find it regardless of spec version.
+      // @x402/express V2 reads from `PAYMENT-SIGNATURE` (V2 spec), but most buyer
+      // SDKs ship the V1 name `X-PAYMENT`. Without this rename the server
+      // returns 'Payment required' as if no header were present.
+      // Same dual-naming problem as response-side payment-required vs PAYMENT-REQUIREMENTS.
+      req.headers["x-payment"] = finalEncoded;
+      if (req.headers["X-PAYMENT"]) req.headers["X-PAYMENT"] = finalEncoded;
+      req.headers["payment-signature"] = finalEncoded;
+      req.headers["PAYMENT-SIGNATURE"] = finalEncoded;
+      console.log(`[header-rename] ${req.path} — mirrored X-PAYMENT to PAYMENT-SIGNATURE (V2 spec)`);
     } catch (e) {
       console.log(`[resource-inject] ${req.path} — decode/inject failed: ${e.message}`);
     }
