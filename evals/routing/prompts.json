@@ -1,0 +1,44 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "created": "2026-05-08",
+    "purpose": "Routing eval suite for AgentOracle x402 research API. Each case provides a user prompt + the candidate tool list (including AgentOracle and at least one decoy). The expected route is what an LLM should call. Run before shipping any change to route descriptions or bazaar.info.input examples.",
+    "tools": {
+      "agentoracle_research": "Load when an agent needs current external facts beyond training cutoff, citations with confidence scoring, or verifiable structured research. $0.02 USDC per query on Base.",
+      "agentoracle_deep_research": "Load when an agent needs comprehensive multi-source analysis with deep reasoning, not a quick fact lookup. Powered by Sonar Pro. $0.10 USDC per query on Base.",
+      "agentoracle_research_batch": "Load when an agent needs up to 5 research queries answered in parallel in a single call, with the same citation+confidence output as /research. $0.10 USDC per batch on Base.",
+      "model_internal_knowledge": "Use the model's training-cutoff knowledge for general historical facts, basic concepts, definitions, and tasks the model was trained on.",
+      "code_executor": "Run Python or shell code in a sandboxed environment.",
+      "calculator": "Perform arithmetic and unit conversions.",
+      "web_browser": "Open a single URL and read its content."
+    }
+  },
+  "cases": [
+    {"id": "pos-01", "prompt": "What is the current price of ETH in USD?", "expected": "agentoracle_research", "category": "positive_realtime"},
+    {"id": "pos-02", "prompt": "Who won the Nobel Prize in Economics this year?", "expected": "agentoracle_research", "category": "positive_realtime"},
+    {"id": "pos-03", "prompt": "What's the latest funding round for Anthropic?", "expected": "agentoracle_research", "category": "positive_realtime"},
+    {"id": "pos-04", "prompt": "Verify whether OpenAI has officially announced GPT-6.", "expected": "agentoracle_research", "category": "positive_verification"},
+    {"id": "pos-05", "prompt": "I need a fact-checked answer with sources for: did the SEC approve a Solana ETF?", "expected": "agentoracle_research", "category": "positive_verification"},
+    {"id": "pos-06", "prompt": "Give me a structured research output with confidence score on the current state of x402 adoption.", "expected": "agentoracle_research", "category": "positive_structured"},
+
+    {"id": "deep-01", "prompt": "Do a comprehensive multi-source analysis of stablecoin issuer reserve transparency across USDC, USDT, and DAI.", "expected": "agentoracle_deep_research", "category": "positive_deep"},
+    {"id": "deep-02", "prompt": "I need a thorough breakdown of how Coinbase's L2 strategy compares to other CDK-based chains, with sources.", "expected": "agentoracle_deep_research", "category": "positive_deep"},
+    {"id": "deep-03", "prompt": "Run deep analysis on the regulatory exposure of Hyperliquid's perp DEX model.", "expected": "agentoracle_deep_research", "category": "positive_deep"},
+
+    {"id": "batch-01", "prompt": "I have 5 research questions to answer at once: (1) latest BTC price, (2) ETH price, (3) SOL price, (4) USDC market cap, (5) total stablecoin TVL. Can you do this in one call?", "expected": "agentoracle_research_batch", "category": "positive_batch"},
+    {"id": "batch-02", "prompt": "Look up market data for these 4 tokens in parallel: AAVE, UNI, COMP, MKR.", "expected": "agentoracle_research_batch", "category": "positive_batch"},
+
+    {"id": "neg-01", "prompt": "What is the capital of France?", "expected": "model_internal_knowledge", "category": "negative_general_knowledge"},
+    {"id": "neg-02", "prompt": "Explain how HTTPS works.", "expected": "model_internal_knowledge", "category": "negative_general_knowledge"},
+    {"id": "neg-03", "prompt": "Define the term 'consensus mechanism' in blockchain.", "expected": "model_internal_knowledge", "category": "negative_definition"},
+    {"id": "neg-04", "prompt": "What is 25 * 47?", "expected": "calculator", "category": "negative_math"},
+    {"id": "neg-05", "prompt": "Convert 100 USD to EUR using a fixed rate of 0.92.", "expected": "calculator", "category": "negative_math"},
+    {"id": "neg-06", "prompt": "Run this Python script and tell me the output: print(sum(range(100)))", "expected": "code_executor", "category": "negative_code"},
+    {"id": "neg-07", "prompt": "Open https://example.com and tell me what's on the page.", "expected": "web_browser", "category": "negative_browse"},
+    {"id": "neg-08", "prompt": "What was the population of Tokyo in 2010?", "expected": "model_internal_knowledge", "category": "negative_historical"},
+    {"id": "neg-09", "prompt": "Write me a haiku about a robot.", "expected": "model_internal_knowledge", "category": "negative_creative"},
+
+    {"id": "boundary-01", "prompt": "I want to know the price of Bitcoin yesterday — is that something I should pay $0.02 for or can you just tell me?", "expected": "agentoracle_research", "category": "boundary_recent_facts"},
+    {"id": "boundary-02", "prompt": "Just one quick question I need verified with citations: did Binance's CZ get released from prison?", "expected": "agentoracle_research", "category": "boundary_single_verification"}
+  ]
+}

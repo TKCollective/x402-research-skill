@@ -1,0 +1,164 @@
+# Integrator Gotchas — x402 + CDP Bazaar
+
+Real things that broke when shipping `agentoracle.co/research` on Coinbase x402 / Bazaar between March and May 2026. Each one cost us between 30 minutes and 2 days. Listed in rough order of how brutal they were to diagnose.
+
+If you hit one of these and it isn't enough detail, open an issue at https://github.com/TKCollective/x402-research-skill or ping @AgentOracle_AI on X — happy to share full diffs.
+
+---
+
+## 1. `paymentPayload.resource` is "optional" but the indexer requires it
+
+**Symptom:** All `/settle` calls return 200 + `success: true` + valid Base mainnet tx hash, but the resource is **never indexed** in CDP `/discovery/resources`. EXTENSION-RESPONSES decodes to:
+```json
+{"bazaar":{"status":"rejected","rejectedReason":"discovery request validation failed"}}
+```
+
+**Root cause:** Per x402 V2 spec §5.2, `paymentPayload.resource = {url, description, mimeType}` is required for the indexer to tag a settle to a listing. The schema marks it optional (`@x402/core@2.11.0/schemas/index.d.mts:315-389`), so most buyer SDKs (including `@x402/client`) omit it.
+
+**Fix (server-side, ~15 lines of middleware):** decode `X-PAYMENT`, inject `resource` from a per-route map if absent, re-encode before forwarding to facilitator. See [`d972aa0a`](https://github.com/TKCollective/x402-research-skill/commit/d972aa0a) and [issue #2207](https://github.com/x402-foundation/x402/issues/2207).
+
+**Why server-side:** patching one buyer doesn't fix the ecosystem. Fixing it on the seller makes you robust to every v1-shaped buyer that hits you.
+
+---
+
+## 2. v1/v2 schema conflation in 402 challenge body
+
+**Symptom:** `agentic.market/validate` shows 6/6 transport, 8/8 payment, but Bazaar Extension fails. CDP indexer silently drops you.
+
+**Root cause:** `@x402/express` ships the challenge in a `payment-required` HTTP header (base64 JSON), but **aggregator crawlers parse the response BODY**, not headers. If you don't mirror the header into the body, you appear unindexable. Worse, if you write a v1-shaped body (with `maxAmountRequired`, `resource`/`description`/`mimeType` inlined into `accepts[]`) when the indexer expects v2, you're rejected with `discovery request validation failed`.
+
+**v2 canonical shape:**
+```json
+{
+  "x402Version": 2,
+  "resource": { "url": "...", "description": "...", "mimeType": "application/json" },
+  "accepts": [{
+    "scheme": "exact",
+    "network": "eip155:8453",
+    "amount": "20000",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "payTo": "0x...",
+    "maxTimeoutSeconds": 300,
+    "extra": { "name": "USD Coin", "version": "2" }
+  }],
+  "extensions": { "bazaar": { "info": {...}, "schema": {...} } }
+}
+```
+
+`accepts[]` has NO `resource`/`description`/`mimeType` — those live at the top level only. `amount` (not `maxAmountRequired`). `network` is CAIP-2 (`eip155:8453`), not the label `"base"`.
+
+**Fix:** wrap your payment middleware with a body mirror. See [`0387615f`](https://github.com/TKCollective/x402-research-skill/commit/0387615f).
+
+---
+
+## 3. `extensions.bazaar.bazaar` double-wrap
+
+**Symptom:** Bazaar extension present in the body but indexer rejects it.
+
+**Root cause:** `declareDiscoveryExtension()` returns `{ bazaar: { info, schema } }`. If you set `extensions: { bazaar: declareDiscoveryExtension(...) }`, you get `extensions.bazaar.bazaar.info` — double-wrapped. Crawler can't find `info` at the expected path.
+
+**Fix:** spread, don't nest:
+```js
+extensions: { ...declareDiscoveryExtension({...}) }
+```
+Or defensively un-wrap in your body mirror. See [`64943351`](https://github.com/TKCollective/x402-research-skill/commit/64943351).
+
+---
+
+## 4. CDP facilitator silently accepts label-form network but indexer needs CAIP-2
+
+**Symptom:** `/verify` and `/settle` both return 200, on-chain tx confirms, but indexer never sees you.
+
+**Root cause:** CDP `/verify` and `/settle` accept both `network: "base"` and `network: "eip155:8453"`. The indexer only accepts CAIP-2 form on the **wire challenge body**. The facilitator API itself is more lenient — so you'll think your code is right, because settles work.
+
+**Fix:** wire body uses `eip155:8453`, facilitator client requirements use `"base"` (label form). They are NOT the same surface. Don't try to unify them.
+
+---
+
+## 5. `paymentRequirements` schema rejects legacy `amount` field
+
+**Symptom:** Direct `cdpFacilitatorClient.verify()` call rejects with schema validation error mentioning unknown field `amount`.
+
+**Root cause:** The CDP facilitator's strict canonical x402 schema for `paymentRequirements` (passed as the second arg to verify/settle) uses `maxAmountRequired`, NOT `amount`. The wire challenge body uses `amount`. Two schemas, two field names.
+
+**Fix:**
+- Wire challenge body → `amount`
+- `cdpFacilitatorClient.verify(payload, requirements)` requirements → `maxAmountRequired`
+
+See [`57f361e7`](https://github.com/TKCollective/x402-research-skill/commit/57f361e7).
+
+---
+
+## 6. SDK 2.11.0 breaking changes (April 27, 2026)
+
+**Symptom:** `paymentMiddleware` throws at construction time with cryptic schema errors after a clean `npm install`.
+
+**Root cause:** `@x402/express@2.11.0` shipped `PaymentRequirementsV2Schema` field changes that aren't backward-compatible with route configs from 2.8.x. Specifically: `network` enum became stricter, `extensions` schema validation tightened.
+
+**Fix (until you have a focused upgrade session):** pin to `^2.8.0` or `^2.9.0` in `package.json`. We reverted with [`0c5c232d`](https://github.com/TKCollective/x402-research-skill/commit/0c5c232d) and have a Saturday slot booked for the migration.
+
+---
+
+## 7. CDP env keys appear empty in Vercel UI but work via API
+
+**Symptom:** `CDP_API_KEY_ID` shows empty in Vercel dashboard environment variables. You set it; it still shows empty. Production calls fail with 401.
+
+**Root cause:** Vercel UI bug — values containing certain characters render as empty in the dashboard but ARE present in the deployed environment. Or weren't, depending on which way the bug is biting today.
+
+**Fix:** set environment variables via the Vercel CLI, not the UI:
+```bash
+echo "$CDP_API_KEY_ID" | vercel env add CDP_API_KEY_ID production
+```
+Verify with `vercel env ls production`. If output looks empty, redeploy and check `process.env.CDP_API_KEY_ID` from a `/health` endpoint.
+
+---
+
+## 8. Bazaar extension MUST include `info.input.method`
+
+**Symptom:** Extension declared, body mirror correct, still no indexing.
+
+**Root cause:** `info.input.method` is required by the Bazaar discovery schema for HTTP resources. If your `declareDiscoveryExtension()` call omits it, the extension validates locally but the indexer rejects.
+
+**Fix:**
+```js
+declareDiscoveryExtension({
+  info: {
+    input: { type: "http", method: "POST", bodyType: "json", body: {...} },
+    output: { type: "json", example: {...} },
+  },
+  schema: {...},
+})
+```
+See [`6b56d3bd`](https://github.com/TKCollective/x402-research-skill/commit/6b56d3bd).
+
+---
+
+## 9. CDP facilitator schema length caps on description fields
+
+**Symptom:** `cdpFacilitatorClient.verify()` rejects with a generic schema error after you've added a detailed `description` to your route config.
+
+**Root cause:** CDP enforces a length cap (~250 chars in our experience) on the `description` field in route configs. Aggregator crawlers happily ingest long descriptions in the wire body, but CDP's facilitator-side schema is stricter.
+
+**Fix:** keep route-level `description` short (< 250 chars). Put detail in the `bazaar.info` block, which doesn't have the same cap. See [`ea1b4492`](https://github.com/TKCollective/x402-research-skill/commit/ea1b4492).
+
+---
+
+## 10. Multi-network resource server: don't put SKALE in `accepts[]` if your facilitator doesn't support it
+
+**Symptom:** `RouteConfigurationError` at server boot with mention of unsupported network.
+
+**Root cause:** xpay facilitator supports Base only. If you put SKALE (`eip155:1187947933`) in your `accepts[]` and use xpay as your sole facilitator, `syncFacilitatorOnStart` validation fails before you even serve a request.
+
+**Fix:** Use PayAI (supports Base + SKALE) as your EVM facilitator, or split: Base-only routes go through CDP, SKALE-only routes go through PayAI. Use `x402ResourceServer` with a facilitator array and `register()` per scheme. See [`579923c2`](https://github.com/TKCollective/x402-research-skill/commit/579923c2).
+
+---
+
+## Useful links
+
+- x402 V2 spec: https://github.com/x402-foundation/x402/blob/main/specs/x402-specification-v2.md
+- agentic.market validator: https://agentic.market/validate
+- CDP discovery API: `GET https://api.cdp.coinbase.com/platform/v2/x402/discovery/merchant?payTo=<address>`
+- This repo: https://github.com/TKCollective/x402-research-skill
+- Live reference implementation: https://agentoracle.co/research
+
+If you've fixed one of these differently and your fix is more elegant, please open a PR. The point of this doc is to reduce ecosystem-wide pain, not to enshrine our hacks.

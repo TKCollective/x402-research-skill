@@ -696,21 +696,25 @@ const routeConfig = {
   // must be present in the 402 challenge for discovery.)
   // declareDiscoveryExtension() returns { bazaar: { info, schema } }, so spread
   // it directly into `extensions` to avoid extensions.bazaar.bazaar double-wrap.
+  // Descriptions follow Perplexity's "Load when..." routing-trigger pattern
+  // (research.perplexity.ai/articles/designing-refining-and-maintaining-agent-skills-at-perplexity)
+  // Optimized for an LLM agent deciding whether to call us, not for human docs.
+  // Hard length cap: ~250 chars (CDP facilitator schema rejects longer).
   "POST /research": {
     accepts: researchAccepts,
-    description: "Research API. $0.02 USDC per query on Base.",
+    description: "Load when an agent needs current external facts beyond training cutoff, citations with confidence scoring, or verifiable structured research. $0.02 USDC per query on Base.",
     mimeType: "application/json",
     extensions: { ...bazaarResearch },
   },
   "POST /deep-research": {
     accepts: deepAccepts,
-    description: "Deep research API. $0.10 USDC per query on Base.",
+    description: "Load when an agent needs comprehensive multi-source analysis with deep reasoning, not a quick fact lookup. Powered by Sonar Pro. $0.10 USDC per query on Base.",
     mimeType: "application/json",
     extensions: { ...bazaarDeep },
   },
   "POST /research/batch": {
     accepts: batchAccepts,
-    description: "Batch research API. $0.10 USDC per batch on Base.",
+    description: "Load when an agent needs up to 5 research queries answered in parallel in a single call, with the same citation+confidence output as /research. $0.10 USDC per batch on Base.",
     mimeType: "application/json",
     extensions: { ...bazaarResearch },
   },
