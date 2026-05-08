@@ -57,6 +57,7 @@ a:hover { color: var(--gold-bright); }
 .header__inner { display: flex; align-items: center; justify-content: space-between; }
 .header__brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; color: var(--text); }
 .header__brand-logo { width: 28px; height: 28px; }
+.header__brand-mark { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--gold); color: #0A0A08; font-weight: 800; font-size: 11px; border-radius: 6px; letter-spacing: 0.04em; }
 .header__back { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); }
 .header__back:hover { color: var(--gold); }
 
@@ -159,7 +160,7 @@ a:hover { color: var(--gold-bright); }
 <header class="header">
   <div class="container header__inner">
     <a href="/" class="header__brand">
-      <img src="/favicon.svg" alt="AgentOracle" class="header__brand-logo">
+      <span class="header__brand-mark">AO</span>
       AgentOracle
     </a>
     <a href="/" class="header__back">\u2190 Back to main site</a>
