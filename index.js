@@ -887,8 +887,6 @@ app.use((req, res, next) => {
         mutated = true;
         console.log(`[resource-inject] ${req.path} — injected resource.url=${decoded.resource.url}`);
       }
-      // DIAGNOSTIC: log full decoded paymentPayload so we can see what middleware rejects
-      console.log(`[payload-debug] ${req.path} — keys=${Object.keys(decoded).join(",")} accepted.network=${decoded.accepted?.network} accepted.scheme=${decoded.accepted?.scheme} accepted.amount=${decoded.accepted?.amount} payload.from=${decoded.payload?.authorization?.from} payload.value=${decoded.payload?.authorization?.value}`);
       if (mutated) {
         const reencoded = Buffer.from(JSON.stringify(decoded)).toString("base64");
         req.headers["x-payment"] = reencoded;
@@ -931,9 +929,46 @@ app.use((req, res, next) => {
   }
   next();
 });
+// ─── PAYMENT-REQUIREMENTS canonical header (per V2 transport spec) ───
+// Per ethanoroshiba on x402-foundation/x402#2207 (May 8 19:58 UTC):
+//   "per the HTTP transport spec the payment requirements need to be supplied
+//    by the PAYMENT-REQUIREMENTS header, not in the response body, which is
+//    blocking discovery on our end right now."
+// @x402/express@2.x ships with the v1 spelling (`payment-required`). The CDP
+// indexer reads from the canonical V2 header `PAYMENT-REQUIREMENTS`. Without
+// it, the indexer ignores the merchant entirely — same root cause that has
+// 0xdespot, AsaiShota, hyperD, and us all stuck at NOT_INDEXED with otherwise
+// successful settles.
+// Fix: intercept response, copy `payment-required` header value to canonical
+// `PAYMENT-REQUIREMENTS`. Also expose it via Access-Control-Expose-Headers
+// so browser clients can read it.
+app.use((req, res, next) => {
+  const origSetHeader = res.setHeader.bind(res);
+  res.setHeader = function (name, value) {
+    const result = origSetHeader(name, value);
+    if (typeof name === "string" && name.toLowerCase() === "payment-required") {
+      // Mirror to canonical V2 header name (case-insensitive but spec uses upper)
+      origSetHeader("PAYMENT-REQUIREMENTS", value);
+    }
+    return result;
+  };
+  // Patch the existing CORS expose-headers list to include the new name so
+  // browser-based aggregators can read it.
+  const origWriteHead = res.writeHead.bind(res);
+  res.writeHead = function (...args) {
+    const expose = res.getHeader("access-control-expose-headers");
+    if (typeof expose === "string" && !/PAYMENT-REQUIREMENTS/i.test(expose)) {
+      origSetHeader("access-control-expose-headers", expose + ",PAYMENT-REQUIREMENTS");
+    }
+    return origWriteHead(...args);
+  };
+  next();
+});
+
 app.use(wrapPaymentMiddlewareForAggregators(paymentMiddleware(routeConfig, unifiedResourceServer)));
 console.log(`✅ Unified payment middleware: single instance, all chains via facilitator array`);
 console.log(`✅ 402 body mirror: aggregator-visible challenge in response body`);
+console.log(`✅ PAYMENT-REQUIREMENTS canonical header mirroring (V2 transport spec)`);
 
 // ── Bazaar Bootstrap: direct CDP verify+settle for discovery indexing ──
 if (CDP_ENABLED && cdpFacilitatorClient) {
