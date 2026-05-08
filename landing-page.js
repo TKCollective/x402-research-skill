@@ -169,10 +169,8 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
   letter-spacing: -0.005em;
 }
 .hero__cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-.hero__pain-list { list-style: none; padding: 0; margin: 0 0 24px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 28px; }
-.hero__pain-list li { position: relative; padding-left: 18px; font-size: 14px; line-height: 1.45; color: var(--text-muted); }
-.hero__pain-list li::before { content: '→'; position: absolute; left: 0; top: 0; color: var(--gold); font-weight: 700; }
-@media (max-width: 720px) { .hero__pain-list { grid-template-columns: 1fr; gap: 6px; } }
+.hero__lede { font-size: 17px; line-height: 1.55; color: var(--text-muted); margin: 0 0 28px 0; max-width: 540px; letter-spacing: -0.005em; }
+@media (max-width: 720px) { .hero__lede { font-size: 16px; line-height: 1.6; } }
 .btn {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 14px 26px; border-radius: 8px;
@@ -535,7 +533,7 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
 .validation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 1080px; margin: 48px auto 24px; }
 @media (max-width: 820px) { .validation-grid { grid-template-columns: 1fr; gap: 16px; } }
 .validation-card { margin: 0; padding: 28px; background: linear-gradient(180deg, rgba(201,169,110,0.04), rgba(201,169,110,0.01)); border: 1px solid rgba(201,169,110,0.18); border-radius: 12px; display: flex; flex-direction: column; gap: 16px; }
-.validation-card__quote { margin: 0; font-size: 16px; line-height: 1.55; color: var(--text); font-style: italic; }
+.validation-card__quote { margin: 0; font-size: 17px; line-height: 1.6; color: var(--text); font-style: italic; }
 .validation-card__quote code { font-family: var(--font-mono); font-size: 13px; background: rgba(201,169,110,0.1); color: var(--gold); padding: 1px 6px; border-radius: 3px; font-style: normal; }
 .validation-card__cite { display: flex; flex-direction: column; gap: 2px; padding-top: 12px; border-top: 1px solid rgba(201,169,110,0.12); }
 .validation-card__name { font-size: 14px; font-weight: 700; color: var(--gold); letter-spacing: 0.01em; }
@@ -562,7 +560,7 @@ a.validation-card__date:hover { color: var(--gold); }
 .receipt-card__verdict--act { background: rgba(34,197,94,0.12); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
 .receipt-card__verdict--reject { background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
 .receipt-card__verdict--abstain { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
-.receipt-card__claim { font-size: 14px; line-height: 1.45; color: var(--text); font-style: italic; }
+.receipt-card__claim { font-size: 15px; line-height: 1.5; color: var(--text); font-style: italic; }
 .receipt-card__meta { display: flex; flex-wrap: wrap; gap: 8px 16px; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
 .receipt-card__sig { font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); padding: 6px 8px; background: rgba(0,0,0,0.3); border-radius: 4px; word-break: break-all; }
 .receipts-feed__footer { text-align: center; font-size: 12px; color: var(--text-faint); margin-top: 24px; font-family: var(--font-mono); }
@@ -578,7 +576,7 @@ a.validation-card__date:hover { color: var(--gold); }
 .who-uses__card:hover { border-color: rgba(201,169,110,0.35); transform: translateY(-2px); }
 .who-uses__card--cta { background: linear-gradient(180deg, rgba(201,169,110,0.06), rgba(201,169,110,0.02)); border-color: rgba(201,169,110,0.25); }
 .who-uses__role { font-size: 16px; font-weight: 700; color: var(--gold); margin-bottom: 10px; letter-spacing: -0.01em; }
-.who-uses__card p { font-size: 14px; line-height: 1.55; color: var(--text-muted); margin: 0; }
+.who-uses__card p { font-size: 15px; line-height: 1.6; color: var(--text-muted); margin: 0; }
 .who-uses__card a { color: var(--gold); text-decoration: none; font-weight: 600; }
 .who-uses__card a:hover { color: var(--gold-bright); }
 
@@ -599,10 +597,13 @@ a.validation-card__date:hover { color: var(--gold); }
 }
 .section-title-gold { color: var(--gold); }
 .section-subtitle {
-  font-size: 16px; color: var(--text-muted);
-  max-width: 580px; line-height: 1.7;
+  font-size: 17px; color: var(--text-muted);
+  max-width: 620px; line-height: 1.7;
   margin: 0 auto 64px; text-align: center;
 }
+@media (max-width: 720px) { .section-subtitle { font-size: 16px; line-height: 1.65; } }
+.flow__result { text-align: center; margin-top: 56px; font-size: 17px; color: var(--text-muted); max-width: 720px; margin-left: auto; margin-right: auto; line-height: 1.5; }
+.flow__result strong { color: var(--gold); font-weight: 700; }
 
 /* === 4-STEP FLOW === */
 .flow {
@@ -1171,17 +1172,9 @@ a.validation-card__date:hover { color: var(--gold); }
       </span>
     </div>
     <h1 class="hero__headline">
-      The trust layer for <span class="hero__headline-gold">AI agents.</span>
+      AI agents can act.<br><span class="hero__headline-gold">Most still can’t be trusted.</span>
     </h1>
-    <p style="font-family:var(--font-mono);font-size:14px;color:var(--gold-dim);letter-spacing:0.04em;margin-bottom:20px;font-style:italic;">verify before you act.</p>
-    <ul class="hero__pain-list" aria-label="What AgentOracle solves">
-      <li>Verify any claim before your agent acts on it.</li>
-      <li>Catch hallucinations before they reach the user.</li>
-      <li>Prove every answer was checked — with a cryptographic receipt.</li>
-      <li>Replace human fact-check teams with a $0.02-per-call API.</li>
-      <li>Audit any AI response, instantly, without rebuilding your stack.</li>
-      <li>Comply with EU AI Act Article 26 record-keeping requirements.</li>
-    </ul>
+    <p class="hero__lede">AgentOracle is the trust layer for the agent economy. We decompose every claim, verify across 4 independent sources, and return a cryptographic receipt — before your agent takes any action or moves value.</p>
     <div class="hero__cta-row">
       <a href="#playground" class="btn btn--primary">Try free — no wallet needed →</a>
       <a href="/business" class="btn btn--secondary" style="font-size:14px;">Talk to us about a pilot</a>
@@ -1492,42 +1485,43 @@ a.validation-card__date:hover { color: var(--gold); }
 <section class="section" id="how-it-works">
   <div class="reveal">
     <div class="section-eyebrow">how it works</div>
-    <h2 class="section-title">4-source verification in <span class="section-title-gold">seconds</span></h2>
-    <p class="section-subtitle">Every claim runs through four independent sources in parallel. Consensus builds the score. Contradiction flags the risk.</p>
+    <h2 class="section-title">From claim to <span class="section-title-gold">verifiable, auditable answer</span>.</h2>
+    <p class="section-subtitle">Four steps. Every response. No exceptions.</p>
   </div>
   <div class="flow reveal">
     <div class="flow-step">
-      <div class="flow-step__num">01<span>input</span></div>
-      <div class="flow-step__icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-      <div class="flow-step__title">Claim Input</div>
-      <div class="flow-step__desc">Agent sends any text or data to /evaluate. Plain string, JSON, scraped content — anything.</div>
-      <span class="flow-step__chip">any source</span>
-    </div>
-    <div class="flow-arrow"><svg viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="8" x2="22" y2="8"/><polyline points="16 2 22 8 16 14"/></svg></div>
-    <div class="flow-step">
-      <div class="flow-step__num">02<span>decompose</span></div>
+      <div class="flow-step__num">01<span>decompose</span></div>
       <div class="flow-step__icon"><svg viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><circle cx="12" cy="12" r="3"/></svg></div>
-      <div class="flow-step__title">Decomposition</div>
-      <div class="flow-step__desc">Gemma 4 breaks content into individual verifiable claims. Each claim is independent and atomic.</div>
+      <div class="flow-step__title">Claim Decomposition</div>
+      <div class="flow-step__desc">We break complex statements into verifiable atomic claims. Each one stands alone.</div>
       <span class="flow-step__chip">gemma 4</span>
     </div>
     <div class="flow-arrow"><svg viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="8" x2="22" y2="8"/><polyline points="16 2 22 8 16 14"/></svg></div>
     <div class="flow-step">
-      <div class="flow-step__num">03<span>verify</span></div>
+      <div class="flow-step__num">02<span>verify</span></div>
       <div class="flow-step__icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg></div>
-      <div class="flow-step__title">4-Source Verify</div>
-      <div class="flow-step__desc">Sonar + Sonar Pro + Adversarial scan + Gemma calibration run in parallel against every claim.</div>
+      <div class="flow-step__title">Multi-Source Verification</div>
+      <div class="flow-step__desc">Each claim is checked against 4 independent sources in parallel. Consensus builds. Contradiction flags risk.</div>
       <span class="flow-step__chip">4 sources</span>
     </div>
     <div class="flow-arrow"><svg viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="8" x2="22" y2="8"/><polyline points="16 2 22 8 16 14"/></svg></div>
     <div class="flow-step">
-      <div class="flow-step__num">04<span>score</span></div>
+      <div class="flow-step__num">03<span>score</span></div>
       <div class="flow-step__icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      <div class="flow-step__title">Trust Score</div>
-      <div class="flow-step__desc">Per-claim confidence (0.00–1.00) plus top-level recommendation: ACT, VERIFY, or REJECT.</div>
+      <div class="flow-step__title">Confidence Scoring</div>
+      <div class="flow-step__desc">Every result gets a precise 0.00–1.00 confidence score plus a recommendation: ACT, VERIFY, or REJECT.</div>
       <span class="flow-step__chip">0.00–1.00</span>
     </div>
+    <div class="flow-arrow"><svg viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="8" x2="22" y2="8"/><polyline points="16 2 22 8 16 14"/></svg></div>
+    <div class="flow-step">
+      <div class="flow-step__num">04<span>sign</span></div>
+      <div class="flow-step__icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <div class="flow-step__title">Cryptographic Receipt</div>
+      <div class="flow-step__desc">A signed JWS proof of verification. Store it, verify it, audit it. Tamper-evident, replayable, third-party verifiable.</div>
+      <span class="flow-step__chip">ed25519 jws</span>
+    </div>
   </div>
+  <p class="flow__result reveal">Result: your agents don’t just give answers — they give <strong>verifiable, auditable answers</strong>.</p>
 </section>
 
 <section class="section features-section" id="features">
