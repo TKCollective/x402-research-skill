@@ -1184,7 +1184,7 @@ a.validation-card__date:hover { color: var(--gold); }
     </ul>
     <div class="hero__cta-row">
       <a href="#playground" class="btn btn--primary">Try free — no wallet needed →</a>
-      <a href="mailto:joe@agentoracle.co?subject=AgentOracle%20pilot%20inquiry" class="btn btn--secondary" style="font-size:14px;">Talk to us about a pilot</a>
+      <a href="/business" class="btn btn--secondary" style="font-size:14px;">Talk to us about a pilot</a>
       <span class="hero__install-cmd" onclick="navigator.clipboard.writeText('npx agentoracle-mcp');this.textContent='Copied!';setTimeout(()=>{this.textContent='$ npx agentoracle-mcp'},1500)" style="cursor:pointer;font-family:var(--font-mono);font-size:14px;color:var(--gold);border-bottom:1px dashed var(--gold-dim);padding-bottom:2px;font-weight:600;" title="Click to copy">$ npx agentoracle-mcp</span>
     </div>
     <p style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);margin-top:10px;letter-spacing:0.02em;">Works with Claude Desktop, Cursor, and Windsurf. Verify before you act.</p>
@@ -1483,7 +1483,7 @@ a.validation-card__date:hover { color: var(--gold); }
       </div>
       <div class="who-uses__card who-uses__card--cta">
         <div class="who-uses__role">Don’t see your role?</div>
-        <p><a href="mailto:joe@agentoracle.co?subject=AgentOracle%20use%20case">Tell us your use case →</a></p>
+        <p><a href="/business">Tell us your use case →</a></p>
       </div>
     </div>
   </div>

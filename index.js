@@ -40,6 +40,7 @@ import cors from "cors";
 import axios from "axios";
 import { LANDING_PAGE_HTML } from "./landing-page.js";
 import { DEMO_PAGE_HTML, DEMO_VIDEO_HTML } from "./demo-pages.js";
+import { BUSINESS_PAGE_HTML } from "./business-page.js";
 import { FAVICON_ICO, FAVICON_SVG, FAVICON_16, FAVICON_32, APPLE_TOUCH, OG_IMAGE } from "./favicons.js";
 
 // ── x402 v2 SDK imports ──────────────────────────────────────────
@@ -2468,6 +2469,11 @@ app.get("/", (_req, res) => {
 });
 
 // ── Demo Pages — interactive walkthrough + terminal animation ────
+app.get("/business", (_req, res) => {
+  res.setHeader("Cache-Control", "public, max-age=300, s-maxage=600");
+  res.send(BUSINESS_PAGE_HTML);
+});
+
 app.get("/demo", (_req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.send(DEMO_PAGE_HTML);
