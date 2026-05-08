@@ -840,6 +840,58 @@ function wrapPaymentMiddlewareForAggregators(originalMiddleware) {
   };
 }
 
+// ─── paymentPayload.resource Injector (PaymentPayloadV2 §5.2 fix) ───
+// Per ethanoroshiba's May 8 diagnosis on x402-foundation/x402#2207: the CDP
+// Bazaar indexer needs paymentPayload.resource = {url, description, mimeType}
+// in the X-PAYMENT envelope to tag a settlement to a listing. The field is
+// marked optional in PaymentPayloadV2Schema, but the indexer rejects with
+// `discovery request validation failed` when missing — exact symptom AsaiShota
+// hit (50+ settles, all 200 success, 0/17 indexed).
+//
+// The @x402/express SDK does NOT auto-populate this from the buyer side, so we
+// inject it server-side: decode the X-PAYMENT header, look up the per-route
+// resource metadata, splice it into paymentPayload, re-encode, and replace the
+// header before paymentMiddleware forwards to the facilitator.
+const RESOURCE_MAP = {
+  "/research": {
+    url: "https://agentoracle.co/research",
+    description: "Real-time research API for AI agents. Send any natural-language question, get structured JSON with summary, key facts, sources, and confidence scoring. Powered by Perplexity Sonar. $0.02 USDC per query on Base.",
+    mimeType: "application/json",
+  },
+  "/deep-research": {
+    url: "https://agentoracle.co/deep-research",
+    description: "Deep research mode powered by Sonar Pro. $0.10 USDC per query on Base.",
+    mimeType: "application/json",
+  },
+  "/research/batch": {
+    url: "https://agentoracle.co/research/batch",
+    description: "Batch research API \u2014 up to 5 queries per call. $0.10 USDC per batch on Base.",
+    mimeType: "application/json",
+  },
+};
+app.use((req, res, next) => {
+  const xpayHeaderName = req.headers["x-payment"] !== undefined ? "x-payment" : (req.headers["X-PAYMENT"] !== undefined ? "X-PAYMENT" : null);
+  const xpay = xpayHeaderName ? req.headers[xpayHeaderName] : null;
+  if (xpay && RESOURCE_MAP[req.path]) {
+    try {
+      const decoded = JSON.parse(Buffer.from(xpay, "base64").toString("utf8"));
+      // PaymentPayloadV2 has optional top-level resource: {url, description, mimeType}
+      // If buyer omitted it, inject from our route map. Idempotent if already present.
+      if (!decoded.resource || typeof decoded.resource === "string" || !decoded.resource.url) {
+        decoded.resource = { ...RESOURCE_MAP[req.path] };
+        const reencoded = Buffer.from(JSON.stringify(decoded)).toString("base64");
+        // Mutate both header reads the SDK uses
+        req.headers["x-payment"] = reencoded;
+        if (req.headers["X-PAYMENT"]) req.headers["X-PAYMENT"] = reencoded;
+        console.log(`[resource-inject] ${req.path} — injected resource.url=${decoded.resource.url} into paymentPayload`);
+      }
+    } catch (e) {
+      console.log(`[resource-inject] ${req.path} — decode/inject failed: ${e.message}`);
+    }
+  }
+  next();
+});
+
 // Pre-middleware diagnostic: log every X-PAYMENT request so we can see what the
 // signed body contains and what status comes back from the @x402/express middleware.
 app.use((req, res, next) => {
@@ -848,7 +900,7 @@ app.use((req, res, next) => {
     console.log(`[x402-trace] ${req.method} ${req.path} — X-PAYMENT length=${xpay.length}, first 80=${xpay.slice(0, 80)}`);
     try {
       const decoded = JSON.parse(Buffer.from(xpay, "base64").toString("utf8"));
-      console.log(`[x402-trace]   payload network=${decoded.network} scheme=${decoded.scheme} payload.from=${decoded?.payload?.authorization?.from || "?"} value=${decoded?.payload?.authorization?.value || "?"}`);
+      console.log(`[x402-trace]   payload network=${decoded.network} scheme=${decoded.scheme} payload.from=${decoded?.payload?.authorization?.from || "?"} value=${decoded?.payload?.authorization?.value || "?"} resource=${decoded.resource?.url || "(none)"}`);
     } catch (e) {
       console.log(`[x402-trace]   decode failed: ${e.message}`);
     }
@@ -902,6 +954,17 @@ if (CDP_ENABLED && cdpFacilitatorClient) {
       let paymentPayload;
       try { paymentPayload = JSON.parse(Buffer.from(paymentHeader, "base64").toString()); }
       catch { paymentPayload = JSON.parse(paymentHeader); }
+
+      // PaymentPayloadV2 §5.2: resource object MUST be present for indexer to
+      // tag this settle to a Bazaar listing. ethanoroshiba confirmed May 8.
+      // Inject if buyer omitted (most v1-shaped clients do).
+      if (!paymentPayload.resource || typeof paymentPayload.resource === "string" || !paymentPayload.resource.url) {
+        paymentPayload.resource = {
+          url: "https://agentoracle.co/research",
+          description: "Real-time research API for AI agents. $0.02 USDC per query on Base.",
+          mimeType: "application/json",
+        };
+      }
 
       // CDP facilitator strict-validates paymentRequirements against canonical x402 schema.
       // Required fields: scheme, network (label form), maxAmountRequired, resource, description,
