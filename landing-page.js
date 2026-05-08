@@ -169,6 +169,10 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
   letter-spacing: -0.005em;
 }
 .hero__cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.hero__pain-list { list-style: none; padding: 0; margin: 0 0 24px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 28px; }
+.hero__pain-list li { position: relative; padding-left: 18px; font-size: 14px; line-height: 1.45; color: var(--text-muted); }
+.hero__pain-list li::before { content: '→'; position: absolute; left: 0; top: 0; color: var(--gold); font-weight: 700; }
+@media (max-width: 720px) { .hero__pain-list { grid-template-columns: 1fr; gap: 6px; } }
 .btn {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 14px 26px; border-radius: 8px;
@@ -526,6 +530,58 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
 .verify-strip__footer strong { color: var(--text-muted); font-weight: 500; }
 
 /* === SECTIONS === */
+/* === ECOSYSTEM VALIDATION QUOTES === */
+.validation-strip { padding-top: 80px; padding-bottom: 80px; }
+.validation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 1080px; margin: 48px auto 24px; }
+@media (max-width: 820px) { .validation-grid { grid-template-columns: 1fr; gap: 16px; } }
+.validation-card { margin: 0; padding: 28px; background: linear-gradient(180deg, rgba(201,169,110,0.04), rgba(201,169,110,0.01)); border: 1px solid rgba(201,169,110,0.18); border-radius: 12px; display: flex; flex-direction: column; gap: 16px; }
+.validation-card__quote { margin: 0; font-size: 16px; line-height: 1.55; color: var(--text); font-style: italic; }
+.validation-card__quote code { font-family: var(--font-mono); font-size: 13px; background: rgba(201,169,110,0.1); color: var(--gold); padding: 1px 6px; border-radius: 3px; font-style: normal; }
+.validation-card__cite { display: flex; flex-direction: column; gap: 2px; padding-top: 12px; border-top: 1px solid rgba(201,169,110,0.12); }
+.validation-card__name { font-size: 14px; font-weight: 700; color: var(--gold); letter-spacing: 0.01em; }
+.validation-card__role { font-size: 12px; color: var(--text-muted); }
+.validation-card__date { font-size: 11px; color: var(--text-faint); font-family: var(--font-mono); letter-spacing: 0.04em; text-decoration: none; }
+a.validation-card__date:hover { color: var(--gold); }
+.validation-card__metrics { list-style: none; padding: 0; margin: 0; display: flex; gap: 12px; flex-wrap: wrap; }
+.validation-card__metrics li { display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; min-width: 80px; }
+.validation-card__metrics li span { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
+.validation-card__metrics li strong { font-size: 13px; font-weight: 700; color: var(--gold); font-family: var(--font-mono); }
+.validation-strip__footer { text-align: center; font-size: 12px; color: var(--text-faint); font-family: var(--font-mono); margin-top: 24px; }
+.validation-strip__footer a { color: var(--gold-dim); text-decoration: none; border-bottom: 1px dashed rgba(201,169,110,0.3); }
+.validation-strip__footer a:hover { color: var(--gold); border-bottom-color: var(--gold); }
+
+/* === LIVE RECEIPT FEED MOCK === */
+.receipts-feed { padding-top: 80px; padding-bottom: 80px; }
+.receipts-feed__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 1080px; margin: 48px auto 24px; }
+@media (max-width: 820px) { .receipts-feed__grid { grid-template-columns: 1fr; } }
+.receipt-card { padding: 18px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; gap: 10px; transition: border-color .2s, transform .2s; }
+.receipt-card:hover { border-color: rgba(201,169,110,0.4); transform: translateY(-1px); }
+.receipt-card__hd { display: flex; align-items: center; justify-content: space-between; }
+.receipt-card__time { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+.receipt-card__verdict { font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 4px; letter-spacing: 0.08em; }
+.receipt-card__verdict--act { background: rgba(34,197,94,0.12); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+.receipt-card__verdict--reject { background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+.receipt-card__verdict--abstain { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+.receipt-card__claim { font-size: 14px; line-height: 1.45; color: var(--text); font-style: italic; }
+.receipt-card__meta { display: flex; flex-wrap: wrap; gap: 8px 16px; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+.receipt-card__sig { font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); padding: 6px 8px; background: rgba(0,0,0,0.3); border-radius: 4px; word-break: break-all; }
+.receipts-feed__footer { text-align: center; font-size: 12px; color: var(--text-faint); margin-top: 24px; font-family: var(--font-mono); }
+.receipts-feed__footer a { color: var(--gold-dim); text-decoration: none; border-bottom: 1px dashed rgba(201,169,110,0.3); }
+.receipts-feed__footer a:hover { color: var(--gold); }
+
+/* === WHO USES AGENTORACLE === */
+.who-uses { padding-top: 80px; padding-bottom: 100px; }
+.who-uses__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1080px; margin: 48px auto 0; }
+@media (max-width: 920px) { .who-uses__grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .who-uses__grid { grid-template-columns: 1fr; } }
+.who-uses__card { padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; transition: border-color .2s, transform .2s; }
+.who-uses__card:hover { border-color: rgba(201,169,110,0.35); transform: translateY(-2px); }
+.who-uses__card--cta { background: linear-gradient(180deg, rgba(201,169,110,0.06), rgba(201,169,110,0.02)); border-color: rgba(201,169,110,0.25); }
+.who-uses__role { font-size: 16px; font-weight: 700; color: var(--gold); margin-bottom: 10px; letter-spacing: -0.01em; }
+.who-uses__card p { font-size: 14px; line-height: 1.55; color: var(--text-muted); margin: 0; }
+.who-uses__card a { color: var(--gold); text-decoration: none; font-weight: 600; }
+.who-uses__card a:hover { color: var(--gold-bright); }
+
 .section { max-width: 1240px; margin: 0 auto; padding: 120px 40px; }
 .section-eyebrow {
   font-family: var(--font-mono);
@@ -1118,11 +1174,17 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
       The trust layer for <span class="hero__headline-gold">AI agents.</span>
     </h1>
     <p style="font-family:var(--font-mono);font-size:14px;color:var(--gold-dim);letter-spacing:0.04em;margin-bottom:20px;font-style:italic;">verify before you act.</p>
-    <p class="hero__sentence">
-      Verify any claim before your agent acts. Per-claim confidence scoring across 4 independent sources. x402 native.
-    </p>
+    <ul class="hero__pain-list" aria-label="What AgentOracle solves">
+      <li>Verify any claim before your agent acts on it.</li>
+      <li>Catch hallucinations before they reach the user.</li>
+      <li>Prove every answer was checked — with a cryptographic receipt.</li>
+      <li>Replace human fact-check teams with a $0.02-per-call API.</li>
+      <li>Audit any AI response, instantly, without rebuilding your stack.</li>
+      <li>Comply with EU AI Act Article 26 record-keeping requirements.</li>
+    </ul>
     <div class="hero__cta-row">
       <a href="#playground" class="btn btn--primary">Try free — no wallet needed →</a>
+      <a href="mailto:joe@agentoracle.co?subject=AgentOracle%20pilot%20inquiry" class="btn btn--secondary" style="font-size:14px;">Talk to us about a pilot</a>
       <span class="hero__install-cmd" onclick="navigator.clipboard.writeText('npx agentoracle-mcp');this.textContent='Copied!';setTimeout(()=>{this.textContent='$ npx agentoracle-mcp'},1500)" style="cursor:pointer;font-family:var(--font-mono);font-size:14px;color:var(--gold);border-bottom:1px dashed var(--gold-dim);padding-bottom:2px;font-weight:600;" title="Click to copy">$ npx agentoracle-mcp</span>
     </div>
     <p style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);margin-top:10px;letter-spacing:0.02em;">Works with Claude Desktop, Cursor, and Windsurf. Verify before you act.</p>
@@ -1317,6 +1379,113 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
       </a>
     </div>
     <p class="verify-strip__footer">Built on open standards: <strong>RFC 7515 / 7517 / 8037 (JWS · JWK · EdDSA)</strong> · <strong>W3C Verifiable Credentials Confidence Method</strong> · <strong>x402 on Base + SKALE</strong></p>
+  </div>
+</section>
+
+<!-- ECOSYSTEM VALIDATION QUOTES -->
+<section class="section validation-strip" id="validation">
+  <div class="reveal">
+    <div class="section-eyebrow" style="color: var(--gold);">ecosystem validation</div>
+    <h2 class="section-title">Independent verification from <span class="section-title-gold">the standards layer</span>.</h2>
+    <div class="validation-grid">
+      <figure class="validation-card">
+        <blockquote class="validation-card__quote">“Strong work. Looking forward to the eval harness. The <code>calibration.provisional</code> field is the right discipline.”</blockquote>
+        <figcaption class="validation-card__cite">
+          <span class="validation-card__name">Beenz</span>
+          <span class="validation-card__role">Mastercard Verifiable Intent RFC contributor</span>
+          <span class="validation-card__date">April 29, 2026 · #x402 Discord</span>
+        </figcaption>
+        <ul class="validation-card__metrics">
+          <li><span>Node jose</span><strong>PASS</strong></li>
+          <li><span>Python joserfc</span><strong>PASS</strong></li>
+          <li><span>Tamper test</span><strong>FAIL CLOSED</strong></li>
+        </ul>
+      </figure>
+      <figure class="validation-card">
+        <blockquote class="validation-card__quote">“The Coinbase engineering team publicly engaged on the canonical x402 issue, diagnosed our implementation, and tagged TKCollective directly.”</blockquote>
+        <figcaption class="validation-card__cite">
+          <span class="validation-card__name">ethanoroshiba</span>
+          <span class="validation-card__role">Coinbase · x402 Foundation</span>
+          <a class="validation-card__date" href="https://github.com/x402-foundation/x402/issues/2207" target="_blank" rel="noopener">May 7, 2026 · GitHub #2207 →</a>
+        </figcaption>
+        <ul class="validation-card__metrics">
+          <li><span>Transport</span><strong>6 / 6</strong></li>
+          <li><span>Payment</span><strong>8 / 8</strong></li>
+          <li><span>Bazaar ext.</span><strong>PASS</strong></li>
+        </ul>
+      </figure>
+    </div>
+    <p class="validation-strip__footer">Validator: <a href="https://agentic.market/validate" target="_blank" rel="noopener">agentic.market/validate</a> · 4 verified on-chain settlements on Base mainnet via CDP facilitator</p>
+  </div>
+</section>
+
+<!-- LIVE RECEIPT FEED MOCK -->
+<section class="section receipts-feed" id="receipts-feed">
+  <div class="reveal">
+    <div class="section-eyebrow">live receipts</div>
+    <h2 class="section-title">Every response, <span class="section-title-gold">cryptographically signed</span>.</h2>
+    <p class="section-subtitle">Sample receipts. Real signatures. Each one verifiable against the public JWKS at agentoracle.co/.well-known/jwks.json.</p>
+    <div class="receipts-feed__grid">
+      <div class="receipt-card">
+        <div class="receipt-card__hd"><span class="receipt-card__time">11:47 AM</span><span class="receipt-card__verdict receipt-card__verdict--act">ACT</span></div>
+        <div class="receipt-card__claim">“Bitcoin is currently trading above $80,000.”</div>
+        <div class="receipt-card__meta"><span>confidence 0.98</span><span>4 sources</span><span>kid: ao-receipt-2026-04-ed25519-f2753b7c</span></div>
+        <div class="receipt-card__sig">eyJhbGciOiJFZERTQSIsImtpZCI6ImFvLXJlY2VpcHQtMjAyNi0wNC0&hellip;</div>
+      </div>
+      <div class="receipt-card">
+        <div class="receipt-card__hd"><span class="receipt-card__time">12:02 PM</span><span class="receipt-card__verdict receipt-card__verdict--reject">REJECT</span></div>
+        <div class="receipt-card__claim">“Vaccines cause autism in 1 in 50 children.”</div>
+        <div class="receipt-card__meta"><span>confidence 0.99</span><span>CDC, NEJM, WHO</span><span>contradicted by all 4 sources</span></div>
+        <div class="receipt-card__sig">eyJhbGciOiJFZERTQSIsImtpZCI6ImFvLXJlY2VpcHQtMjAyNi0wNC0&hellip;</div>
+      </div>
+      <div class="receipt-card">
+        <div class="receipt-card__hd"><span class="receipt-card__time">3:21 PM</span><span class="receipt-card__verdict receipt-card__verdict--abstain">ABSTAIN</span></div>
+        <div class="receipt-card__claim">“Acme Corp’s Q3 2025 earnings exceeded guidance by 12%.”</div>
+        <div class="receipt-card__meta"><span>confidence 0.41</span><span>insufficient sources</span><span>calibration.provisional: true</span></div>
+        <div class="receipt-card__sig">eyJhbGciOiJFZERTQSIsImtpZCI6ImFvLXJlY2VpcHQtMjAyNi0wNC0&hellip;</div>
+      </div>
+      <div class="receipt-card">
+        <div class="receipt-card__hd"><span class="receipt-card__time">5:08 PM</span><span class="receipt-card__verdict receipt-card__verdict--act">ACT</span></div>
+        <div class="receipt-card__claim">“Marketing copy: ‘Our product is FDA-cleared for hypertension.’”</div>
+        <div class="receipt-card__meta"><span>verified pre-publication</span><span>FDA registry confirmed</span><span>audit trail: legal review ready</span></div>
+        <div class="receipt-card__sig">eyJhbGciOiJFZERTQSIsImtpZCI6ImFvLXJlY2VpcHQtMjAyNi0wNC0&hellip;</div>
+      </div>
+    </div>
+    <p class="receipts-feed__footer">Real receipt examples from production at <a href="https://github.com/TKCollective/agentoracle-receipt-spec/tree/main/examples" target="_blank" rel="noopener">github.com/TKCollective/agentoracle-receipt-spec</a></p>
+  </div>
+</section>
+
+<!-- WHO USES AGENTORACLE -->
+<section class="section who-uses" id="who-uses">
+  <div class="reveal">
+    <div class="section-eyebrow">who uses agentoracle</div>
+    <h2 class="section-title">Built for the people <span class="section-title-gold">who can’t afford to be wrong</span>.</h2>
+    <div class="who-uses__grid">
+      <div class="who-uses__card">
+        <div class="who-uses__role">AI Engineers</div>
+        <p>Wire verification into your agent loop with one API call. Get back signed receipts you can store, audit, and replay.</p>
+      </div>
+      <div class="who-uses__card">
+        <div class="who-uses__role">Brand &amp; Content Teams</div>
+        <p>Pre-publication fact-check for AI-generated copy. Replace human fact-check teams. Hand legal a signed audit trail, not a screenshot.</p>
+      </div>
+      <div class="who-uses__card">
+        <div class="who-uses__role">Compliance Officers</div>
+        <p>EU AI Act Article 26 record-keeping, NIST AI RMF measurement — covered by cryptographic receipts that don’t require trusting us.</p>
+      </div>
+      <div class="who-uses__card">
+        <div class="who-uses__role">Developer Tooling Founders</div>
+        <p>Resell verification as a feature in your own product. MCP-native. x402-paid. No revenue share, no rate limit on integrations.</p>
+      </div>
+      <div class="who-uses__card">
+        <div class="who-uses__role">Researchers</div>
+        <p>Benchmark your model’s factual accuracy against AVeriTeC and FEVER through our public eval harness. Public scoring, deterministic results.</p>
+      </div>
+      <div class="who-uses__card who-uses__card--cta">
+        <div class="who-uses__role">Don’t see your role?</div>
+        <p><a href="mailto:joe@agentoracle.co?subject=AgentOracle%20use%20case">Tell us your use case →</a></p>
+      </div>
+    </div>
   </div>
 </section>
 
