@@ -72,10 +72,14 @@ body {
   font-family: var(--font-body);
   background: var(--bg);
   color: var(--text);
-  line-height: 1.6;
+  font-size: 16px;
+  line-height: 1.65;
   overflow-x: hidden;
-  font-feature-settings: 'cv11', 'ss03';
+  font-feature-settings: 'cv11', 'ss03', 'cv02';
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
+@media (max-width: 720px) { body { font-size: 15.5px; line-height: 1.6; } }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; background: none; border: none; color: inherit; cursor: pointer; }
 
@@ -169,8 +173,8 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
   letter-spacing: -0.005em;
 }
 .hero__cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-.hero__lede { font-size: 17px; line-height: 1.55; color: var(--text-muted); margin: 0 0 28px 0; max-width: 540px; letter-spacing: -0.005em; }
-@media (max-width: 720px) { .hero__lede { font-size: 16px; line-height: 1.6; } }
+.hero__lede { font-size: 18px; line-height: 1.6; color: var(--text-muted); margin: 0 0 32px 0; max-width: 560px; letter-spacing: -0.005em; }
+@media (max-width: 720px) { .hero__lede { font-size: 16.5px; line-height: 1.6; max-width: 100%; } }
 .btn {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 14px 26px; border-radius: 8px;
@@ -507,7 +511,7 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
 }
 
 /* === VERIFIABLE RECEIPTS TRUST STRIP === */
-.verify-strip { background: linear-gradient(180deg, #080807 0%, #0B0A08 100%); border-bottom: 1px solid var(--border); padding: 80px 40px; }
+.verify-strip { background: linear-gradient(180deg, #080807 0%, #0B0A08 100%); border-bottom: 1px solid var(--border); padding: 112px 40px; }
 .verify-strip__inner { max-width: 1240px; margin: 0 auto; }
 .verify-strip__hd { text-align: center; margin-bottom: 48px; }
 .verify-strip__eyebrow { display:inline-flex; align-items:center; gap:8px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--gold); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 14px; padding: 4px 10px; background: rgba(201,169,110,.06); border: 1px solid rgba(201,169,110,.2); border-radius: 4px; }
@@ -529,11 +533,11 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
 
 /* === SECTIONS === */
 /* === ECOSYSTEM VALIDATION QUOTES === */
-.validation-strip { padding-top: 80px; padding-bottom: 80px; }
+.validation-strip { padding-top: 120px; padding-bottom: 120px; }
 .validation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 1080px; margin: 48px auto 24px; }
 @media (max-width: 820px) { .validation-grid { grid-template-columns: 1fr; gap: 16px; } }
 .validation-card { margin: 0; padding: 28px; background: linear-gradient(180deg, rgba(201,169,110,0.04), rgba(201,169,110,0.01)); border: 1px solid rgba(201,169,110,0.18); border-radius: 12px; display: flex; flex-direction: column; gap: 16px; }
-.validation-card__quote { margin: 0; font-size: 17px; line-height: 1.6; color: var(--text); font-style: italic; }
+.validation-card__quote { margin: 0; font-size: 17.5px; line-height: 1.65; color: var(--text); font-style: italic; letter-spacing: -0.005em; }
 .validation-card__quote code { font-family: var(--font-mono); font-size: 13px; background: rgba(201,169,110,0.1); color: var(--gold); padding: 1px 6px; border-radius: 3px; font-style: normal; }
 .validation-card__cite { display: flex; flex-direction: column; gap: 2px; padding-top: 12px; border-top: 1px solid rgba(201,169,110,0.12); }
 .validation-card__name { font-size: 14px; font-weight: 700; color: var(--gold); letter-spacing: 0.01em; }
@@ -549,7 +553,7 @@ a.validation-card__date:hover { color: var(--gold); }
 .validation-strip__footer a:hover { color: var(--gold); border-bottom-color: var(--gold); }
 
 /* === LIVE RECEIPT FEED MOCK === */
-.receipts-feed { padding-top: 80px; padding-bottom: 80px; }
+.receipts-feed { padding-top: 120px; padding-bottom: 120px; }
 .receipts-feed__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 1080px; margin: 48px auto 24px; }
 @media (max-width: 820px) { .receipts-feed__grid { grid-template-columns: 1fr; } }
 .receipt-card { padding: 18px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; gap: 10px; transition: border-color .2s, transform .2s; }
@@ -560,7 +564,7 @@ a.validation-card__date:hover { color: var(--gold); }
 .receipt-card__verdict--act { background: rgba(34,197,94,0.12); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
 .receipt-card__verdict--reject { background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
 .receipt-card__verdict--abstain { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
-.receipt-card__claim { font-size: 15px; line-height: 1.5; color: var(--text); font-style: italic; }
+.receipt-card__claim { font-size: 15.5px; line-height: 1.55; color: var(--text); font-style: italic; }
 .receipt-card__meta { display: flex; flex-wrap: wrap; gap: 8px 16px; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
 .receipt-card__sig { font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); padding: 6px 8px; background: rgba(0,0,0,0.3); border-radius: 4px; word-break: break-all; }
 .receipts-feed__footer { text-align: center; font-size: 12px; color: var(--text-faint); margin-top: 24px; font-family: var(--font-mono); }
@@ -568,7 +572,7 @@ a.validation-card__date:hover { color: var(--gold); }
 .receipts-feed__footer a:hover { color: var(--gold); }
 
 /* === WHO USES AGENTORACLE === */
-.who-uses { padding-top: 80px; padding-bottom: 100px; }
+.who-uses { padding-top: 120px; padding-bottom: 144px; }
 .who-uses__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1080px; margin: 48px auto 0; }
 @media (max-width: 920px) { .who-uses__grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 600px) { .who-uses__grid { grid-template-columns: 1fr; } }
@@ -576,11 +580,12 @@ a.validation-card__date:hover { color: var(--gold); }
 .who-uses__card:hover { border-color: rgba(201,169,110,0.35); transform: translateY(-2px); }
 .who-uses__card--cta { background: linear-gradient(180deg, rgba(201,169,110,0.06), rgba(201,169,110,0.02)); border-color: rgba(201,169,110,0.25); }
 .who-uses__role { font-size: 16px; font-weight: 700; color: var(--gold); margin-bottom: 10px; letter-spacing: -0.01em; }
-.who-uses__card p { font-size: 15px; line-height: 1.6; color: var(--text-muted); margin: 0; }
+.who-uses__card p { font-size: 15.5px; line-height: 1.65; color: var(--text-muted); margin: 0; }
 .who-uses__card a { color: var(--gold); text-decoration: none; font-weight: 600; }
 .who-uses__card a:hover { color: var(--gold-bright); }
 
-.section { max-width: 1240px; margin: 0 auto; padding: 120px 40px; }
+.section { max-width: 1240px; margin: 0 auto; padding: 144px 40px; }
+.section + .section { border-top: 1px solid rgba(201,169,110,0.06); }
 .section-eyebrow {
   font-family: var(--font-mono);
   font-size: 10px; font-weight: 600;
@@ -597,11 +602,12 @@ a.validation-card__date:hover { color: var(--gold); }
 }
 .section-title-gold { color: var(--gold); }
 .section-subtitle {
-  font-size: 17px; color: var(--text-muted);
-  max-width: 620px; line-height: 1.7;
-  margin: 0 auto 64px; text-align: center;
+  font-size: 18px; color: var(--text-muted);
+  max-width: 640px; line-height: 1.7;
+  margin: 0 auto 72px; text-align: center;
+  letter-spacing: -0.005em;
 }
-@media (max-width: 720px) { .section-subtitle { font-size: 16px; line-height: 1.65; } }
+@media (max-width: 720px) { .section-subtitle { font-size: 16px; line-height: 1.65; margin-bottom: 56px; } }
 .flow__result { text-align: center; margin-top: 56px; font-size: 17px; color: var(--text-muted); max-width: 720px; margin-left: auto; margin-right: auto; line-height: 1.5; }
 .flow__result strong { color: var(--gold); font-weight: 700; }
 
@@ -912,7 +918,9 @@ a.validation-card__date:hover { color: var(--gold); }
   .header__nav { display: none; }
   .data-bar__inner { grid-template-columns: repeat(3, 1fr); }
   .data-cell:nth-child(n+4) { display: none; }
-  .section { padding: 80px 24px; }
+  .section { padding: 96px 24px; }
+  .validation-strip, .receipts-feed, .who-uses { padding-top: 80px; padding-bottom: 80px; }
+  .verify-strip { padding: 80px 24px; }
   .feature-row { grid-template-columns: 40px 1fr; gap: 16px; }
   .feature-row__desc, .feature-row__metric { grid-column: 2; margin-top: 4px; }
   .banner { padding: 0 24px 80px; }
@@ -1034,7 +1042,7 @@ a.validation-card__date:hover { color: var(--gold); }
 .faq-item.is-open .faq-item__icon { transform: rotate(180deg); color: var(--gold); }
 .faq-item__body { display: none; padding: 0 20px 18px; }
 .faq-item.is-open .faq-item__body { display: block; }
-.faq-item__answer { font-size: 14px; color: var(--text-muted); line-height: 1.7; }
+.faq-item__answer { font-size: 15.5px; color: var(--text-muted); line-height: 1.7; max-width: 64ch; }
 .faq-item__answer code { font-family: var(--font-mono); font-size: 12px; color: var(--gold); background: rgba(201,169,110,0.08); padding: 1px 6px; border-radius: 4px; }
 .faq-item__answer a { color: var(--gold); border-bottom: 1px solid var(--gold-dim); }
 
@@ -1051,7 +1059,7 @@ a.validation-card__date:hover { color: var(--gold); }
 .step__desc code { font-family: var(--font-mono); font-size: 11px; color: var(--gold); background: rgba(201,169,110,0.08); padding: 1px 5px; border-radius: 3px; }
 .json-section { display: grid; grid-template-columns: 1fr 1.2fr; gap: 60px; align-items: start; }
 .json-features { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-.json-features li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-muted); }
+.json-features li { display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--text-muted); line-height: 1.55; }
 .json-features li svg { color: var(--green); flex-shrink: 0; }
 .collapsible-toggle { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--gold-dim); cursor: pointer; margin-bottom: 12px; transition: color 0.2s; }
 .collapsible-toggle:hover { color: var(--gold); }
