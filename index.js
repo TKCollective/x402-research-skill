@@ -879,26 +879,16 @@ app.use((req, res, next) => {
   if (xpay && RESOURCE_MAP[req.path]) {
     try {
       const decoded = JSON.parse(Buffer.from(xpay, "base64").toString("utf8"));
-      let mutated = false;
-      // 1) PaymentPayloadV2 has optional top-level resource: {url, description, mimeType}
+      // PaymentPayloadV2 has optional top-level resource: {url, description, mimeType}
       // If buyer omitted it, inject from our route map. Idempotent if already present.
+      let mutated = false;
       if (!decoded.resource || typeof decoded.resource === "string" || !decoded.resource.url) {
         decoded.resource = { ...RESOURCE_MAP[req.path] };
         mutated = true;
         console.log(`[resource-inject] ${req.path} — injected resource.url=${decoded.resource.url}`);
       }
-      // 2) NETWORK NORMALIZATION (gotcha #4 in INTEGRATOR_GOTCHAS.md)
-      // Wire body MUST be CAIP-2 ("eip155:8453") for the indexer.
-      // @x402/express@2.8 middleware compares against routeConfig.accepts[].network
-      // which is label form ("base"). Buyer SDK reflects CAIP-2 from challenge into
-      // paymentPayload.accepted.network, causing a mismatch and bouncing X-PAYMENT
-      // before /settle is ever called — hence no EXTENSION-RESPONSES.
-      // Normalize back to label form on the way in. CDP facilitator accepts both.
-      if (decoded.accepted && decoded.accepted.network === "eip155:8453") {
-        decoded.accepted.network = "base";
-        mutated = true;
-        console.log(`[network-normalize] ${req.path} — paymentPayload.accepted.network: eip155:8453 → base`);
-      }
+      // DIAGNOSTIC: log full decoded paymentPayload so we can see what middleware rejects
+      console.log(`[payload-debug] ${req.path} — keys=${Object.keys(decoded).join(",")} accepted.network=${decoded.accepted?.network} accepted.scheme=${decoded.accepted?.scheme} accepted.amount=${decoded.accepted?.amount} payload.from=${decoded.payload?.authorization?.from} payload.value=${decoded.payload?.authorization?.value}`);
       if (mutated) {
         const reencoded = Buffer.from(JSON.stringify(decoded)).toString("base64");
         req.headers["x-payment"] = reencoded;
