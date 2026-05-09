@@ -955,7 +955,12 @@ app.use((req, res, next) => {
   res.setHeader = function (name, value) {
     const result = origSetHeader(name, value);
     if (typeof name === "string" && name.toLowerCase() === "payment-required") {
-      // Mirror to canonical V2 header name (case-insensitive but spec uses upper)
+      // Per HTTP-transport-v2 spec §"Payment Required Signaling" the canonical
+      // name is PAYMENT-REQUIRED (singular). ethanoroshiba's note on issue #2207
+      // used PAYMENT-REQUIREMENTS (plural). HTTP is case-insensitive but
+      // singular vs plural is NOT — emit both defensively. AsaiShota confirmed
+      // discovery indexed within ~30s after adding both names (May 8 23:49Z).
+      origSetHeader("PAYMENT-REQUIRED", value);
       origSetHeader("PAYMENT-REQUIREMENTS", value);
     }
     return result;
@@ -965,8 +970,11 @@ app.use((req, res, next) => {
   const origWriteHead = res.writeHead.bind(res);
   res.writeHead = function (...args) {
     const expose = res.getHeader("access-control-expose-headers");
-    if (typeof expose === "string" && !/PAYMENT-REQUIREMENTS/i.test(expose)) {
-      origSetHeader("access-control-expose-headers", expose + ",PAYMENT-REQUIREMENTS");
+    if (typeof expose === "string") {
+      const additions = [];
+      if (!/PAYMENT-REQUIRED\b/i.test(expose)) additions.push("PAYMENT-REQUIRED");
+      if (!/PAYMENT-REQUIREMENTS/i.test(expose)) additions.push("PAYMENT-REQUIREMENTS");
+      if (additions.length) origSetHeader("access-control-expose-headers", expose + "," + additions.join(","));
     }
     return origWriteHead(...args);
   };
@@ -976,7 +984,7 @@ app.use((req, res, next) => {
 app.use(wrapPaymentMiddlewareForAggregators(paymentMiddleware(routeConfig, unifiedResourceServer)));
 console.log(`✅ Unified payment middleware: single instance, all chains via facilitator array`);
 console.log(`✅ 402 body mirror: aggregator-visible challenge in response body`);
-console.log(`✅ PAYMENT-REQUIREMENTS canonical header mirroring (V2 transport spec)`);
+console.log(`✅ PAYMENT-REQUIRED + PAYMENT-REQUIREMENTS canonical headers (V2 transport spec)`);
 
 // ── Bazaar Bootstrap: direct CDP verify+settle for discovery indexing ──
 if (CDP_ENABLED && cdpFacilitatorClient) {
