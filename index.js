@@ -1026,23 +1026,23 @@ if (CDP_ENABLED && cdpFacilitatorClient) {
         };
       }
 
-      // CDP facilitator strict-validates paymentRequirements against canonical x402 schema.
-      // Required fields: scheme, network (label form), maxAmountRequired, resource, description,
-      // mimeType, payTo, maxTimeoutSeconds, asset. Do NOT include legacy 'amount' — schema rejects it.
+      // PaymentRequirementsV2Schema (canonical, what CDP V2 verify expects):
+      // exactly { scheme, network, amount, asset, payTo, maxTimeoutSeconds, extra? }.
+      // NO maxAmountRequired, NO resource/description/mimeType (those live on the
+      // top-level PaymentRequired envelope, not on the per-route requirements).
+      // Network MUST be CAIP-2 form ("eip155:8453") to match V2 paymentPayload.accepted.network.
       const requirements = {
         scheme: "exact",
-        network: "base",
-        maxAmountRequired: "20000",
-        resource: "https://agentoracle.co/research",
-        description: "Real-time research API for AI agents. $0.02 USDC per query on Base.",
-        mimeType: "application/json",
+        network: NETWORK,
+        amount: "20000",
+        asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
         payTo: PAY_TO,
         maxTimeoutSeconds: 300,
-        asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
         extra: { name: "USD Coin", version: "2" },
       };
-      // Normalize the incoming payload too — client may have signed with either form
-      if (paymentPayload && paymentPayload.network === "eip155:8453") paymentPayload.network = "base";
+      console.log("[bazaar-bootstrap] verify with paymentPayload.scheme=", paymentPayload?.scheme,
+        "network=", paymentPayload?.network || paymentPayload?.accepted?.network,
+        "resource=", paymentPayload?.resource?.url || paymentPayload?.resource);
       const verifyRes = await cdpFacilitatorClient.verify(paymentPayload, requirements);
       if (!verifyRes.isValid) return res.status(402).json({ error: "Verification failed", reason: verifyRes.invalidReason });
       const settleRes = await cdpFacilitatorClient.settle(paymentPayload, requirements);
