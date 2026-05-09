@@ -1173,10 +1173,11 @@ a.validation-card__date:hover { color: var(--gold); }
       <span class="whats-new__pulse"></span>
       <span class="whats-new__label">New</span>
       <span class="whats-new__track" id="whatsNewTrack">
-        <span class="whats-new__item active" data-idx="0"><span class="whats-new__date">May 4</span><span class="whats-new__text">First on-chain x402 settlements live on Base → <a class="whats-new__link" href="https://basescan.org/tx/0x4c5cf98c9462638015b89348c65dbe71995b56df9cda5905c4264963dc34dd03" target="_blank" rel="noopener noreferrer">basescan</a></span></span>
-        <span class="whats-new__item" data-idx="1"><span class="whats-new__date">May 4</span><span class="whats-new__text">Bazaar discovery manifest live → <a class="whats-new__link" href="/.well-known/x402" target="_blank" rel="noopener noreferrer">/.well-known/x402</a></span></span>
-        <span class="whats-new__item" data-idx="2"><span class="whats-new__date">Apr 30</span><span class="whats-new__text">Privacy &amp; data-handling page → <a class="whats-new__link" href="/privacy">/privacy</a></span></span>
-        <span class="whats-new__item" data-idx="3"><span class="whats-new__date">Apr 29</span><span class="whats-new__text">JWS receipt spec v0.1 public → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-receipt-spec" target="_blank" rel="noopener noreferrer">github</a></span></span>
+        <span class="whats-new__item active" data-idx="0"><span class="whats-new__date">May 8</span><span class="whats-new__text">Indexed in Coinbase Bazaar — 5 settlements verified → <a class="whats-new__link" href="https://api.cdp.coinbase.com/platform/v2/x402/discovery/merchant?payTo=0xdF90200B0031051BbF7a66BB9387d2Ecf599e109" target="_blank" rel="noopener noreferrer">discovery</a></span></span>
+        <span class="whats-new__item" data-idx="1"><span class="whats-new__date">May 8</span><span class="whats-new__text">5th on-chain settlement → <a class="whats-new__link" href="https://basescan.org/tx/0xe9b4f382d30fbd25ac001c9cc71d2426e84781d8445078cce0c2ae0f93bce9d4" target="_blank" rel="noopener noreferrer">basescan</a></span></span>
+        <span class="whats-new__item" data-idx="2"><span class="whats-new__date">May 4</span><span class="whats-new__text">First x402 settlements live on Base → <a class="whats-new__link" href="https://basescan.org/tx/0x4c5cf98c9462638015b89348c65dbe71995b56df9cda5905c4264963dc34dd03" target="_blank" rel="noopener noreferrer">basescan</a></span></span>
+        <span class="whats-new__item" data-idx="3"><span class="whats-new__date">Apr 30</span><span class="whats-new__text">Privacy &amp; data-handling page → <a class="whats-new__link" href="/privacy">/privacy</a></span></span>
+        <span class="whats-new__item" data-idx="4"><span class="whats-new__date">Apr 29</span><span class="whats-new__text">JWS receipt spec v0.1 public → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-receipt-spec" target="_blank" rel="noopener noreferrer">github</a></span></span>
       </span>
     </div>
     <h1 class="hero__headline">

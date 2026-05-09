@@ -67,6 +67,9 @@ Or defensively un-wrap in your body mirror. See [`64943351`](https://github.com/
 
 ## 4. CDP facilitator silently accepts label-form network but indexer needs CAIP-2
 
+*(See also gotcha #12 — V2 facilitator-client requirements MUST use CAIP-2 to match `paymentPayload.accepted.network`.)*
+
+
 **Symptom:** `/verify` and `/settle` both return 200, on-chain tx confirms, but indexer never sees you.
 
 **Root cause:** CDP `/verify` and `/settle` accept both `network: "base"` and `network: "eip155:8453"`. The indexer only accepts CAIP-2 form on the **wire challenge body**. The facilitator API itself is more lenient — so you'll think your code is right, because settles work.
@@ -150,6 +153,57 @@ See [`6b56d3bd`](https://github.com/TKCollective/x402-research-skill/commit/6b56
 **Root cause:** xpay facilitator supports Base only. If you put SKALE (`eip155:1187947933`) in your `accepts[]` and use xpay as your sole facilitator, `syncFacilitatorOnStart` validation fails before you even serve a request.
 
 **Fix:** Use PayAI (supports Base + SKALE) as your EVM facilitator, or split: Base-only routes go through CDP, SKALE-only routes go through PayAI. Use `x402ResourceServer` with a facilitator array and `register()` per scheme. See [`579923c2`](https://github.com/TKCollective/x402-research-skill/commit/579923c2).
+
+---
+
+## 11. `X-PAYMENT` (V1) vs `PAYMENT-SIGNATURE` (V2) request header rename
+
+**Symptom:** Buyer SDK signs and sends `X-PAYMENT` correctly. Server SDK returns a fresh 402 with `error: "Payment required"` that looks identical to the original challenge. No `EXTENSION-RESPONSES` header on the 402 because `/settle` is never called.
+
+**Root cause:** `@x402/express` V2 reads the buyer's payload from the **`PAYMENT-SIGNATURE`** request header (V2 spec name). Every buyer SDK we tested (`@x402/client`, `@x402/fetch`, AsaiShota's, hyperD's) ships the V1 name `X-PAYMENT`. Server SDK calls `extractPayment(req)` — returns `null` because it can't find `PAYMENT-SIGNATURE` — and the entire request flow goes down the unpaid-request path. You get a 402 that looks exactly like the initial challenge, with no diagnostic header to tell you the SDK silently dropped your X-PAYMENT.
+
+**Fix (server-side, ~3 lines of pre-middleware):**
+```js
+app.use((req, res, next) => {
+  const xpay = req.headers["x-payment"];
+  if (xpay) {
+    req.headers["payment-signature"] = xpay;
+    req.headers["PAYMENT-SIGNATURE"] = xpay;
+  }
+  next();
+});
+```
+
+See [`8e7426d3`](https://github.com/TKCollective/x402-research-skill/commit/8e7426d3). Symmetrical fix to gotcha #2 (response side `payment-required` → `PAYMENT-REQUIRED`/`PAYMENT-REQUIREMENTS`). Both ends of the wire need the V1→V2 rename for backward compat with the SDK fleet.
+
+---
+
+## 12. CDP facilitator client expects V2 `PaymentRequirementsV2Schema` shape, not V1
+
+**Symptom:** `cdpFacilitatorClient.verify(payload, requirements)` returns HTTP 500 `invalid_payload` on every call, even when the on-chain authorization signature is valid and the buyer's `paymentPayload` looks correct.
+
+**Root cause:** `@x402/core/schemas`'s `PaymentRequirementsV2Schema` is exactly:
+```ts
+{ scheme, network, amount, asset, payTo, maxTimeoutSeconds, extra? }
+```
+No `maxAmountRequired`. No `resource`/`description`/`mimeType`. Those live on the **top-level** `PaymentRequiredV2` envelope (the 402 response body), not on the per-route requirements you pass to `verify()`/`settle()`. Mixing V1 and V2 names on the same call (the V1 shape uses `maxAmountRequired` and inlines `resource`/`description`/`mimeType`) gets you a strict-validation rejection from CDP that surfaces only as `invalid_payload` — no field-specific diagnostic.
+
+Also: `network` must be CAIP-2 (`eip155:8453`) when calling V2 verify/settle, **and** must match `paymentPayload.accepted.network` from the buyer SDK exactly. Label form (`base`) silently fails strict-eq checks even though CDP accepts both forms in some contexts.
+
+**Fix:** canonical V2 requirements shape:
+```js
+const requirements = {
+  scheme: "exact",
+  network: "eip155:8453",
+  amount: "20000",
+  asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  payTo: PAY_TO,
+  maxTimeoutSeconds: 300,
+  extra: { name: "USD Coin", version: "2" },
+};
+await cdpFacilitatorClient.verify(paymentPayload, requirements);
+```
+See [`6c1c6dc6`](https://github.com/TKCollective/x402-research-skill/commit/6c1c6dc6). This was the last gate before our resource indexed in CDP discovery on May 8, 2026 — every other layer was correct and we were silently 500ing on every settle.
 
 ---
 
