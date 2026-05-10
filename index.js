@@ -887,6 +887,30 @@ app.use((req, res, next) => {
         mutated = true;
         console.log(`[resource-inject] ${req.path} — injected resource.url=${decoded.resource.url}`);
       }
+      // BUYER EXTENSIONS ECHO (per 0xdespot on x402#2207, May 10 2026, the 7th cause):
+      // If the buyer's signed paymentPayload.extensions is missing/empty, CDP's
+      // facilitator interprets it as "no bazaar opt-in" and skips the bazaar
+      // round-trip entirely — EXTENSION-RESPONSES header never appears, no indexing,
+      // no rejected/processing state machine. This is invisible because /settle
+      // still returns 200 success.
+      //
+      // PaymentPayloadV2Schema.extensions is Optional but the bazaar handler
+      // treats omission as opt-out. Most buyer SDKs (incl. @x402/client,
+      // @x402/fetch, AsaiShota's pre-fix, hyperD's pre-fix) don't echo it back.
+      //
+      // Inject server-side from the same source the 402 challenge declares, so
+      // every paid request through us is bazaar-opted-in regardless of buyer SDK.
+      if (!decoded.extensions || !decoded.extensions.bazaar || !decoded.extensions.bazaar.info) {
+        const bazaarExt =
+          req.path === "/deep-research" ? bazaarDeep :
+          req.path === "/research" ? bazaarResearch :
+          req.path === "/research/batch" ? bazaarResearch : null;
+        if (bazaarExt) {
+          decoded.extensions = { ...bazaarExt };
+          mutated = true;
+          console.log(`[extensions-inject] ${req.path} — injected paymentPayload.extensions.bazaar (7th cause fix)`);
+        }
+      }
       const finalEncoded = mutated
         ? Buffer.from(JSON.stringify(decoded)).toString("base64")
         : xpay;

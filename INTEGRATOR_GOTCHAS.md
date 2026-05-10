@@ -207,6 +207,28 @@ See [`6c1c6dc6`](https://github.com/TKCollective/x402-research-skill/commit/6c1c
 
 ---
 
+## 13. Buyer must echo `paymentPayload.extensions` (the silent opt-out)
+
+**Symptom:** Every other fix on this list is correct. On-chain settles succeed (HTTP 200). The merchant `/discovery/resources` endpoint stays at `404`. `EXTENSION-RESPONSES` response header from CDP is **completely absent** — not `rejected`, not `processing`, just missing. The `rejected → processing → indexed` state machine never starts.
+
+**Root cause** (per [@0xdespot on x402#2207 May 10 2026](https://github.com/x402-foundation/x402/issues/2207)): `PaymentPayloadV2Schema.extensions` is marked `Optional`. The CDP bazaar handler treats omission as **opt-out** and skips bazaar processing entirely. Most buyer SDKs (`@x402/client`, `@x402/fetch`, AsaiShota's pre-fix, hyperD's pre-fix) don't echo the `extensions: {bazaar: {info, schema}}` block from the 402 challenge back into the buyer's signed paymentPayload. The result: a successful $0.02 settle that the indexer never sees as a bazaar listing event.
+
+**Fix (server-side, ~10 lines of pre-middleware):**
+```js
+if (!decoded.extensions?.bazaar?.info) {
+  const bazaarExt = ROUTE_TO_BAZAAR_EXTENSION[req.path];
+  if (bazaarExt) {
+    decoded.extensions = { ...bazaarExt };
+    // re-encode and rewrite X-PAYMENT header
+  }
+}
+```
+Same defensive-injection pattern as gotcha #1 (paymentPayload.resource). Idempotent if buyer already echoed it. After this fix landed in hyperD, their discovery endpoint flipped `404 → 200 with 1 resource` within 75 seconds of the next settle. See [our commit landing this fix](https://github.com/TKCollective/x402-research-skill/commits/main).
+
+**Why this is the most insidious of the 13:** every other gotcha gives you SOME signal — a 402 bounce, a 500, a wire-validation error, a `rejected` extension header. This one gives you a clean 200 success and silently disables indexing. You can ship a perfectly-working paid API for weeks and have zero discoverability because no buyer SDK in the wild echoes extensions by default.
+
+---
+
 ## Useful links
 
 - x402 V2 spec: https://github.com/x402-foundation/x402/blob/main/specs/x402-specification-v2.md
@@ -216,3 +238,7 @@ See [`6c1c6dc6`](https://github.com/TKCollective/x402-research-skill/commit/6c1c
 - Live reference implementation: https://agentoracle.co/research
 
 If you've fixed one of these differently and your fix is more elegant, please open a PR. The point of this doc is to reduce ecosystem-wide pain, not to enshrine our hacks.
+
+## Acknowledgments
+
+This list exists because three independent merchants (AgentOracle / @TKCollective, [x402-market / @AsaiShota](https://github.com/AsaiShota/x402-market), [hyperD / @0xdespot](https://github.com/hyperd-ai/hyperd-mcp)) debugged the v1↔v2 transport boundary in public on [x402-foundation/x402#2207](https://github.com/x402-foundation/x402/issues/2207) between May 6 and May 10, 2026, with technical input from [@ethanoroshiba](https://github.com/ethanoroshiba) (Coinbase). Gotchas #1, #2, #3, #11, #13 surfaced collaboratively across that thread. #12 (V2 `PaymentRequirementsV2Schema` shape) and #4 (canonical-vs-label network) we found ourselves. #6 (canonical resource URL stripping) we dodge by construction; @0xdespot caught it first.
