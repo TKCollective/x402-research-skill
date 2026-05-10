@@ -92,13 +92,19 @@ See [`57f361e7`](https://github.com/TKCollective/x402-research-skill/commit/57f3
 
 ---
 
-## 6. SDK 2.11.0 breaking changes (April 27, 2026)
+## 6. SDK 2.11.0 is NOT actually breaking — misattribution gotcha
 
-**Symptom:** `paymentMiddleware` throws at construction time with cryptic schema errors after a clean `npm install`.
+> **Updated May 10, 2026 — status: retracted as a real gotcha, kept as a misattribution warning.**
 
-**Root cause:** `@x402/express@2.11.0` shipped `PaymentRequirementsV2Schema` field changes that aren't backward-compatible with route configs from 2.8.x. Specifically: `network` enum became stricter, `extensions` schema validation tightened.
+**What we originally thought:** `@x402/express@2.11.0` (released 2026-04-27) shipped breaking `PaymentRequirementsV2Schema` changes. A `npm install` upgrade in late April left `paymentMiddleware` throwing at construction time, so we reverted to `^2.8.0` with [`0c5c232d`](https://github.com/TKCollective/x402-research-skill/commit/0c5c232d).
 
-**Fix (until you have a focused upgrade session):** pin to `^2.8.0` or `^2.9.0` in `package.json`. We reverted with [`0c5c232d`](https://github.com/TKCollective/x402-research-skill/commit/0c5c232d) and have a Saturday slot booked for the migration.
+**What actually happened:** when we did the focused upgrade session on May 10 (commits Stage A/B/C: [`e3337504`](https://github.com/TKCollective/x402-research-skill/commit/e3337504), [`473a4014`](https://github.com/TKCollective/x402-research-skill/commit/473a4014), [`2769cff2`](https://github.com/TKCollective/x402-research-skill/commit/2769cff2)), the 2.8 → 2.11 diff turned out to be **field-ordering changes only** plus one new optional `error?` field on `PaymentRequirements`. No required fields added. No fields removed. No semantic surface changes. All used exports (`paymentMiddleware`, `x402ResourceServer`, `declareDiscoveryExtension`) have identical signatures and behavior.
+
+The April 27 "the SDK broke" symptom was almost certainly caused by **gotchas #2 / #11 / #12** in this doc — the v1↔v2 transport-spec migration boundary that took 4 days of public debugging on [x402-foundation/x402#2207](https://github.com/x402-foundation/x402/issues/2207) to fully resolve. The schema-validation errors at construction time were structurally similar enough that a quick npm rollback masked the real issue and we lost 2 weeks pinned to 2.8.
+
+**If you see schema errors after a 2.x → 2.11 upgrade:** before pinning back, check whether your route configs are emitting **v1-shape** fields (`maxAmountRequired`, inlined `resource`/`description`/`mimeType` in `accepts[]`, label-form `network: "base"`). 2.11's stricter zod schemas surface those v1 bugs that 2.8 was silently tolerating. The fix is the v2 wire-format work (gotcha #2), not the SDK version pin.
+
+**Migration path that worked for us:** staged upgrade with deploy verification at each step. Stage A: `@x402/express` only. Stage B: `@x402/core` + `@x402/extensions`. Stage C: `@x402/evm` + `@x402/fetch` + `@x402/stellar`. Run all 15 of your wire-shape checks after each stage. Rollback per-stage is single-commit revert. Total time: 15 minutes.
 
 ---
 
