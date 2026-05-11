@@ -177,8 +177,8 @@ a:hover { color: var(--gold-bright); }
 <section class="b-hero">
   <div class="container">
     <span class="b-hero__eyebrow">For Business</span>
-    <h1 class="b-hero__title">Verify AI-generated content <span class="b-hero__title-gold">before</span> it ships.</h1>
-    <p class="b-hero__sub">Pre-publication fact-checking for AI-generated copy, with a cryptographic receipt your legal team can audit. Built for content agencies, regulated industries, and brand teams who can\u2019t afford a hallucination in production.</p>
+    <h1 class="b-hero__title">Content AI optimizes what agents <span class="b-hero__title-gold">read</span>. AgentOracle verifies what agents <span class="b-hero__title-gold">do</span>.</h1>
+    <p class="b-hero__sub">Enterprise content platforms make your content easier for AI agents to consume. AgentOracle does the opposite: we verify the claims your AI agents are about to act on, before they act. Pre-action fact-checking with a cryptographic receipt your legal team can audit. Built for the 50,000+ mid-market companies running Sprinklr, HubSpot, or Salesforce Marketing Cloud with 3\u20138 AI tools and no unified verification layer.</p>
     <div class="b-hero__ctas">
       <a href="mailto:joe@agentoracle.co?subject=AgentOracle%20pilot%20inquiry&body=Hi%20\u2014%20I%E2%80%99m%20interested%20in%20a%20pilot.%0A%0AAbout%20us:%20%5Bcompany%5D%0AUse%20case:%20%5Bbrief%20description%5D%0AVolume:%20%5Bestimated%20queries%2Fmonth%5D" class="btn btn--primary">Start a pilot conversation \u2192</a>
       <a href="/" class="btn btn--secondary">See the developer side</a>
