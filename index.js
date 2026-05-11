@@ -1958,6 +1958,43 @@ app.get("/health", (_req, res) => {
 //    - Confidence scoring: multi-signal confidence with level flag
 //    - Default tier is "standard" ($0.02, Sonar)
 
+// Friendly GET handlers: return bazaar discovery metadata so x402scan / agentic.market
+// /-other crawlers that probe with GET before attempting payment see a useful doc
+// instead of 404. Mirrors the bazaar manifest declared at challenge-build time.
+function researchMetadataDoc(routePath, price, tierNote) {
+  return {
+    endpoint: routePath,
+    method: "POST",
+    description: "Real-time research API for AI agents. Natural-language query, structured JSON with summary, key facts, sources, and confidence scoring." + (tierNote ? " " + tierNote : ""),
+    pricing: `${price} USDC per query on Base (x402 gated)`,
+    discovery: {
+      indexed_in_cdp_bazaar: true,
+      cdp_discovery_url: "https://api.cdp.coinbase.com/platform/v2/x402/discovery/merchant?payTo=0xdF90200B0031051BbF7a66BB9387d2Ecf599e109",
+      x402_version: 2,
+      network: "eip155:8453",
+      asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      pay_to: "0xdF90200B0031051BbF7a66BB9387d2Ecf599e109",
+      scheme: "exact",
+    },
+    request_body: {
+      query: "string — the natural-language question to research",
+      tier: routePath === "/research" ? "optional: 'standard' (default, this endpoint) | 'deep' (escalates to /deep-research at $0.10)" : undefined,
+    },
+    example_request: { query: "What is the current price of Bitcoin?" },
+    example_response: {
+      query: "What is the current price of Bitcoin?",
+      tier: "standard",
+      result: { summary: "...", key_facts: ["BTC price: $80,700"], sources: ["coinbase.com", "coinmarketcap.com"], confidence_score: 0.94 },
+      confidence: { score: 0.94, level: "high", sources_count: 8, facts_count: 4 },
+      metadata: { model: "sonar", network: "base", price_paid: price },
+    },
+    note: "Use POST with x402 payment to get a paid research answer. GET returns this doc.",
+  };
+}
+app.get("/research", (_req, res) => res.json(researchMetadataDoc("/research", "$0.02", "Pass tier=deep to upgrade to Sonar Pro at $0.10.")));
+app.get("/deep-research", (_req, res) => res.json(researchMetadataDoc("/deep-research", "$0.10", "Sonar Pro — comprehensive multi-source analysis with deep reasoning.")));
+app.get("/research/batch", (_req, res) => res.json(researchMetadataDoc("/research/batch", "$0.10", "Up to 5 queries per call, parallel research with the same citation+confidence output as /research.")));
+
 app.post("/research", async (req, res) => {
   const { query, tier } = req.body;
   trackRequest(req, "research");
