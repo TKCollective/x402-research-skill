@@ -741,6 +741,18 @@ if (STELLAR_ENABLED) {
 
 unifiedResourceServer.registerExtension(bazaarResourceServerExtension);
 
+// ─── Bazaar extension boot-time assertion (per x402#2207 May 10 investigation) ───
+// Working hypothesis on issue #2207: dynamic-import / async-registration race could
+// silently leave the bazaar extension unregistered at runtime even though enrichment
+// works at challenge-build time. Single assertion + diagnostic route to disambiguate.
+const BAZAAR_REGISTERED = unifiedResourceServer.hasExtension("bazaar");
+if (!BAZAAR_REGISTERED) {
+  console.error("\n\n\u26d4 FATAL: bazaar extension not registered after boot. Aborting startup.\n");
+  console.error("Registered extensions:", unifiedResourceServer.getExtensions().map(e => e.key).join(", ") || "(none)");
+  process.exit(1);
+}
+console.log(`\u2705 Bazaar extension registered at boot — ${unifiedResourceServer.getExtensions().map(e => e.key).join(", ")}`);
+
 // ─── Aggregator-Visible 402 Body Mirror (PaymentRequiredV2 shape) ───
 // The @x402/express SDK ships the payment challenge in a `payment-required` HTTP
 // header (base64 JSON). x402scan, agentic.market, and Bazaar crawlers parse the
@@ -900,6 +912,8 @@ app.use((req, res, next) => {
       //
       // Inject server-side from the same source the 402 challenge declares, so
       // every paid request through us is bazaar-opted-in regardless of buyer SDK.
+      // Pre-injection diagnostic (per x402#2207 May 10 investigation)
+      console.log(`[bazaar-diag-pre] ${req.path} — extensions=${JSON.stringify(decoded.extensions)?.slice(0,200)}`);
       if (!decoded.extensions || !decoded.extensions.bazaar || !decoded.extensions.bazaar.info) {
         const bazaarExt =
           req.path === "/deep-research" ? bazaarDeep :
@@ -911,6 +925,8 @@ app.use((req, res, next) => {
           console.log(`[extensions-inject] ${req.path} — injected paymentPayload.extensions.bazaar (7th cause fix)`);
         }
       }
+      // Post-injection diagnostic
+      console.log(`[bazaar-diag-post] ${req.path} — extensions.bazaar.info.input.method=${decoded.extensions?.bazaar?.info?.input?.method} extensions.bazaar.schema.type=${decoded.extensions?.bazaar?.schema?.type}`);
       const finalEncoded = mutated
         ? Buffer.from(JSON.stringify(decoded)).toString("base64")
         : xpay;
@@ -1865,6 +1881,20 @@ app.get("/traffic", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// Diagnostic route per x402#2207 May 10 investigation — lets anyone verify the
+// bazaar extension is actually registered at runtime, not just at challenge
+// emission time. Public so other thread contributors can pattern-match.
+app.get("/health/bazaar", (_req, res) => {
+  res.json({
+    bazaar_extension_registered: unifiedResourceServer.hasExtension("bazaar"),
+    registered_extensions: unifiedResourceServer.getExtensions().map(e => e.key),
+    bazaarResourceServerExtension_keys: Object.keys(bazaarResourceServerExtension),
+    has_hooks: !!bazaarResourceServerExtension.hooks,
+    has_enrichDeclaration: typeof bazaarResourceServerExtension.enrichDeclaration === "function",
+    note: "If has_hooks=false, the extension only enriches the challenge declaration; settle-time tallying is done CDP-side, not via local SDK hooks.",
+  });
 });
 
 app.get("/health", (_req, res) => {
