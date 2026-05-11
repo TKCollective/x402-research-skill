@@ -215,6 +215,15 @@ See [`6c1c6dc6`](https://github.com/TKCollective/x402-research-skill/commit/6c1c
 
 ## 13. Buyer must echo `paymentPayload.extensions` (the silent opt-out)
 
+> **CRITICAL UPDATE — May 11, 2026:** Server-side injection of `paymentPayload.extensions.bazaar` is **necessary but not sufficient**. The CDP facilitator's Bazaar-listing-match step keys off **the buyer-signed paymentPayload contents**, NOT the post-sign X-PAYMENT header as it arrives at `/settle`. Per @ethanoroshiba on x402-foundation/x402#2207 (May 11 22:11 UTC): *"Payment payloads must continue to be discoverable in order to match existing Bazaar entries to corresponding facilitator settlements."*
+>
+> **What this means:** a server-side rewrite of the X-PAYMENT header (the fix described below) is enough to avoid the silent `EXTENSION-RESPONSES: bazaar.status=rejected` failure mode and produce a 200 success, but the settle will NOT be matched to the merchant's Bazaar listing and `quality.l30DaysTotalCalls`/`l30DaysUniquePayers` will NOT increment.
+>
+> **The complete fix is buyer-side.** The buyer SDK must read the bazaar extension reference from the 402 challenge body at challenge-decode time and include it in the `paymentPayload.extensions` block before signing. Server-side injection covers v1-shaped buyers that hit you, but only buyer-side echo drives the listing-side quality metrics.
+>
+> See thread for the ongoing buyer-side spec discussion.
+
+
 **Symptom:** Every other fix on this list is correct. On-chain settles succeed (HTTP 200). The merchant `/discovery/resources` endpoint stays at `404`. `EXTENSION-RESPONSES` response header from CDP is **completely absent** — not `rejected`, not `processing`, just missing. The `rejected → processing → indexed` state machine never starts.
 
 **Root cause** (per [@0xdespot on x402#2207 May 10 2026](https://github.com/x402-foundation/x402/issues/2207)): `PaymentPayloadV2Schema.extensions` is marked `Optional`. The CDP bazaar handler treats omission as **opt-out** and skips bazaar processing entirely. Most buyer SDKs (`@x402/client`, `@x402/fetch`, AsaiShota's pre-fix, hyperD's pre-fix) don't echo the `extensions: {bazaar: {info, schema}}` block from the 402 challenge back into the buyer's signed paymentPayload. The result: a successful $0.02 settle that the indexer never sees as a bazaar listing event.
