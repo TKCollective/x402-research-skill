@@ -3106,6 +3106,28 @@ async function getDbStats() {
   } catch { return { total_keys: 0, feedback_count: 0 }; }
 }
 
+// Friendly GET handler: returns usage doc instead of 404 so health-check probes
+// and monitoring scripts get actionable info instead of cryptic 404.
+app.get("/evaluate", (_req, res) => {
+  res.json({
+    endpoint: "/evaluate",
+    method: "POST",
+    description: "Per-claim verification with confidence scoring. Tiered, FEVER-calibrated.",
+    request_body: {
+      content: "string OR object — the claim or content to verify",
+      url: "string — optional, fetch and verify content at this URL",
+      source: "optional — 'exa' | 'sonar' (default: tiered fallback)",
+      min_confidence: "optional — 0.0–1.0 (default: 0.5)",
+    },
+    example: {
+      content: "Bitcoin is currently trading around $80,000",
+      min_confidence: 0.7,
+    },
+    pricing: "$0.01 USDC per call (x402 gated). $0 if cached.",
+    note: "Use POST with one of {content, url} required. GET returns this doc.",
+  });
+});
+
 app.post("/evaluate", async (req, res) => {
   const { content, url, source, min_confidence } = req.body;
   trackRequest(req, "evaluate");
