@@ -215,13 +215,11 @@ See [`6c1c6dc6`](https://github.com/TKCollective/x402-research-skill/commit/6c1c
 
 ## 13. Buyer must echo `paymentPayload.extensions` (the silent opt-out)
 
-> **CRITICAL UPDATE — May 11, 2026:** Server-side injection of `paymentPayload.extensions.bazaar` is **necessary but not sufficient**. The CDP facilitator's Bazaar-listing-match step keys off **the buyer-signed paymentPayload contents**, NOT the post-sign X-PAYMENT header as it arrives at `/settle`. Per @ethanoroshiba on x402-foundation/x402#2207 (May 11 22:11 UTC): *"Payment payloads must continue to be discoverable in order to match existing Bazaar entries to corresponding facilitator settlements."*
+> **STATUS UPDATE — May 11, 2026 23:00 UTC:** Server-side injection of `paymentPayload.extensions.bazaar` IS the correct fix. Per @ethanoroshiba on x402-foundation/x402#2207 (May 11 22:55 UTC): *"Server-side injection should be ok. Buyers are expected to reflect the extensions defined by a server, but the extensions are not part of the `TransferWithAuthorization` signature, so they do not need to be signed by the client in order to be part of the payload."*
 >
-> **What this means:** a server-side rewrite of the X-PAYMENT header (the fix described below) is enough to avoid the silent `EXTENSION-RESPONSES: bazaar.status=rejected` failure mode and produce a 200 success, but the settle will NOT be matched to the merchant's Bazaar listing and `quality.l30DaysTotalCalls`/`l30DaysUniquePayers` will NOT increment.
+> **However:** there is a separate, narrower issue still under investigation. Some `payTo` addresses show frozen `quality` counters even when buyer-side echo is correct AND server-side injection is correct. Per @AsaiShota's May 11 23:30 UTC dual-`payTo` probe with the same buyer SDK against two different `payTo` addresses: one counter ticked, the other stayed frozen. The differentiator is per-`payTo` state, not buyer behavior. This is being narrowed in the GitHub thread.
 >
-> **The complete fix is buyer-side.** The buyer SDK must read the bazaar extension reference from the 402 challenge body at challenge-decode time and include it in the `paymentPayload.extensions` block before signing. Server-side injection covers v1-shaped buyers that hit you, but only buyer-side echo drives the listing-side quality metrics.
->
-> See thread for the ongoing buyer-side spec discussion.
+> Server-side `paymentPayload.extensions.bazaar` injection remains the correct integrator-side fix for the "no `EXTENSION-RESPONSES` header" failure mode. The frozen-counter pattern on some `payTo`s is a separate, lower-frequency issue currently being investigated with @ethanoroshiba.
 
 
 **Symptom:** Every other fix on this list is correct. On-chain settles succeed (HTTP 200). The merchant `/discovery/resources` endpoint stays at `404`. `EXTENSION-RESPONSES` response header from CDP is **completely absent** — not `rejected`, not `processing`, just missing. The `rejected → processing → indexed` state machine never starts.
