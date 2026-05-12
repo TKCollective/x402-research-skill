@@ -1172,7 +1172,31 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(wrapPaymentMiddlewareForAggregators(paymentMiddleware(routeConfig, unifiedResourceServer)));
+// May 12 2026: AGGREGATOR WRAPPER DISABLED.
+//
+// The wrapper rewrote the @x402/express 402 body to a "v2 + aggregator-friendly"
+// shape so x402scan / agentic.market crawlers could read it. Today on
+// x402-foundation/x402#2207, ethanoroshiba (Coinbase eng) confirmed:
+//
+//   1. /.well-known/x402 is NOT part of the discovery/indexing pipeline
+//   2. x402scan + agentic.market both auto-pull from CDP's discovery API
+//   3. CDP already indexed us on May 8 from the native @x402/express 402 body
+//
+// So the wrapper served no indexer purpose — and it had a catastrophic side
+// effect: it desynced the 402 body the buyer SDK parses from the
+// `paymentRequired.accepts` the server SDK has stored internally. The server's
+// `findMatchingRequirements` does deepEqual(serverRequirement, buyer.accepted)
+// for x402Version:2 payments. With the wrapper rewriting fields, no buyer
+// payload could ever deepEqual-match. Every standard buyer hit
+// "No matching payment requirements" at /settle. THIS is the actual reason our
+// l30DaysTotalCalls is frozen at 1 — we've been silently rejecting every paid
+// settle since the wrapper was deployed.
+//
+// Fix: use the unwrapped @x402/express middleware directly. Buyer and server
+// now serialize/deserialize through the exact same code path, deepEqual
+// matches, payment settles, Bazaar matcher attributes the call to the
+// indexed resource.
+app.use(paymentMiddleware(routeConfig, unifiedResourceServer));
 console.log(`✅ Unified payment middleware: single instance, all chains via facilitator array`);
 console.log(`✅ 402 body mirror: aggregator-visible challenge in response body`);
 console.log(`✅ PAYMENT-REQUIRED + PAYMENT-REQUIREMENTS canonical headers (V2 transport spec)`);
