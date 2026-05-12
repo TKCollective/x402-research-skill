@@ -559,23 +559,38 @@ const bazaarDeep = declareDiscoveryExtension({
 // 4b. Public seller-side discovery manifest (/.well-known/x402 and /info)
 // Canonical x402 v2 shape so Bazaar / agentic.market / x402scan crawlers can
 // fetch our resource list directly. Mirrors CDP's GET /discovery/resources.
+// V2 MIGRATION (May 11 2026, per x402-foundation/x402#2207 — ethanoroshiba):
+// CDP discoverability matcher compares the live discovery doc against
+// the snapshot captured at first-index (May 8). Our /.well-known/x402 was
+// emitting v1 shape (x402Version:1, network:"base", maxAmountRequired)
+// while our 402 challenge has always emitted v2 — this drift likely caused
+// our /research quality.l30DaysTotalCalls to freeze at 1 even though six
+// paid Base-mainnet settlements have landed since May 8.
+//
+// Fixes:
+//   1. x402Version: 1 -> 2 (top-level AND each item)
+//   2. accepts[].network: "base" -> "eip155:8453" (CAIP-2)
+//   3. accepts[].maxAmountRequired -> accepts[].amount (field rename in v2)
+//   4. Drop duplicated `resource` + `description` from inside accepts[] —
+//      these belong at the item level only.
+//   5. Item descriptions now match the live 402 routeConfig descriptions
+//      ("Load when…" pattern) so the matcher sees one canonical string.
 function buildDiscoveryManifest() {
   const lastUpdated = Math.floor(Date.now() / 1000);
   const items = [
     {
       resource: "https://agentoracle.co/research",
       type: "http",
-      x402Version: 1,
+      x402Version: 2,
+      description: "Load when an agent needs current external facts beyond training cutoff, citations with confidence scoring, or verifiable structured research. $0.02 USDC per query on Base.",
+      mimeType: "application/json",
       accepts: [{
         scheme: "exact",
-        network: "base",
-        maxAmountRequired: "20000",
+        network: "eip155:8453",
+        amount: "20000",
         asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
         payTo: PAY_TO,
         maxTimeoutSeconds: 300,
-        resource: "https://agentoracle.co/research",
-        description: "Real-time research API for AI agents. Send any natural-language question, get structured JSON with summary, key facts, sources, and confidence scoring. Powered by Perplexity Sonar. $0.02 USDC per query on Base.",
-        mimeType: "application/json",
         extra: { name: "USD Coin", version: "2" },
       }],
       lastUpdated,
@@ -592,15 +607,16 @@ function buildDiscoveryManifest() {
     {
       resource: "https://agentoracle.co/deep-research",
       type: "http",
-      x402Version: 1,
+      x402Version: 2,
+      description: "Load when an agent needs comprehensive multi-source analysis with deep reasoning, not a quick fact lookup. Powered by Sonar Pro. $0.10 USDC per query on Base.",
+      mimeType: "application/json",
       accepts: [{
-        scheme: "exact", network: "base",
-        maxAmountRequired: "100000",
+        scheme: "exact",
+        network: "eip155:8453",
+        amount: "100000",
         asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-        payTo: PAY_TO, maxTimeoutSeconds: 300,
-        resource: "https://agentoracle.co/deep-research",
-        description: "Deep research mode powered by Sonar Pro. $0.10 USDC per query on Base.",
-        mimeType: "application/json",
+        payTo: PAY_TO,
+        maxTimeoutSeconds: 300,
         extra: { name: "USD Coin", version: "2" },
       }],
       lastUpdated,
@@ -615,15 +631,16 @@ function buildDiscoveryManifest() {
     {
       resource: "https://agentoracle.co/research/batch",
       type: "http",
-      x402Version: 1,
+      x402Version: 2,
+      description: "Load when an agent needs up to 5 research queries answered in parallel in a single call, with the same citation+confidence output as /research. $0.10 USDC per batch on Base.",
+      mimeType: "application/json",
       accepts: [{
-        scheme: "exact", network: "base",
-        maxAmountRequired: "100000",
+        scheme: "exact",
+        network: "eip155:8453",
+        amount: "100000",
         asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-        payTo: PAY_TO, maxTimeoutSeconds: 300,
-        resource: "https://agentoracle.co/research/batch",
-        description: "Batch research API \u2014 up to 5 queries per call. $0.10 USDC per batch on Base.",
-        mimeType: "application/json",
+        payTo: PAY_TO,
+        maxTimeoutSeconds: 300,
         extra: { name: "USD Coin", version: "2" },
       }],
       lastUpdated,
@@ -637,7 +654,7 @@ function buildDiscoveryManifest() {
     },
   ];
   return {
-    x402Version: 1,
+    x402Version: 2,
     seller: {
       name: "AgentOracle",
       operator: "TKCollective LLC",
@@ -655,6 +672,19 @@ app.get("/.well-known/x402", (_req, res) => {
   res.json(buildDiscoveryManifest());
 });
 app.get("/info", (_req, res) => {
+  res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.json(buildDiscoveryManifest());
+});
+// Aliases so Bazaar / x402scan secondary path probes resolve cleanly
+// instead of returning the 404+sitemap (which can look like a broken
+// merchant to a crawler). Both paths return the same canonical manifest.
+app.get("/discovery", (_req, res) => {
+  res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.json(buildDiscoveryManifest());
+});
+app.get("/x402", (_req, res) => {
   res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300");
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.json(buildDiscoveryManifest());
