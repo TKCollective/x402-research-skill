@@ -886,6 +886,20 @@ function wrapPaymentMiddlewareForAggregators(originalMiddleware) {
   };
 }
 
+// ─── Settle-payload ring buffer (diagnostic) ───
+// Per ethanoroshiba's May 12 audit ask on x402#2207: confirm that every
+// paid /research settle actually carries paymentPayload.resource and
+// paymentPayload.extensions.bazaar, and that the facilitator is CDP and
+// not something else. Console logs are invisible without server access,
+// so we mirror the inject-middleware diagnostics into an in-memory ring
+// (last 50 paid requests) and expose them at /health/bazaar/last-settles.
+const SETTLE_RING_MAX = 50;
+const settleRing = [];
+function recordSettleEvent(ev) {
+  settleRing.push(ev);
+  if (settleRing.length > SETTLE_RING_MAX) settleRing.shift();
+}
+
 // ─── paymentPayload.resource Injector (PaymentPayloadV2 §5.2 fix) ───
 // Per ethanoroshiba's May 8 diagnosis on x402-foundation/x402#2207: the CDP
 // Bazaar indexer needs paymentPayload.resource = {url, description, mimeType}
@@ -944,6 +958,15 @@ app.use((req, res, next) => {
       // every paid request through us is bazaar-opted-in regardless of buyer SDK.
       // Pre-injection diagnostic (per x402#2207 May 10 investigation)
       console.log(`[bazaar-diag-pre] ${req.path} — extensions=${JSON.stringify(decoded.extensions)?.slice(0,200)}`);
+      const _pre_resource_url = decoded?.resource?.url || null;
+      const _pre_resource_type = typeof decoded?.resource;
+      const _pre_ext_bazaar_present = !!(decoded?.extensions?.bazaar?.info);
+      const _pre_ext_method = decoded?.extensions?.bazaar?.info?.input?.method || null;
+      const _x402_version = decoded?.x402Version || null;
+      const _network = decoded?.network || null;
+      const _scheme = decoded?.scheme || null;
+      const _from = decoded?.payload?.authorization?.from || null;
+      const _value = decoded?.payload?.authorization?.value || null;
       if (!decoded.extensions || !decoded.extensions.bazaar || !decoded.extensions.bazaar.info) {
         const bazaarExt =
           req.path === "/deep-research" ? bazaarDeep :
@@ -970,11 +993,57 @@ app.use((req, res, next) => {
       req.headers["payment-signature"] = finalEncoded;
       req.headers["PAYMENT-SIGNATURE"] = finalEncoded;
       console.log(`[header-rename] ${req.path} — mirrored X-PAYMENT to PAYMENT-SIGNATURE (V2 spec)`);
+      // ── ring-buffer record ──
+      recordSettleEvent({
+        t: new Date().toISOString(),
+        path: req.path,
+        method: req.method,
+        x402Version: _x402_version,
+        network: _network,
+        scheme: _scheme,
+        from: _from,
+        value: _value,
+        pre: {
+          resource_url: _pre_resource_url,
+          resource_type: _pre_resource_type,
+          ext_bazaar_present: _pre_ext_bazaar_present,
+          ext_method: _pre_ext_method,
+        },
+        post: {
+          resource_url: decoded?.resource?.url || null,
+          ext_bazaar_present: !!(decoded?.extensions?.bazaar?.info),
+          ext_method: decoded?.extensions?.bazaar?.info?.input?.method || null,
+          ext_schema_type: decoded?.extensions?.bazaar?.schema?.type || null,
+        },
+        mutated_resource: !_pre_resource_url || _pre_resource_type === "string",
+        mutated_extensions: !_pre_ext_bazaar_present,
+        facilitator: req.path && req.path.startsWith("/research") || req.path === "/deep-research" ? (CDP_ENABLED ? "cdp" : "xpay") : "n/a",
+      });
     } catch (e) {
       console.log(`[resource-inject] ${req.path} — decode/inject failed: ${e.message}`);
+      recordSettleEvent({
+        t: new Date().toISOString(),
+        path: req.path,
+        method: req.method,
+        error: `decode-failed: ${e.message}`,
+      });
     }
   }
   next();
+});
+
+// Diagnostic endpoint — shows the last N paid settle payloads after
+// server-side injection. Use this to confirm every settle carries:
+//   resource.url + extensions.bazaar.info.input.method
+// And that facilitator routing is correct (cdp vs xpay).
+app.get("/health/bazaar/last-settles", (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  res.json({
+    count: settleRing.length,
+    facilitator_resolved: CDP_ENABLED ? "cdp" : "xpay",
+    cdp_enabled: CDP_ENABLED,
+    settles: settleRing.slice().reverse(),  // newest first
+  });
 });
 
 // Pre-middleware diagnostic: log every X-PAYMENT request so we can see what the
