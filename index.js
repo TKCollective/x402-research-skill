@@ -982,7 +982,16 @@ const RESOURCE_MAP = {
   },
 };
 app.use((req, res, next) => {
-  const xpayHeaderName = req.headers["x-payment"] !== undefined ? "x-payment" : (req.headers["X-PAYMENT"] !== undefined ? "X-PAYMENT" : null);
+  // v2 buyer SDK (@x402/fetch) sends `PAYMENT-SIGNATURE` header.
+  // v1 buyer SDK (x402-fetch) sends `X-PAYMENT` header.
+  // Trigger the injector on either so we capture both buyer cohorts in the
+  // diagnostic ring buffer AND get bazaar-extension/resource injection on
+  // both paths.
+  const xpayHeaderName =
+    req.headers["payment-signature"] !== undefined ? "payment-signature" :
+    req.headers["PAYMENT-SIGNATURE"] !== undefined ? "PAYMENT-SIGNATURE" :
+    req.headers["x-payment"] !== undefined ? "x-payment" :
+    req.headers["X-PAYMENT"] !== undefined ? "X-PAYMENT" : null;
   const xpay = xpayHeaderName ? req.headers[xpayHeaderName] : null;
   if (xpay && RESOURCE_MAP[req.path]) {
     try {
