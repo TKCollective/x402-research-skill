@@ -830,8 +830,44 @@ function wrapPaymentMiddlewareForAggregators(originalMiddleware) {
               firstAccept.mimeType ||
               "application/json";
 
-            // Strip v1-style fields off accepts[] (per ethanoroshiba's diagnosis,
-            // resource/description/mimeType MUST NOT appear here in v2)
+            // EMIT HYBRID v1+v2 ACCEPTS SHAPE.
+            //
+            // Why hybrid (May 12 2026 root-cause find): the canonical buyer
+            // SDK `x402-fetch` (used by every standard buyer in the wild) is
+            // still on v1. Its Zod schema REQUIRES on every accept:
+            //   - network: enum ['base'|'base-sepolia'|...]  (rejects 'eip155:8453')
+            //   - maxAmountRequired: string  (required)
+            //   - resource: string           (required)
+            //   - description: string       (required)
+            //   - mimeType: string          (required)
+            // If any field is missing or `network` is the CAIP-2 form, the
+            // buyer SDK throws `ZodError` BEFORE submitting payment — every
+            // standard buyer has been failing to pay us at parse time since
+            // we migrated. THIS is why l30DaysTotalCalls is frozen at 1: not
+            // a Bazaar bug, our wrapper was v2-strict and locked out every
+            // v1 buyer. Verified by running the canonical x402-fetch buyer
+            // against /research and observing ZodError.
+            //
+            // Fix: emit BOTH shapes on each accept. v2 indexers (CDP Bazaar,
+            // x402scan, agentic.market) read `amount` + CAIP-2 `network` +
+            // top-level resource{}. v1 buyers read `maxAmountRequired` +
+            // legacy `network` label + inlined resource/description/mimeType.
+            // No indexer chokes on extra fields. No buyer chokes on missing
+            // ones. Both work.
+            const v1NetworkOf = (n) => {
+              if (!n) return undefined;
+              if (n === "eip155:8453") return "base";
+              if (n === "eip155:1187947933") return "skale-base-sepolia"; // closest in v1 enum
+              if (n === "eip155:84532") return "base-sepolia";
+              return n; // already a v1 label
+            };
+            const v2NetworkOf = (n) => {
+              if (!n) return undefined;
+              if (n === "base") return "eip155:8453";
+              if (n === "skale") return "eip155:1187947933";
+              if (n === "base-sepolia") return "eip155:84532";
+              return n; // already CAIP-2
+            };
             const accepts = (decoded.accepts || []).map((a) => {
               const {
                 resource: _r,
@@ -843,16 +879,32 @@ function wrapPaymentMiddlewareForAggregators(originalMiddleware) {
                 ...rest
               } = a;
               const cleaned = { ...rest };
-              // amount field: keep as `amount` per v2 schema; some SDK versions
-              // emit `maxAmountRequired` only — coalesce.
-              if (rawAmount !== undefined) cleaned.amount = String(rawAmount);
-              else if (maxAmountRequired !== undefined) cleaned.amount = String(maxAmountRequired);
-              // CAIP-2 network. Validators/CDP indexer expect chain-id form.
-              if (network) {
-                if (network === "base") cleaned.network = "eip155:8453";
-                else if (network === "skale") cleaned.network = "eip155:1187947933";
-                else cleaned.network = network; // already CAIP-2 or other label
+
+              // amount/maxAmountRequired — emit BOTH. v2 reads `amount`, v1 reads
+              // `maxAmountRequired`. Both populated from the same source value.
+              const amountValue =
+                rawAmount !== undefined ? String(rawAmount) :
+                maxAmountRequired !== undefined ? String(maxAmountRequired) :
+                undefined;
+              if (amountValue !== undefined) {
+                cleaned.amount = amountValue;
+                cleaned.maxAmountRequired = amountValue;
               }
+
+              // network — emit v1 label (buyer-required). The CAIP-2 form is
+              // EXPRESSED via the top-level resource and via `extra.network`
+              // for any indexer that wants it. Keeping the canonical v1
+              // enum value is what unblocks x402-fetch.
+              if (network) {
+                cleaned.network = v1NetworkOf(network) || network;
+              }
+
+              // resource/description/mimeType — buyer SDK requires these on
+              // accept. Pull from the top-level resource{} we already built.
+              cleaned.resource = resourceUrl;
+              cleaned.description = resourceDescription || "Paid API resource";
+              cleaned.mimeType = resourceMimeType;
+
               return cleaned;
             });
 
