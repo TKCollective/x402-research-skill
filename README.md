@@ -299,6 +299,18 @@ Agents report outcomes for free. Did acting on a `"recommendation": "act"` claim
 
 ---
 
+## Production integrators
+
+Independent x402 / Coinbase Bazaar integrators we cross-link to. If you're shipping a paid agent endpoint on Base and want to compare notes, see the ongoing discussion on [x402-foundation/x402#2207](https://github.com/x402-foundation/x402/issues/2207).
+
+- **[hyperd-py](https://github.com/0xdespot/hyperd-py)** — Reference Python buyer for x402 in ~210 LOC. The canonical non-TypeScript integration pattern. By [@0xdespot](https://github.com/0xdespot).
+- **[x402-market](https://github.com/AsaiShota/x402-market)** — Multi-merchant marketplace with paid `test-echo-cdp-*` resources for cross-merchant probing on Base. By [@AsaiShota](https://github.com/AsaiShota).
+- **[Syndicate Links](https://syndicatelinks.co)** — `api.syndicatelinks.co/affiliate/links` paid affiliate-link API on Base mainnet. By [@cmcgrabby-hue](https://github.com/cmcgrabby-hue).
+
+All four of us share standing instrumentation (ring buffers + CDP discovery-API watchdogs) for Bazaar attribution debugging. If you're integrating and hit something unusual, the four-merchant dataset on issue #2207 is the public record of what we've seen so far.
+
+---
+
 ## Links
 
 - Website: [agentoracle.co](https://agentoracle.co)
