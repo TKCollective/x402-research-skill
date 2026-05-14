@@ -1162,6 +1162,12 @@ app.use((req, res, next) => {
       // discovery indexed within ~30s after adding both names (May 8 23:49Z).
       origSetHeader("PAYMENT-REQUIRED", value);
       origSetHeader("PAYMENT-REQUIREMENTS", value);
+      // RFC 7235 WWW-Authenticate auth-challenge convention. Per RipperMercs
+      // on x402-foundation/x402#2207 (May 14): blockrun.ai also emits this
+      // alongside PAYMENT-REQUIRED, matching the canonical 402-challenge
+      // shape. Cost is zero, defense in depth for any HTTP client that
+      // reads RFC-7235 challenges before custom x402 headers.
+      origSetHeader("WWW-Authenticate", `X402 requirements="${value}"`);
     }
     return result;
   };
@@ -1174,11 +1180,122 @@ app.use((req, res, next) => {
       const additions = [];
       if (!/PAYMENT-REQUIRED\b/i.test(expose)) additions.push("PAYMENT-REQUIRED");
       if (!/PAYMENT-REQUIREMENTS/i.test(expose)) additions.push("PAYMENT-REQUIREMENTS");
+      if (!/WWW-Authenticate/i.test(expose)) additions.push("WWW-Authenticate");
       if (additions.length) origSetHeader("access-control-expose-headers", expose + "," + additions.join(","));
     }
     return origWriteHead(...args);
   };
   next();
+});
+
+// ─── EXTENSION-RESPONSES capture (diagnostic for x402#2207 four-bucket triage) ───
+// Per AsaiShota / 0xdespot / RipperMercs / ethanoroshiba on issue #2207
+// (May 13-14), Bazaar attribution failures sort into 4 distinct buckets
+// depending on what EXTENSION-RESPONSES header the facilitator returns
+// on the settle 200:
+//
+//   bucket 1: EXTENSION-RESPONSES absent       → extension never reached indexer
+//   bucket 2: EXTENSION-RESPONSES = processing → accepted, indexer never fires (TensorFeed pre-fix)
+//   bucket 3: EXTENSION-RESPONSES = success    → indexed once, pipeline froze (x402-market shape)
+//   bucket 4: never advanced past initial probe (current AgentOracle characterization)
+//
+// We have no first-party data on which bucket we're in because we never
+// captured the post-settle EXTENSION-RESPONSES header on the way back
+// from the facilitator. This middleware fixes that gap: it wraps the
+// response so any settle that returns an EXTENSION-RESPONSES header is
+// captured into an in-memory ring buffer keyed by tx hash, exposed at
+// /health/bazaar/last-extension-responses for the thread to consume.
+const EXT_RESP_RING_MAX = 50;
+const extRespRing = [];
+function recordExtensionResponse(ev) {
+  extRespRing.push(ev);
+  if (extRespRing.length > EXT_RESP_RING_MAX) extRespRing.shift();
+}
+app.use((req, res, next) => {
+  if (req.method !== "POST") return next();
+  // Only instrument paid routes
+  if (!/^\/(research|deep-research|research\/batch|evaluate)/.test(req.path)) return next();
+  const origSetHeader = res.setHeader.bind(res);
+  const origJson = res.json.bind(res);
+  let extResp = null;
+  res.setHeader = function (name, value) {
+    if (typeof name === "string" && /^extension-responses$/i.test(name)) {
+      extResp = String(value);
+    }
+    return origSetHeader(name, value);
+  };
+  res.json = function (body) {
+    // Also pluck from x-payment-response if facilitator embedded extension result there
+    try {
+      const payResp = res.getHeader("x-payment-response") || res.getHeader("payment-response");
+      let txHash = null, payer = null;
+      if (payResp) {
+        try {
+          const decoded = JSON.parse(Buffer.from(String(payResp), "base64").toString("utf8"));
+          txHash = decoded?.transaction || null;
+          payer = decoded?.payer || null;
+        } catch (_) {}
+      }
+      let extDecoded = null;
+      if (extResp) {
+        try { extDecoded = JSON.parse(Buffer.from(extResp, "base64").toString("utf8")); }
+        catch (_) { extDecoded = { _raw: extResp.slice(0, 200), _decode_error: true }; }
+      }
+      // Bucket classification per #2207 diagnostic taxonomy
+      let bucket = "4_no_extension_response";
+      if (extDecoded && extDecoded.bazaar) {
+        if (extDecoded.bazaar.status === "processing") bucket = "2_processing";
+        else if (extDecoded.bazaar.status === "success") bucket = "3_success";
+        else if (extDecoded.bazaar.status === "failed" || extDecoded.bazaar.error) bucket = "1_extension_rejected";
+        else bucket = "X_unknown_status";
+      } else if (extResp) {
+        bucket = "X_extension_responses_present_but_unparseable";
+      }
+      recordExtensionResponse({
+        t: new Date().toISOString(),
+        path: req.path,
+        status: res.statusCode,
+        tx_hash: txHash,
+        payer,
+        ext_responses_header_present: !!extResp,
+        ext_responses_decoded: extDecoded,
+        bucket,
+      });
+    } catch (e) {
+      recordExtensionResponse({
+        t: new Date().toISOString(),
+        path: req.path,
+        error: `capture-failed: ${e.message}`,
+      });
+    }
+    return origJson(body);
+  };
+  next();
+});
+
+// Diagnostic endpoint — last 50 paid-settle EXTENSION-RESPONSES outcomes,
+// bucketed per the four-failure-mode taxonomy on x402#2207.
+app.get("/health/bazaar/last-extension-responses", (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  // Quick bucket histogram for at-a-glance read
+  const histogram = {};
+  for (const e of extRespRing) {
+    const k = e.bucket || "err";
+    histogram[k] = (histogram[k] || 0) + 1;
+  }
+  res.json({
+    count: extRespRing.length,
+    histogram,
+    buckets_legend: {
+      "1_extension_rejected": "bazaar handler returned failure/error — extension reached indexer but was rejected",
+      "2_processing": "EXTENSION-RESPONSES = processing — extension accepted, indexer never fires (TensorFeed pre-fix shape)",
+      "3_success": "EXTENSION-RESPONSES = success — indexed at least once, may be in pipeline-freeze state",
+      "4_no_extension_response": "EXTENSION-RESPONSES header absent entirely — extension never reached indexer (Syndicate Links shape)",
+      "X_unknown_status": "unrecognized bazaar.status value — schema drift",
+      "X_extension_responses_present_but_unparseable": "header present but base64/json decode failed",
+    },
+    events: extRespRing.slice().reverse(),
+  });
 });
 
 // May 12 2026: AGGREGATOR WRAPPER DISABLED.
