@@ -1241,15 +1241,24 @@ app.use((req, res, next) => {
         try { extDecoded = JSON.parse(Buffer.from(extResp, "base64").toString("utf8")); }
         catch (_) { extDecoded = { _raw: extResp.slice(0, 200), _decode_error: true }; }
       }
-      // Bucket classification per #2207 diagnostic taxonomy
-      let bucket = "4_no_extension_response";
-      if (extDecoded && extDecoded.bazaar) {
+      // Bucket classification per #2207 diagnostic taxonomy.
+      // ONLY classify settles that actually paid (200 + tx_hash present).
+      // 402 challenges and other non-paid responses are excluded since they
+      // never invoked the facilitator's bazaar extension handler at all and
+      // therefore say nothing about the EXTENSION-RESPONSES failure-mode bucket.
+      let bucket;
+      const isPaidSettle = res.statusCode === 200 && !!txHash;
+      if (!isPaidSettle) {
+        bucket = "0_not_a_paid_settle";
+      } else if (extDecoded && extDecoded.bazaar) {
         if (extDecoded.bazaar.status === "processing") bucket = "2_processing";
         else if (extDecoded.bazaar.status === "success") bucket = "3_success";
         else if (extDecoded.bazaar.status === "failed" || extDecoded.bazaar.error) bucket = "1_extension_rejected";
         else bucket = "X_unknown_status";
       } else if (extResp) {
         bucket = "X_extension_responses_present_but_unparseable";
+      } else {
+        bucket = "4_no_extension_response";
       }
       recordExtensionResponse({
         t: new Date().toISOString(),
@@ -1287,12 +1296,13 @@ app.get("/health/bazaar/last-extension-responses", (req, res) => {
     count: extRespRing.length,
     histogram,
     buckets_legend: {
-      "1_extension_rejected": "bazaar handler returned failure/error — extension reached indexer but was rejected",
-      "2_processing": "EXTENSION-RESPONSES = processing — extension accepted, indexer never fires (TensorFeed pre-fix shape)",
-      "3_success": "EXTENSION-RESPONSES = success — indexed at least once, may be in pipeline-freeze state",
-      "4_no_extension_response": "EXTENSION-RESPONSES header absent entirely — extension never reached indexer (Syndicate Links shape)",
-      "X_unknown_status": "unrecognized bazaar.status value — schema drift",
-      "X_extension_responses_present_but_unparseable": "header present but base64/json decode failed",
+      "0_not_a_paid_settle": "422/402/4xx/etc — no paid settle attempted, no bazaar handler invocation, says nothing about attribution",
+      "1_extension_rejected": "PAID SETTLE: bazaar handler returned failure/error — extension reached indexer but was rejected",
+      "2_processing": "PAID SETTLE: EXTENSION-RESPONSES = processing — extension accepted, indexer never fires (TensorFeed pre-fix shape)",
+      "3_success": "PAID SETTLE: EXTENSION-RESPONSES = success — indexed at least once, may be in pipeline-freeze state",
+      "4_no_extension_response": "PAID SETTLE: EXTENSION-RESPONSES header absent entirely — extension never reached indexer (Syndicate Links shape)",
+      "X_unknown_status": "PAID SETTLE: unrecognized bazaar.status value — schema drift",
+      "X_extension_responses_present_but_unparseable": "PAID SETTLE: header present but base64/json decode failed",
     },
     events: extRespRing.slice().reverse(),
   });
