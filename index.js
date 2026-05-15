@@ -1215,19 +1215,33 @@ app.use((req, res, next) => {
   if (req.method !== "POST") return next();
   // Only instrument paid routes
   if (!/^\/(research|deep-research|research\/batch|evaluate)/.test(req.path)) return next();
-  const origSetHeader = res.setHeader.bind(res);
-  const origJson = res.json.bind(res);
-  let extResp = null;
-  res.setHeader = function (name, value) {
-    if (typeof name === "string" && /^extension-responses$/i.test(name)) {
-      extResp = String(value);
-    }
-    return origSetHeader(name, value);
-  };
-  res.json = function (body) {
-    // Also pluck from x-payment-response if facilitator embedded extension result there
+
+  // res.on('finish') fires AFTER Node has flushed headers to the wire,
+  // regardless of which middleware called res.send / res.json / res.end
+  // or which middleware actually set the headers. This is the correct
+  // hook for capturing facilitator-injected response headers like
+  // EXTENSION-RESPONSES on /research settles where @x402/express's
+  // paymentMiddleware writes the settle 200 outside our outbound-wrap.
+  //
+  // Earlier version of this middleware wrapped res.json directly, but
+  // that missed cases where @x402/express short-circuits and writes the
+  // settle response before user route handlers run. The 'finish' event
+  // is the canonical Node hook for "response fully written" and fires
+  // for every response regardless of writer.
+  res.on("finish", () => {
     try {
-      const payResp = res.getHeader("x-payment-response") || res.getHeader("payment-response");
+      // Pull EXTENSION-RESPONSES off the actually-sent headers (case-insensitive)
+      // res.getHeaders() returns lowercased keys regardless of how they were set
+      const headers = res.getHeaders ? res.getHeaders() : {};
+      const extResp = headers["extension-responses"] ||
+                      headers["Extension-Responses"] ||
+                      res.getHeader("extension-responses");
+      const extRespStr = extResp ? String(extResp) : null;
+
+      // Pull tx hash + payer off x-payment-response (canonical place facilitator
+      // returns settle metadata to the seller)
+      const payResp = res.getHeader("x-payment-response") ||
+                      res.getHeader("payment-response");
       let txHash = null, payer = null;
       if (payResp) {
         try {
@@ -1236,16 +1250,21 @@ app.use((req, res, next) => {
           payer = decoded?.payer || null;
         } catch (_) {}
       }
+
       let extDecoded = null;
-      if (extResp) {
-        try { extDecoded = JSON.parse(Buffer.from(extResp, "base64").toString("utf8")); }
-        catch (_) { extDecoded = { _raw: extResp.slice(0, 200), _decode_error: true }; }
+      if (extRespStr) {
+        try { extDecoded = JSON.parse(Buffer.from(extRespStr, "base64").toString("utf8")); }
+        catch (_) {
+          // Try plain JSON (some facilitator versions return non-base64-encoded)
+          try { extDecoded = JSON.parse(extRespStr); }
+          catch (_) { extDecoded = { _raw: extRespStr.slice(0, 300), _decode_error: true }; }
+        }
       }
+
       // Bucket classification per #2207 diagnostic taxonomy.
       // ONLY classify settles that actually paid (200 + tx_hash present).
       // 402 challenges and other non-paid responses are excluded since they
-      // never invoked the facilitator's bazaar extension handler at all and
-      // therefore say nothing about the EXTENSION-RESPONSES failure-mode bucket.
+      // never invoked the facilitator's bazaar extension handler at all.
       let bucket;
       const isPaidSettle = res.statusCode === 200 && !!txHash;
       if (!isPaidSettle) {
@@ -1255,20 +1274,36 @@ app.use((req, res, next) => {
         else if (extDecoded.bazaar.status === "success") bucket = "3_success";
         else if (extDecoded.bazaar.status === "failed" || extDecoded.bazaar.error) bucket = "1_extension_rejected";
         else bucket = "X_unknown_status";
-      } else if (extResp) {
+      } else if (extRespStr) {
         bucket = "X_extension_responses_present_but_unparseable";
       } else {
         bucket = "4_no_extension_response";
       }
+
+      // ALL response headers captured for thread-publishable diagnostic.
+      // Strip ones that carry buyer-PII or settle-specific bytes the buyer
+      // already has; keep facilitator-injected and CDP-injected ones.
+      const safeHeaders = {};
+      for (const [k, v] of Object.entries(headers)) {
+        const kl = k.toLowerCase();
+        // Keep only facilitator/indexer signal headers + standard observable
+        if (/^(extension-responses|payment-response|x-payment-response|x-bazaar|x-cdp-|x-facilitator-|server|date|content-type|content-length)/.test(kl)) {
+          safeHeaders[kl] = typeof v === "string" ? (v.length > 500 ? v.slice(0, 500) + "...[truncated]" : v) : v;
+        }
+      }
+
       recordExtensionResponse({
         t: new Date().toISOString(),
         path: req.path,
+        method: req.method,
         status: res.statusCode,
         tx_hash: txHash,
         payer,
-        ext_responses_header_present: !!extResp,
+        ext_responses_header_present: !!extRespStr,
+        ext_responses_raw_truncated: extRespStr ? extRespStr.slice(0, 300) : null,
         ext_responses_decoded: extDecoded,
         bucket,
+        response_headers: safeHeaders,
       });
     } catch (e) {
       recordExtensionResponse({
@@ -1277,8 +1312,7 @@ app.use((req, res, next) => {
         error: `capture-failed: ${e.message}`,
       });
     }
-    return origJson(body);
-  };
+  });
   next();
 });
 
