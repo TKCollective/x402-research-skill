@@ -705,6 +705,19 @@ app.get("/x402", (_req, res) => {
 const researchAccepts = [baseAcceptResearch];
 const deepAccepts = [baseAcceptDeep];
 
+// Dedicated SKALE-gasless route — additive (2026-05-15).
+// /deep-research/skale is functionally identical to /deep-research but exposes
+// SKALE (eip155:1187947933) via PayAI as the sole accepts entry. This keeps
+// the Bazaar-indexed /deep-research route Base-only (per 579923c2 constraint:
+// CDP indexer rejects routes whose accepts[] contains networks outside its
+// enum, even when Base is also present), while giving SKALE-native callers a
+// real, callable, gasless endpoint they can curl and pay on SKALE today.
+//
+// Deliberately omits the bazaar discovery extension on this route: CDP
+// doesn't index SKALE-only resources anyway, and including the extension
+// surface here invites the exact rejection-pattern we're protecting against.
+const deepSkaleAccepts = [skaleAcceptDeep];
+
 // Batch pricing: $0.10 for up to 5 queries (same price structure as deep)
 const BATCH_PRICE = "$0.10";
 const SKALE_PRICE_BATCH = {
@@ -741,6 +754,13 @@ const routeConfig = {
     description: "Load when an agent needs comprehensive multi-source analysis with deep reasoning, not a quick fact lookup. Powered by Sonar Pro. $0.10 USDC per query on Base.",
     mimeType: "application/json",
     extensions: { ...bazaarDeep },
+  },
+  // SKALE-dedicated alias of /deep-research. Same backend, different payment
+  // network. No bazaar extension on purpose (see deepSkaleAccepts comment).
+  "POST /deep-research/skale": {
+    accepts: deepSkaleAccepts,
+    description: "Load when an agent on SKALE Network needs gasless multi-source deep analysis. Same backend as /deep-research. Powered by Sonar Pro. $0.10 USDC per query on SKALE.",
+    mimeType: "application/json",
   },
   "POST /research/batch": {
     accepts: batchAccepts,
@@ -3100,9 +3120,14 @@ app.get("/demo/video", (_req, res) => {
 //  Body: { "query": "any natural-language question" }
 //  Price: $0.10 USDC — uses sonar-pro for deeper, more comprehensive research
 
-app.post("/deep-research", async (req, res) => {
+// /deep-research and /deep-research/skale share the same backend.
+// Distinct routes in routeConfig give them distinct 402 challenges (Base-only
+// vs SKALE-only accepts), but once payment is settled the body of the request
+// is handled identically below. trackRequest tags each path independently so
+// /traffic stats stay honest about which payment network the caller used.
+app.post(["/deep-research", "/deep-research/skale"], async (req, res) => {
   const { query } = req.body;
-  trackRequest(req, "deep-research");
+  trackRequest(req, req.path === "/deep-research/skale" ? "deep-research-skale" : "deep-research");
 
   if (!query || typeof query !== "string" || query.trim().length === 0) {
     return res.status(400).json({
@@ -3607,6 +3632,17 @@ app.post("/evaluate", async (req, res) => {
         );
       });
     });
+    // Backfill any sources that never resolved before the early-finish trigger
+    // (3-of-4 settle path leaves the 4th as null until the budget timer fires).
+    // Without this, parseEvalResponse on a null slot throws
+    //   "Cannot read properties of null (reading 'status')"
+    // which surfaced as the 500 on short /evaluate payloads in CI on 2026-05-15.
+    for (let i = 0; i < settled.length; i++) {
+      if (settled[i] === null) {
+        settled[i] = { status: "rejected", reason: "finished_before_settle" };
+        console.log(`[EVALUATE] ${labels[i]}: unsettled when early-finish fired, treating as rejected`);
+      }
+    }
     const [sonarRes, proRes, advRes, gemmaRes] = settled;
     console.log(`[EVALUATE] settled in ${Date.now()-evalStart}ms (${settledCount}/4 sources, budget=${EVAL_BUDGET_MS}ms)`);
 
@@ -3614,7 +3650,7 @@ app.post("/evaluate", async (req, res) => {
     const gemmaEval = gemmaRes?.status === "fulfilled" ? gemmaRes.value : null;
 
     function parseEvalResponse(settled, label) {
-      if (settled.status === "rejected") { console.log(`[EVALUATE] ${label}: rejected`); return null; }
+      if (!settled || settled.status === "rejected") { if (settled) console.log(`[EVALUATE] ${label}: rejected`); return null; }
       try {
         const raw = settled.value.data?.choices?.[0]?.message?.content || "{}";
         const cleaned = raw.replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/i,"").trim();
