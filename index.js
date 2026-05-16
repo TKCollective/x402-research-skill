@@ -3607,6 +3607,17 @@ app.post("/evaluate", async (req, res) => {
         );
       });
     });
+    // Backfill any sources that never resolved before the early-finish trigger
+    // (3-of-4 settle path leaves the 4th as null until the budget timer fires).
+    // Without this, parseEvalResponse on a null slot throws
+    //   "Cannot read properties of null (reading 'status')"
+    // which surfaced as the 500 on short /evaluate payloads in CI on 2026-05-15.
+    for (let i = 0; i < settled.length; i++) {
+      if (settled[i] === null) {
+        settled[i] = { status: "rejected", reason: "finished_before_settle" };
+        console.log(`[EVALUATE] ${labels[i]}: unsettled when early-finish fired, treating as rejected`);
+      }
+    }
     const [sonarRes, proRes, advRes, gemmaRes] = settled;
     console.log(`[EVALUATE] settled in ${Date.now()-evalStart}ms (${settledCount}/4 sources, budget=${EVAL_BUDGET_MS}ms)`);
 
@@ -3614,7 +3625,7 @@ app.post("/evaluate", async (req, res) => {
     const gemmaEval = gemmaRes?.status === "fulfilled" ? gemmaRes.value : null;
 
     function parseEvalResponse(settled, label) {
-      if (settled.status === "rejected") { console.log(`[EVALUATE] ${label}: rejected`); return null; }
+      if (!settled || settled.status === "rejected") { if (settled) console.log(`[EVALUATE] ${label}: rejected`); return null; }
       try {
         const raw = settled.value.data?.choices?.[0]?.message?.content || "{}";
         const cleaned = raw.replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/i,"").trim();

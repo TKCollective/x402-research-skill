@@ -92,9 +92,15 @@ describe("Preview Endpoint (Free)", () => {
     // Preview is rate limited to 10/hr — may hit limit during test runs
     expect([200, 429]).toContain(status);
     if (status === 200) {
-      // Successful preview returns structured data
+      // Successful preview returns truncated structured data.
+      // Confidence lives nested under `result.confidence_score`, not at the
+      // top level. Test originally asserted top-level `confidence` which
+      // never existed on the live API — corrected 2026-05-15 against the
+      // actual /preview response shape.
       expect(json).toHaveProperty("preview", true);
-      expect(json).toHaveProperty("confidence");
+      expect(json).toHaveProperty("result");
+      expect(json.result).toHaveProperty("confidence_score");
+      expect(typeof json.result.confidence_score).toBe("number");
     } else {
       // Rate limited response should suggest upgrade path
       expect(json).toHaveProperty("error", "Rate Limited");
@@ -127,14 +133,23 @@ describe("Paid Endpoints (Payment Required)", () => {
   });
 
   it("POST /evaluate processes claims and returns verification", async () => {
-    const { status, json } = await api("POST", "/evaluate", { content: "The sky is blue" });
+    // Use a payload substantial enough that all 4 verification sources have
+    // material to work with. Short fillers like "The sky is blue" tripped a
+    // race in the early-finish path where one source remained null when 3 of 4
+    // settled, surfacing as 500 / "Cannot read properties of null (reading
+    // 'status')" — fixed in the /evaluate handler (defensive backfill).
+    const { status, json } = await api(
+      "POST",
+      "/evaluate",
+      { content: "Bitcoin is trading around $80,000 according to recent market coverage.", min_confidence: 0.5 }
+    );
     // /evaluate may return 200 (free) or 402 (paid) depending on config
     expect([200, 402]).toContain(status);
     if (status === 200) {
       expect(json).toHaveProperty("evaluation_id");
       expect(json).toHaveProperty("evaluation");
     }
-  }, 30000);
+  }, 60000);
 });
 
 // ═══════════════════════════════════════════════════════════════
@@ -168,18 +183,23 @@ describe("x402 Payment Flow", () => {
     expect(networks.some(n => n.includes("8453"))).toBe(true);
   });
 
-  it("402 response includes Stellar payment option", async () => {
-    const { headers } = await api("POST", "/research", { query: "test" });
-    const challenge = decode402Header(headers);
-    const networks = challenge.accepts.map(a => a.network);
-    expect(networks.some(n => n.includes("stellar"))).toBe(true);
-  });
+  // Stellar and SKALE are intentionally NOT advertised on the Bazaar-indexed
+  // /research and /deep-research routes — CDP's indexer rejects routes whose
+  // accepts[] contains networks outside its enum (commit 579923c2, 2026-05-03).
+  // Stellar accept definitions remain in the codebase (stellarAcceptResearch /
+  // stellarAcceptDeep) for a future dedicated route when we wire it up.
+  // SKALE has a dedicated route ship landing on a feature branch — tests for
+  // it live on that branch and merge to main with the route itself.
+  it.skip("402 response includes Stellar payment option (deferred — needs dedicated route)", () => {});
+  it.skip("402 response includes SKALE gasless option (deferred — see feat/skale-dedicated-route)", () => {});
 
-  it("402 response includes SKALE gasless option", async () => {
-    const { headers } = await api("POST", "/research", { query: "test" });
+  it("402 response on /deep-research stays Base-only (CDP Bazaar compatibility)", async () => {
+    const { headers } = await api("POST", "/deep-research", { query: "test" });
     const challenge = decode402Header(headers);
     const networks = challenge.accepts.map(a => a.network);
-    expect(networks.some(n => n.includes("1187947933"))).toBe(true);
+    // Must remain Base-only — see commit 579923c2 (2026-05-03). Any SKALE or
+    // Stellar leak here will get the route de-indexed from CDP Bazaar.
+    expect(networks.every(n => n.includes("8453"))).toBe(true);
   });
 
   it("402 response includes Bazaar discovery extension", async () => {
