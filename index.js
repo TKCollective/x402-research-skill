@@ -33,6 +33,15 @@
  *   Scheme:  exact (x402 v2)
  */
 
+// CDP-side fetch tap MUST be the very first import. It monkey-patches
+// globalThis.fetch so that calls from the @coinbase/x402 SDK to the CDP
+// facilitator /settle and /verify endpoints capture the EXTENSION-RESPONSES
+// response header into a ring buffer. If this import moves below any module
+// that reads globalThis.fetch on import (notably @x402/core, @coinbase/x402,
+// or anything that imports them transitively), the tap is silently bypassed
+// because those modules cache the original fetch reference at module-load.
+// See cdp-fetch-tap.js for full bucket definitions and the rationale.
+import { getCdpFetchTapBuffer, getCdpFetchTapState } from "./cdp-fetch-tap.js";
 import "dotenv/config";
 import express from "express";
 // Redis via REST API (no package dependency needed)
@@ -1340,6 +1349,44 @@ app.get("/health/bazaar/last-extension-responses", (req, res) => {
     },
     events: extRespRing.slice().reverse(),
   });
+});
+
+// CDP-side fetch tap buffer.
+// This is the *correct* measurement point for EXTENSION-RESPONSES — the
+// server-to-server hop from CDP back to our facilitator client, captured by
+// the globalThis.fetch wrapper installed by cdp-fetch-tap.js. The Express
+// res.on('finish') hook above measures the wrong direction (merchant ->
+// agent) and so reports bucket 4 by construction; this endpoint reports the
+// real CDP-side bucket.
+//
+// Per the discussion on x402-foundation/x402#2207 (@0xdespot, @evanatpizzarobot),
+// EXTENSION-RESPONSES lives on the CDP facilitator's response to /settle and
+// /verify, not on the resource response the paying agent sees.
+//
+// Query params:
+//   ?limit=N    (default 50, max 256 — number of events returned, newest first)
+//   ?bucket=2_processing   (filter to a specific bucket)
+app.get("/health/cdp/fetch-tap-buffer", (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  const limit = Math.min(256, Math.max(1, parseInt(req.query.limit, 10) || 50));
+  const bucket = req.query.bucket ? String(req.query.bucket) : null;
+  const buf = getCdpFetchTapBuffer({ limit, bucket });
+  res.json({
+    ...buf,
+    buckets_legend: {
+      "2_processing": "CDP-side: EXTENSION-RESPONSES present, bazaar.status=processing (transient for TF/hyperD, terminal for AsaiShota/us per x402#2207)",
+      "3_success": "CDP-side: EXTENSION-RESPONSES present, bazaar.status=success (resource attributed in catalog)",
+      "1_rejected": "CDP-side: EXTENSION-RESPONSES present, bazaar.status=rejected (extension reached indexer, indexer refused)",
+      "4_absent": "CDP-side: EXTENSION-RESPONSES header missing from CDP's response (the failure mode @0xdespot flagged: header never sent)",
+      "0_not_settle_or_verify": "CDP traffic but not /settle or /verify (no bucket decision needed)",
+      "0_fetch_error": "fetch threw before a response was returned",
+    },
+  });
+});
+
+app.get("/health/cdp/fetch-tap-state", (_req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  res.json(getCdpFetchTapState());
 });
 
 // May 12 2026: AGGREGATOR WRAPPER DISABLED.
