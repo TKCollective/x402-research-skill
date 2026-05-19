@@ -2441,7 +2441,11 @@ function sendChallengeFor(routePath, price, tierNote, res) {
     Buffer.from(JSON.stringify(challenge)).toString("base64")
   );
   res.setHeader("x402-Version", "2");
-  res.status(402).json({ ...doc, x402_challenge: challenge });
+  // Body must include the x402Version + accepts[] fields at the top level
+  // so strict x402 v2 readers (fardinvahdat/x402trace bazaar-check) can
+  // parse the challenge without descending into a wrapper. The usage doc
+  // is merged in alongside so curling humans still see the friendly fields.
+  res.status(402).json({ ...challenge, ...doc });
 }
 app.get("/research", (_req, res) =>
   sendChallengeFor("/research", "$0.02", "Pass tier=deep to upgrade to Sonar Pro at $0.10.", res)
