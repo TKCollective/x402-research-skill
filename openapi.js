@@ -40,6 +40,10 @@ export const openapiDocument = {
     // step is what populates this with a registration token they hand us.
     ownershipProofs: [],
   },
+  // Top-level default auth declaration so AgentCash's L3 validator doesn't
+  // warn that the endpoint as a whole has no auth mode. Per-operation
+  // security objects override this.
+  security: [{ x402: [] }],
   paths: {
     "/preview": {
       post: {
