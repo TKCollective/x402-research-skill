@@ -48,6 +48,8 @@ export const openapiDocument = {
         description:
           "Truncated verification response (top sources only, confidence score, no exhaustive key-fact list). Free during beta. Rate limited to 20 req/hr per IP.",
         tags: ["Verification"],
+        security: [], // explicitly unauthenticated
+        "x-auth": { mode: "none" },
         requestBody: {
           required: true,
           content: {
@@ -98,6 +100,7 @@ export const openapiDocument = {
     "/research": {
       post: {
         operationId: "research",
+        security: [{ x402: [] }],
         summary: "Research — Single-query verification with sources",
         description:
           "Full verification response: summary, key_facts array, source URLs, confidence score, metadata. Powered by Sonar. Settled in USDC on Base via x402.",
@@ -190,6 +193,7 @@ export const openapiDocument = {
     "/evaluate": {
       post: {
         operationId: "evaluate",
+        security: [{ x402: [] }],
         summary: "Evaluate — Per-claim verdict (ACT / VERIFY / REJECT)",
         description:
           "Multi-source verification of a specific factual claim. Returns per-claim verdicts, evidence, and a confidence threshold recommendation. Currently free in v2.2 beta; paid tiers turn on after the AVeriTeC benchmark numbers publish.",
@@ -267,6 +271,7 @@ export const openapiDocument = {
     "/deep-research": {
       post: {
         operationId: "deepResearch",
+        security: [{ x402: [] }],
         summary: "Deep Research — Multi-step analysis with extended context",
         description:
           "Multi-step deep analysis powered by Sonar Pro. Higher confidence scoring, extended context window, comprehensive source verification. Settled in USDC on Base via x402.",
@@ -341,6 +346,7 @@ export const openapiDocument = {
     "/research/batch": {
       post: {
         operationId: "researchBatch",
+        security: [{ x402: [] }],
         summary: "Research (Batch) — Up to 5 queries in one call",
         description:
           "Run up to 5 research queries in parallel in a single call. Same per-claim citation + confidence output as /research. Single flat $0.10 charge.",
