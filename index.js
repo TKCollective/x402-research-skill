@@ -2405,9 +2405,53 @@ function researchMetadataDoc(routePath, price, tierNote) {
     note: "Use POST with x402 payment to get a paid research answer. GET returns this doc.",
   };
 }
-app.get("/research", (_req, res) => res.json(researchMetadataDoc("/research", "$0.02", "Pass tier=deep to upgrade to Sonar Pro at $0.10.")));
-app.get("/deep-research", (_req, res) => res.json(researchMetadataDoc("/deep-research", "$0.10", "Sonar Pro — comprehensive multi-source analysis with deep reasoning.")));
-app.get("/research/batch", (_req, res) => res.json(researchMetadataDoc("/research/batch", "$0.10", "Up to 5 queries per call, parallel research with the same citation+confidence output as /research.")));
+// GET on paid routes returns 402 with the usage doc as the body.
+// Strict x402 expectation per fardinvahdat/x402trace bazaar-check v0.3.0:
+// the resource URL must return 402 to any caller without a valid X-PAYMENT
+// header, regardless of HTTP method. We keep the human-readable usage doc
+// inside the 402 body so anyone who curls the endpoint still gets a clear
+// pointer to what to do next, and we also attach the PAYMENT-REQUIRED
+// header so x402 clients can parse the challenge directly.
+function sendChallengeFor(routePath, price, tierNote, res) {
+  const doc = researchMetadataDoc(routePath, price, tierNote);
+  // Build a minimal x402 v2 challenge body alongside the usage doc.
+  // Real per-route accepts arrays are sourced from routeConfig at
+  // POST-time by paymentMiddleware; here we mirror the canonical Base
+  // entry so GET callers get the same wire shape POST callers do.
+  const amountAtoms = price === "$0.10" ? "100000" : "20000";
+  const challenge = {
+    x402Version: 2,
+    accepts: [
+      {
+        scheme: "exact",
+        network: "eip155:8453",
+        asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        payTo: "0xdF90200B0031051BbF7a66BB9387d2Ecf599e109",
+        amount: amountAtoms,
+        maxTimeoutSeconds: 300,
+        resource: `https://agentoracle.co${routePath}`,
+        description: doc.description,
+        mimeType: "application/json",
+        extra: { name: "USD Coin", version: "2" },
+      },
+    ],
+  };
+  res.setHeader(
+    "PAYMENT-REQUIRED",
+    Buffer.from(JSON.stringify(challenge)).toString("base64")
+  );
+  res.setHeader("x402-Version", "2");
+  res.status(402).json({ ...doc, x402_challenge: challenge });
+}
+app.get("/research", (_req, res) =>
+  sendChallengeFor("/research", "$0.02", "Pass tier=deep to upgrade to Sonar Pro at $0.10.", res)
+);
+app.get("/deep-research", (_req, res) =>
+  sendChallengeFor("/deep-research", "$0.10", "Sonar Pro — comprehensive multi-source analysis with deep reasoning.", res)
+);
+app.get("/research/batch", (_req, res) =>
+  sendChallengeFor("/research/batch", "$0.10", "Up to 5 queries per call, parallel research with the same citation+confidence output as /research.", res)
+);
 
 app.post("/research", async (req, res) => {
   const { query, tier } = req.body;
