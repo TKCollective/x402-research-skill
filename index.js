@@ -2427,6 +2427,9 @@ function sendChallengeFor(routePath, price, tierNote, res) {
         network: "eip155:8453",
         asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
         payTo: "0xdF90200B0031051BbF7a66BB9387d2Ecf599e109",
+        // x402 v2 canonical field name is maxAmountRequired (not 'amount')
+        // per fardinvahdat/x402trace v0.3.0 strict reader.
+        maxAmountRequired: amountAtoms,
         amount: amountAtoms,
         maxTimeoutSeconds: 300,
         resource: `https://agentoracle.co${routePath}`,
