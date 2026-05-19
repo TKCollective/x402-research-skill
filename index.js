@@ -2421,6 +2421,13 @@ function sendChallengeFor(routePath, price, tierNote, res) {
   const amountAtoms = price === "$0.10" ? "100000" : "20000";
   const challenge = {
     x402Version: 2,
+    extensions: {
+      bazaar: {
+        name: "AgentOracle Verification API",
+        description:
+          "Pay-per-query verification API for AI agents. Settled in USDC on Base via x402. JWS-signed receipts. v0.2 receipt spec going to IETF early June 2026.",
+      },
+    },
     accepts: [
       {
         scheme: "exact",
