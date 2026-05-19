@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AgentOracle on AgentCash — Verifiable Answers for AI Agents</title>
+<meta name="description" content="Permissionless verification API for AI agents. Pay per query in USDC on Base via x402. Three paid routes. JWS-signed receipts. v0.2 IETF receipt spec early June." />
+<meta property="og:title" content="AgentOracle on AgentCash — Verifiable Answers for AI Agents" />
+<meta property="og:description" content="Pay-per-query verification API for AI agents. USDC on Base via x402. Listed on AgentCash." />
+<meta property="og:image" content="https://agentoracle.co/ao-logo-v8.png" />
+<meta property="og:url" content="https://agentoracle.co/agentcash" />
+<meta name="twitter:card" content="summary_large_image" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --gold: #D4A437;
+    --bg: #000000;
+    --fg: #FFFFFF;
+    --muted: #999999;
+    --line: #1a1a1a;
+    --card: #0a0a0a;
+    --green: #4ade80;
+    --mono: ui-monospace, "SF Mono", Menlo, Monaco, "Cascadia Code", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  }
+  html, body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 64px 24px 96px;
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .logo {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+  }
+  .title {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .subtitle {
+    font-size: 18px;
+    color: var(--muted);
+    margin-bottom: 40px;
+  }
+  .lede {
+    font-size: 18px;
+    color: var(--fg);
+    margin-bottom: 16px;
+    max-width: 680px;
+  }
+  .lede + .lede { margin-bottom: 40px; }
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-top: 56px;
+    margin-bottom: 16px;
+    letter-spacing: -0.01em;
+  }
+  p {
+    font-size: 16px;
+    color: var(--fg);
+    margin-bottom: 16px;
+    max-width: 680px;
+  }
+  p.muted { color: var(--muted); }
+  a { color: var(--gold); text-decoration: none; border-bottom: 1px solid transparent; transition: border 0.15s; }
+  a:hover { border-bottom-color: var(--gold); }
+  .install-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 32px;
+    margin: 24px 0 16px;
+  }
+  .install-card__brand {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .install-card__brand span { color: var(--green); }
+  .install-card__title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .install-card__sub {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 640px) {
+    .steps { grid-template-columns: 1fr; }
+  }
+  .step {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .step__num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    margin-bottom: 8px;
+  }
+  .step__name {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .step__desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.45;
+    margin-bottom: 12px;
+    min-height: 50px;
+  }
+  .step__cmd {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--green);
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .endpoints {
+    margin-top: 24px;
+  }
+  .endpoint {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+  }
+  .endpoint__main { flex: 1; min-width: 0; }
+  .endpoint__path {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+  .endpoint__desc {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .endpoint__price {
+    background: var(--bg);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .endpoint__price.free {
+    border-color: var(--muted);
+    color: var(--muted);
+  }
+  .footer {
+    margin-top: 80px;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .footer__brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .footer__brand img { width: 24px; height: 24px; }
+  .footer__links {
+    display: flex;
+    gap: 24px;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+<main class="container">
+
+  <header class="header">
+    <img src="/ao-logo-v8.png" alt="AgentOracle" class="logo" />
+    <h1 class="title">AgentOracle Verification API</h1>
+  </header>
+  <p class="subtitle">Verifiable answers for AI agents</p>
+
+  <p class="lede">Give your agents verified answers. Every <code style="font-family:var(--mono); color:var(--gold)">/research</code> call returns a structured summary with citations and a confidence score. Every <code style="font-family:var(--mono); color:var(--gold)">/evaluate</code> call returns a per-claim verdict — ACT, VERIFY, or REJECT. Pay per request — no auth, no subscriptions, no API keys.</p>
+
+  <p class="lede">Each agent settles in USDC on Base via x402. Receipts are JWS-signed against our public JWKS, independently verifiable offline. v0.2 receipt spec going to IETF early June 2026.</p>
+
+  <div class="install-card">
+    <div class="install-card__brand">AGENT<span>CASH</span></div>
+    <div class="install-card__title">Install AgentOracle into AgentCash.</div>
+    <div class="install-card__sub">Run in your terminal — onboard into AgentCash, try one live call, then save the endpoint to your agent's persistent context.</div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step__num">STEP 1</div>
+        <div class="step__name">Onboard AgentCash</div>
+        <div class="step__desc">Sets up AgentCash and routes you through credits if needed.</div>
+        <div class="step__cmd">$ npx agentcash onboard</div>
+      </div>
+      <div class="step">
+        <div class="step__num">STEP 2</div>
+        <div class="step__name">Try the API</div>
+        <div class="step__desc">Discovers the origin and walks the first live call path.</div>
+        <div class="step__cmd">$ npx agentcash try https://agentoracle.co</div>
+      </div>
+      <div class="step">
+        <div class="step__num">STEP 3</div>
+        <div class="step__name">Add for reuse</div>
+        <div class="step__desc">Keeps AgentOracle available in your agent's persistent context.</div>
+        <div class="step__cmd">$ npx agentcash add https://agentoracle.co</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Endpoints</h2>
+  <div class="endpoints">
+
+    <div class="endpoint">
+      <div class="endpoint__main">
+        <div class="endpoint__path">POST /research</div>
+        <div class="endpoint__desc">Single-query verification with citation URLs, confidence score, and key facts. Powered by Sonar. Most common entry point for agents needing fresh external facts.</div>
+      </div>
+      <div class="endpoint__price">$0.02 USDC</div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint__main">
+        <div class="endpoint__path">POST /research/batch</div>
+        <div class="endpoint__desc">Up to 5 queries answered in parallel in a single call, with the same citation + confidence output as /research. Flat batch price.</div>
+      </div>
+      <div class="endpoint__price">$0.10 USDC</div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint__main">
+        <div class="endpoint__path">POST /deep-research</div>
+        <div class="endpoint__desc">Multi-step deep analysis powered by Sonar Pro. Extended context window, higher confidence scoring, comprehensive source verification. For agent workflows that need depth over speed.</div>
+      </div>
+      <div class="endpoint__price">$0.10 USDC</div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint__main">
+        <div class="endpoint__path">POST /evaluate</div>
+        <div class="endpoint__desc">Multi-source verification of a specific factual claim. Returns per-claim verdict (ACT / VERIFY / REJECT) with confidence threshold. Currently free in v2.2 beta.</div>
+      </div>
+      <div class="endpoint__price free">free · beta</div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint__main">
+        <div class="endpoint__path">POST /preview</div>
+        <div class="endpoint__desc">Truncated verification response. Rate-limited to 20 req/hr per IP. Use this to evaluate the API before paying.</div>
+      </div>
+      <div class="endpoint__price free">free</div>
+    </div>
+
+  </div>
+
+  <h2>What you get back</h2>
+  <p>Every paid response includes the verified answer plus a signed receipt. The receipt is a JWS over a canonical hash of the question, the answer, the sources cited, the model used, and the on-chain payment transaction. Anyone with our public JWKS can verify the receipt offline — no AgentOracle service required.</p>
+  <p>This is the foundation for the v0.2 receipt spec we are filing as an IETF Internet-Draft in early June 2026.</p>
+
+  <h2>Why x402</h2>
+  <p>x402 is the HTTP-native micropayments standard. The protocol is simple: an agent makes a request, the server responds 402, the agent signs an EIP-3009 USDC payment authorization, the request settles on chain, the resource is delivered. No accounts, no API keys, no subscriptions, no rate-limit drama.</p>
+  <p>AgentOracle uses the x402 v2 wire format with the bazaar discovery extension. Settles on Base mainnet (eip155:8453) via the Coinbase CDP facilitator.</p>
+
+  <h2>Indexed and discoverable</h2>
+  <p>AgentOracle is listed on the public agent-discoverable registries: <a href="https://www.x402scan.com/server/agentoracle.co" target="_blank" rel="noopener">x402scan</a>, <a href="https://www.mppscan.com/" target="_blank" rel="noopener">mppscan</a>, and <a href="https://agentcash.dev/" target="_blank" rel="noopener">AgentCash</a>. The full OpenAPI spec lives at <a href="https://agentoracle.co/openapi.json">/openapi.json</a>.</p>
+
+  <footer class="footer">
+    <div class="footer__brand">
+      <img src="/ao-logo-v8.png" alt="" />
+      <span>agentoracle.co</span>
+    </div>
+    <div class="footer__links">
+      <a href="https://agentoracle.co">Home</a>
+      <a href="https://agentoracle.co/openapi.json">OpenAPI</a>
+      <a href="https://x.com/AgentOracle_AI" target="_blank" rel="noopener">X</a>
+    </div>
+  </footer>
+
+</main>
+</body>
+</html>

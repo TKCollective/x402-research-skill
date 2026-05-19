@@ -10,6 +10,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "agentcash.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "ao-logo.jpg",
       "use": "@vercel/static"
     },
@@ -39,6 +43,10 @@
     {
       "src": "/privacy",
       "dest": "/privacy.html"
+    },
+    {
+      "src": "/agentcash",
+      "dest": "/agentcash.html"
     },
     {
       "src": "/ao-logo.jpg",
