@@ -22,6 +22,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "ao-logo-v8.png",
+      "use": "@vercel/static"
+    },
+    {
       "src": "index.js",
       "use": "@vercel/node",
       "config": { "maxDuration": 60 }
@@ -47,6 +51,10 @@
     {
       "src": "/favicon-32x32.png",
       "dest": "/favicon-32x32.png"
+    },
+    {
+      "src": "/ao-logo-v8.png",
+      "dest": "/ao-logo-v8.png"
     },
     {
       "src": "/(.*)",

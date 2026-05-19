@@ -24,6 +24,13 @@ export const openapiDocument = {
       name: "AgentOracle",
       url: "https://agentoracle.co",
     },
+    // Logo for x402scan / mppscan / AgentCash discovery surfaces.
+    // v8 gold-ring-on-black, 512×512 PNG.
+    "x-logo": {
+      url: "https://agentoracle.co/ao-logo-v8.png",
+      altText: "AgentOracle",
+      backgroundColor: "#000000",
+    },
     license: {
       name: "Business Source License 1.1",
       url: "https://agentoracle.co/license",
