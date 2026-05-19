@@ -38,7 +38,18 @@
 import { subscribe } from "node:diagnostics_channel";
 
 const CDP_HOST = "api.cdp.coinbase.com";
+const CDP_PATH_PREFIX = "/platform/v2/x402";
 const RING_MAX = 256;
+// Short-circuit hosts that would otherwise feedback-loop the subscriber.
+// Per @0xdespot's verification on hyperD (x402#2207 2026-05-19 12:27Z): any
+// HTTP-backed store (Upstash Redis, axios with http adapter, etc.) called
+// from inside the subscriber's bookkeeping is itself an undici request that
+// re-fires the subscriber, drowning out CDP entries in the rolling sample.
+const SHORTCIRCUIT_ORIGINS = [
+  "upstash.io",
+  "vercel.app",
+  "sentry.io",
+];
 const ring = []; // newest pushed at end
 const inflight = new Map(); // request -> { t0, url, method }
 let totalRequests = 0;
@@ -74,8 +85,22 @@ function urlFromRequest(req) {
   return "(unknown)";
 }
 
-function isCdp(url) {
-  return typeof url === "string" && url.includes(CDP_HOST);
+function isCdp(originAndPath) {
+  // Match BOTH the host AND the x402 path prefix (per 0xdespot pattern).
+  // Catches CDP /verify and /settle, skips any other CDP traffic.
+  return (
+    typeof originAndPath === "string" &&
+    originAndPath.includes(CDP_HOST) &&
+    originAndPath.includes(CDP_PATH_PREFIX)
+  );
+}
+
+function isShortCircuit(originAndPath) {
+  if (typeof originAndPath !== "string") return false;
+  for (const o of SHORTCIRCUIT_ORIGINS) {
+    if (originAndPath.includes(o)) return true;
+  }
+  return false;
 }
 
 function isSettleOrVerify(url) {
@@ -102,6 +127,27 @@ function classifyBucket(headers) {
     }
   }
   if (raw == null) return { bucket: "4_absent", header: null, value: null };
+  // Per @0xdespot's hyperD verification (x402#2207 2026-05-19): CDP sends
+  // EXTENSION-RESPONSES as base64-encoded JSON e.g.
+  //   { bazaar: { status: 'processing' | 'indexed' | 'rejected', ... } }
+  // Try that path first — it's what real-world CDP traffic looks like today.
+  try {
+    const decoded = Buffer.from(String(raw), "base64").toString("utf8");
+    const obj = JSON.parse(decoded);
+    const status =
+      obj?.bazaar?.status ??
+      obj?.discovery?.status ??
+      (Array.isArray(obj) ? obj[0]?.bazaar?.status : null);
+    if (status) {
+      const s = String(status).toLowerCase();
+      if (s === "processing") return { bucket: "2_processing", header: usedHeader, value: status, decoded: obj };
+      if (s === "indexed" || s === "success" || s === "ok") return { bucket: "3_success", header: usedHeader, value: status, decoded: obj };
+      if (s === "rejected" || s === "failed" || s === "error") return { bucket: "1_rejected", header: usedHeader, value: status, decoded: obj };
+      return { bucket: `2_processing_unknown(${s.slice(0,32)})`, header: usedHeader, value: status, decoded: obj };
+    }
+  } catch (_) {
+    /* fall through to legacy parse paths */
+  }
   // Header can be a JSON-encoded object, a base64-encoded JSON, or a bare
   // status word like "processing". Try them in order.
   const tryStatus = (val) => {
@@ -159,6 +205,11 @@ function install() {
   subscribe("undici:request:create", (m) => {
     totalRequests++;
     const url = urlFromRequest(m.request);
+    // CRITICAL: skip bookkeeping hosts FIRST so they never consume sample
+    // buffer slots. Per @0xdespot's verification, without this guard the
+    // sample list fills with Redis/Vercel-internal traffic and CDP entries
+    // are evicted before they're observed (x402#2207 2026-05-19).
+    if (isShortCircuit(url)) return;
     if (!isCdp(url)) return;
     cdpRequests++;
     inflight.set(m.request, {
