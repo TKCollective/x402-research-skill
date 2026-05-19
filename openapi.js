@@ -48,7 +48,7 @@ export const openapiDocument = {
         description:
           "Truncated verification response (top sources only, confidence score, no exhaustive key-fact list). Free during beta. Rate limited to 20 req/hr per IP.",
         tags: ["Verification"],
-        security: [], // explicitly unauthenticated
+        security: [{ none: [] }],
         "x-auth": { mode: "none" },
         requestBody: {
           required: true,
@@ -402,6 +402,13 @@ export const openapiDocument = {
         scheme: "x402",
         description:
           "x402 micropayments. Pay per-call in USDC on Base mainnet (eip155:8453). See PAYMENT-REQUIRED response header on 402 responses for the challenge body.",
+      },
+      none: {
+        type: "apiKey",
+        in: "header",
+        name: "X-Anonymous",
+        description:
+          "No authentication required (free public endpoint). Header is ignored.",
       },
     },
   },
