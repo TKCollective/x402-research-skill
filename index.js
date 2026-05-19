@@ -33,6 +33,10 @@
  *   Scheme:  exact (x402 v2)
  */
 
+// AgentCash discovery + OpenAPI document (served at /openapi.json).
+// Import order doesn't matter here — the document is a pure object.
+import { openapiDocument } from "./openapi.js";
+
 // CDP-side fetch tap MUST be the very first import. It monkey-patches
 // globalThis.fetch so that calls from the @coinbase/x402 SDK to the CDP
 // facilitator /settle and /verify endpoints capture the EXTENSION-RESPONSES
@@ -2159,6 +2163,17 @@ app.get("/.well-known/x402.json", (_req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.setHeader("Cache-Control", "public, max-age=3600");
   res.json(x402Manifest);
+});
+
+// /openapi.json — AgentCash discovery surface.
+// AgentCash crawls this path and indexes our paid endpoints for
+// Claude / Cursor / Codex / Hermes / Gemini-CLI agents to discover.
+// See agentcash.dev/docs/discovery. The document is also a valid
+// OpenAPI 3.1.0 spec and is a superset of the IETF API-payment standard,
+// so the same file is useful for any other OpenAPI consumer.
+app.get("/openapi.json", (_req, res) => {
+  res.setHeader("Cache-Control", "public, max-age=300");
+  res.json(openapiDocument);
 });
 
 // Standard x402-manifest.json path — expected by x402 discovery tools, OWS SDK,
