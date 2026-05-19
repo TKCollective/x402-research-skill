@@ -178,7 +178,7 @@ function install() {
     if (isSettleOrVerify(ctx.url)) {
       bucketInfo = classifyBucket(headers);
     }
-    push({
+    const event = {
       t: new Date().toISOString(),
       url: ctx.url,
       method: ctx.method,
@@ -198,7 +198,19 @@ function install() {
           ? { [bucketInfo.header]: headers[bucketInfo.header] }
           : {}),
       },
-    });
+    };
+    push(event);
+    // Vercel serverless distributes requests across ephemeral function
+    // instances; an in-memory ring is unreliable for cross-request reads.
+    // Log the event inline on the invocation that produced it so the data
+    // is findable in Vercel logs regardless of which instance handled the
+    // subsequent GET /health/cdp/fetch-tap-buffer call. The CDPTAP prefix
+    // makes filtering trivial: `vercel logs <dep> | grep CDPTAP`.
+    try {
+      console.log("CDPTAP " + JSON.stringify(event));
+    } catch (_) {
+      /* never let logging break the request path */
+    }
   });
 
   subscribe("undici:request:trailers", (m) => {
@@ -209,7 +221,7 @@ function install() {
   subscribe("undici:request:error", (m) => {
     const ctx = inflight.get(m.request);
     if (!ctx) return;
-    push({
+    const event = {
       t: new Date().toISOString(),
       url: ctx.url,
       method: ctx.method,
@@ -217,7 +229,11 @@ function install() {
       took_ms: Date.now() - ctx.t0,
       bucket: "0_fetch_error",
       error: String(m.error?.message || m.error || "unknown").slice(0, 200),
-    });
+    };
+    push(event);
+    try {
+      console.log("CDPTAP " + JSON.stringify(event));
+    } catch (_) {}
     inflight.delete(m.request);
   });
 
