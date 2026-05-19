@@ -1,227 +1,257 @@
 // cdp-fetch-tap.js
 //
-// Server-to-server fetch tap for the CDP → merchant /settle response hop.
+// CDP server-to-server response tap, v2 (2026-05-18).
 //
-// Why this file is needed:
-// EXTENSION-RESPONSES is a *response* header that CDP's facilitator returns to
-// us when our @coinbase/x402 facilitator client POSTs to its /settle endpoint.
-// It never reaches the paying agent — it is consumed (or not) inside the
-// facilitator client. Express request/response hooks like res.on('finish')
-// can't see it because that hook fires on the merchant → agent hop, which is
-// the wrong direction. The only way to observe what CDP is actually sending
-// back to us is to instrument the underlying fetch surface that the
-// @coinbase/x402 SDK uses internally — which is the runtime globalThis.fetch.
+// v1 monkey-patched globalThis.fetch. That did not work because the
+// @coinbase/x402 SDK (via @x402/core) talks to api.cdp.coinbase.com using
+// Node's built-in fetch, which in Node 20 is a thin wrapper over the
+// internal undici dispatcher — and any module that bound a reference to
+// `fetch` before our patch ran kept the original implementation. On Vercel
+// serverless this manifested as totalFetchCalls=N, cdpFetchCalls=0: SDK
+// traffic existed but never went through our wrapper.
 //
-// Credit: the pattern (globalThis.fetch monkey-patch at app boot) is from
-// @0xdespot's commit ba1a07e2 on the x402#2207 thread, 2026-05-17. Install
-// order matters: this file MUST be the first import in index.js, before any
-// module that captures a reference to globalThis.fetch (notably @x402/core
-// and @coinbase/x402, both of which read fetch on import).
+// v2 hooks node:diagnostics_channel events that undici emits internally,
+// regardless of which fetch reference was captured at import time:
 //
-// What it does:
-//   1. Wraps globalThis.fetch
-//   2. Lets non-CDP traffic through transparently (no overhead)
-//   3. For CDP /settle and /verify hops, captures the response headers and
-//      a small JSON snippet of the body, classifies the EXTENSION-RESPONSES
-//      header into a named bucket (0_none / 1_rejected / 2_processing /
-//      3_success / 4_absent), and pushes the event into a 256-entry ring
-//      buffer that's exposed at /health/cdp/fetch-tap-buffer.
-//   4. Returns the response untouched to the caller — zero behavior change
-//      on the SDK side.
+//   'undici:request:create'   — fires when a request is created
+//   'undici:request:headers'  — fires when response headers arrive
+//                               (this is the channel that carries
+//                               EXTENSION-RESPONSES from CDP /settle)
+//   'undici:request:trailers' — fires at end-of-response
 //
-// Buckets (CDP-side, real):
-//   2_processing  — EXTENSION-RESPONSES present, bazaar.status="processing"
-//                   (transient for TF/hyperD, terminal for AsaiShota/us)
-//   3_success     — EXTENSION-RESPONSES present, bazaar.status="success"
-//                   (resource attributed in the catalog)
-//   1_rejected    — EXTENSION-RESPONSES present, bazaar.status="rejected"
-//                   (extension hit indexer, indexer refused it)
-//   4_absent      — EXTENSION-RESPONSES header is missing from CDP's response
-//                   (the failure mode @0xdespot flagged: header never sent)
-//   0_none        — endpoint not a CDP /settle or /verify call (no decision)
+// This works because:
+//   1. diagnostics_channel is registered globally and is checked on every
+//      request, not at module-import time. There is no install-order race.
+//   2. Both `fetch()` and `axios` (which @coinbase/cdp-sdk uses for the
+//      JWT-signed auth path) ultimately dispatch through the same undici
+//      core in Node 20+, so we capture all CDP traffic with one hook.
+//   3. The hook only reads; it does not modify the request or response,
+//      so there is zero risk of breaking SDK behavior.
 //
-// Read the ring buffer:
-//   curl https://agentoracle.co/health/cdp/fetch-tap-buffer
+// Limitation: response body is NOT directly exposed on diagnostics_channel.
+// EXTENSION-RESPONSES lives in headers (confirmed against x402#2207 thread
+// from @0xdespot and @evanatpizzarobot) so we capture the bucket signal
+// without needing the body. If we ever need the body, we can layer
+// `Dispatcher.compose` on top of `setGlobalDispatcher` as a second
+// observation channel without removing this one.
+
+import { subscribe } from "node:diagnostics_channel";
 
 const CDP_HOST = "api.cdp.coinbase.com";
 const RING_MAX = 256;
-const ring = []; // newest at end
-let installed = false;
-let installError = null;
-let totalCalls = 0;
-let cdpCalls = 0;
+const ring = []; // newest pushed at end
+const inflight = new Map(); // request -> { t0, url, method }
+let totalRequests = 0;
+let cdpRequests = 0;
+let installedAt = null;
 
 function push(event) {
   ring.push(event);
   if (ring.length > RING_MAX) ring.shift();
 }
 
-function classifyBucket(extResponsesHeader, parsedBody) {
-  if (extResponsesHeader == null) return "4_absent";
-  // CDP sometimes echoes the extension status into the body too; check both.
-  // Header itself can be a JSON-string or a plain status word — accept either.
-  let status = null;
-  try {
-    const decoded = decodeURIComponent(extResponsesHeader.trim());
-    // Try JSON first
-    if (decoded.startsWith("{") || decoded.startsWith("[")) {
-      const obj = JSON.parse(decoded);
-      // Look for bazaar.status anywhere reasonable
-      status =
-        obj?.bazaar?.status ??
-        obj?.discovery?.status ??
-        (Array.isArray(obj) ? obj[0]?.bazaar?.status : null);
-    } else {
-      // Bare-word header
-      status = decoded.toLowerCase();
-    }
-  } catch (_) {
-    // Fall through; treat as bare word
-    status = String(extResponsesHeader).toLowerCase();
-  }
-  if (status === "processing") return "2_processing";
-  if (status === "success" || status === "ok") return "3_success";
-  if (status === "rejected" || status === "failed" || status === "error")
-    return "1_rejected";
-  // Header is present but value is unrecognized — still record, but flag
-  return `2_processing_unknown(${String(status).slice(0, 32)})`;
-}
-
-function shortHeaders(headersObj) {
-  // Pick only the headers that matter for the bucket decision; keep payload small.
-  const keep = [
-    "extension-responses",
-    "x402-extension-responses",
-    "payment-response",
-    "x-payment-response",
-    "x-cdp-request-id",
-    "content-type",
-  ];
+function rawHeadersToObject(raw) {
+  // undici hands us [name, value, name, value, ...] as Buffers or strings
+  if (!Array.isArray(raw)) return {};
   const out = {};
-  for (const k of keep) {
-    const v = headersObj.get ? headersObj.get(k) : headersObj[k];
-    if (v != null) out[k] = v;
+  for (let i = 0; i < raw.length; i += 2) {
+    const k = String(raw[i]).toLowerCase();
+    const v = String(raw[i + 1]);
+    // collapse duplicate headers (e.g. set-cookie) into an array
+    if (out[k] != null) {
+      out[k] = Array.isArray(out[k]) ? [...out[k], v] : [out[k], v];
+    } else {
+      out[k] = v;
+    }
   }
   return out;
 }
 
-function installFetchTap() {
-  if (installed) return { ok: true, alreadyInstalled: true };
-  if (typeof globalThis.fetch !== "function") {
-    installError = "globalThis.fetch is not a function";
-    return { ok: false, reason: installError };
-  }
-  const originalFetch = globalThis.fetch;
-  // Stash a backreference so an emergency restore is possible without restart.
-  globalThis.__cdp_fetch_tap_original = originalFetch;
-
-  globalThis.fetch = async function tappedFetch(input, init) {
-    totalCalls++;
-    const url =
-      typeof input === "string"
-        ? input
-        : input?.url || (input && input.href) || String(input);
-    const isCdp = typeof url === "string" && url.includes(CDP_HOST);
-    if (!isCdp) {
-      return originalFetch(input, init);
-    }
-    cdpCalls++;
-    const t0 = Date.now();
-    let res;
-    let err;
-    try {
-      res = await originalFetch(input, init);
-    } catch (e) {
-      err = e;
-    }
-    const tookMs = Date.now() - t0;
-    if (err) {
-      push({
-        t: new Date().toISOString(),
-        url,
-        method: (init && init.method) || "GET",
-        status: null,
-        ok: false,
-        took_ms: tookMs,
-        bucket: "0_fetch_error",
-        error: String(err).slice(0, 200),
-      });
-      throw err;
-    }
-    // Path filter — only /settle and /verify are the hops that carry the
-    // bazaar extension response. Other CDP calls (discovery reads, key
-    // rotation, etc.) get a lightweight record without bucketing.
-    const isSettleOrVerify =
-      url.includes("/settle") || url.includes("/verify");
-    // We must NOT consume the body — clone the response first.
-    let bodyPreview = null;
-    let parsedBody = null;
-    try {
-      const cloned = res.clone();
-      const text = await cloned.text();
-      bodyPreview = text.slice(0, 1024);
-      try {
-        parsedBody = JSON.parse(text);
-      } catch (_) {
-        /* not JSON */
-      }
-    } catch (_) {
-      /* body unreadable — keep going */
-    }
-    const ext =
-      res.headers.get("extension-responses") ||
-      res.headers.get("x402-extension-responses") ||
-      null;
-    const bucket = isSettleOrVerify
-      ? classifyBucket(ext, parsedBody)
-      : "0_not_settle_or_verify";
-    push({
-      t: new Date().toISOString(),
-      url,
-      method: (init && init.method) || "GET",
-      status: res.status,
-      ok: res.ok,
-      took_ms: tookMs,
-      ext_responses_header: ext,
-      bucket,
-      headers: shortHeaders(res.headers),
-      body_preview: bodyPreview,
-    });
-    return res;
-  };
-
-  installed = true;
-  // eslint-disable-next-line no-console
-  console.log(
-    "[cdp-fetch-tap] installed — globalThis.fetch wrapped at " +
-      new Date().toISOString()
-  );
-  return { ok: true };
+function urlFromRequest(req) {
+  // undici exposes either { origin, path } or { url }; normalize.
+  if (req?.origin && req?.path) return req.origin + req.path;
+  if (req?.url) return String(req.url);
+  return "(unknown)";
 }
 
-// Install immediately on import. This MUST run before any SDK module captures
-// a reference to globalThis.fetch — that's why this file is imported first.
-const installResult = installFetchTap();
+function isCdp(url) {
+  return typeof url === "string" && url.includes(CDP_HOST);
+}
+
+function isSettleOrVerify(url) {
+  return (
+    typeof url === "string" &&
+    (url.includes("/settle") || url.includes("/verify"))
+  );
+}
+
+function classifyBucket(headers) {
+  // Look at every plausible header name; CDP has used variants over time.
+  const candidates = [
+    "extension-responses",
+    "x402-extension-responses",
+    "x-extension-responses",
+  ];
+  let raw = null;
+  let usedHeader = null;
+  for (const k of candidates) {
+    if (headers[k] != null) {
+      raw = headers[k];
+      usedHeader = k;
+      break;
+    }
+  }
+  if (raw == null) return { bucket: "4_absent", header: null, value: null };
+  // Header can be a JSON-encoded object, a base64-encoded JSON, or a bare
+  // status word like "processing". Try them in order.
+  const tryStatus = (val) => {
+    const s = String(val).trim().toLowerCase();
+    if (s === "processing") return "2_processing";
+    if (s === "success" || s === "ok" || s === "indexed") return "3_success";
+    if (s === "rejected" || s === "failed" || s === "error") return "1_rejected";
+    return null;
+  };
+  // JSON?
+  try {
+    const decoded = decodeURIComponent(String(raw));
+    if (decoded.startsWith("{") || decoded.startsWith("[")) {
+      const obj = JSON.parse(decoded);
+      const status =
+        obj?.bazaar?.status ??
+        obj?.discovery?.status ??
+        (Array.isArray(obj) ? obj[0]?.bazaar?.status : null);
+      const b = status ? tryStatus(status) : null;
+      if (b) return { bucket: b, header: usedHeader, value: status };
+    }
+  } catch (_) {
+    /* try base64 next */
+  }
+  // base64-JSON?
+  try {
+    const decoded = Buffer.from(String(raw), "base64").toString("utf8");
+    if (decoded.startsWith("{") || decoded.startsWith("[")) {
+      const obj = JSON.parse(decoded);
+      const status =
+        obj?.bazaar?.status ??
+        obj?.discovery?.status ??
+        (Array.isArray(obj) ? obj[0]?.bazaar?.status : null);
+      const b = status ? tryStatus(status) : null;
+      if (b) return { bucket: b, header: usedHeader, value: status };
+    }
+  } catch (_) {
+    /* bare word fall-through */
+  }
+  // Bare word
+  const b = tryStatus(raw);
+  if (b) return { bucket: b, header: usedHeader, value: String(raw) };
+  return {
+    bucket: `2_processing_unknown(${String(raw).slice(0, 32)})`,
+    header: usedHeader,
+    value: String(raw).slice(0, 200),
+  };
+}
+
+function install() {
+  if (installedAt) return false;
+
+  // Track request -> { t0, url, method } so we can compute latency and
+  // attribute the headers event back to the originating request.
+  subscribe("undici:request:create", (m) => {
+    totalRequests++;
+    const url = urlFromRequest(m.request);
+    if (!isCdp(url)) return;
+    cdpRequests++;
+    inflight.set(m.request, {
+      t0: Date.now(),
+      url,
+      method: m.request?.method || "GET",
+    });
+  });
+
+  subscribe("undici:request:headers", (m) => {
+    const ctx = inflight.get(m.request);
+    if (!ctx) return; // not a CDP request we're tracking
+    const headers = rawHeadersToObject(m.response?.headers || []);
+    const statusCode = m.response?.statusCode;
+    const tookMs = Date.now() - ctx.t0;
+    let bucketInfo = { bucket: "0_not_settle_or_verify", header: null, value: null };
+    if (isSettleOrVerify(ctx.url)) {
+      bucketInfo = classifyBucket(headers);
+    }
+    push({
+      t: new Date().toISOString(),
+      url: ctx.url,
+      method: ctx.method,
+      status: statusCode,
+      took_ms: tookMs,
+      bucket: bucketInfo.bucket,
+      ext_responses_header: bucketInfo.header,
+      ext_responses_value: bucketInfo.value,
+      // Capture a handful of useful headers for triage; drop the rest to
+      // keep the ring buffer payload small.
+      headers: {
+        "content-type": headers["content-type"],
+        "x-cdp-request-id": headers["x-cdp-request-id"],
+        "cf-ray": headers["cf-ray"],
+        "trace-id": headers["trace-id"],
+        ...(bucketInfo.header
+          ? { [bucketInfo.header]: headers[bucketInfo.header] }
+          : {}),
+      },
+    });
+  });
+
+  subscribe("undici:request:trailers", (m) => {
+    // Cleanup
+    inflight.delete(m.request);
+  });
+
+  subscribe("undici:request:error", (m) => {
+    const ctx = inflight.get(m.request);
+    if (!ctx) return;
+    push({
+      t: new Date().toISOString(),
+      url: ctx.url,
+      method: ctx.method,
+      status: null,
+      took_ms: Date.now() - ctx.t0,
+      bucket: "0_fetch_error",
+      error: String(m.error?.message || m.error || "unknown").slice(0, 200),
+    });
+    inflight.delete(m.request);
+  });
+
+  installedAt = new Date().toISOString();
+  // eslint-disable-next-line no-console
+  console.log(
+    "[cdp-fetch-tap v2] subscribed to undici diagnostics_channel at " +
+      installedAt
+  );
+  return true;
+}
+
+// Install on import. Unlike v1, the diagnostics_channel subscription does
+// not require any race against module-load order — undici checks the
+// channel registrations per-request.
+install();
 
 export function getCdpFetchTapState() {
   return {
-    installed,
-    installError,
-    totalFetchCalls: totalCalls,
-    cdpFetchCalls: cdpCalls,
+    version: "v2-diagnostics-channel",
+    installed: !!installedAt,
+    installedAt,
+    totalRequests,
+    cdpRequests,
+    inflight: inflight.size,
     ringSize: ring.length,
     ringMax: RING_MAX,
-    installedAt: installed ? new Date(0).toISOString() : null, // approx
   };
 }
 
 export function getCdpFetchTapBuffer({ limit = 50, bucket = null } = {}) {
   let events = ring.slice();
-  if (bucket) {
-    events = events.filter((e) => e.bucket === bucket);
-  }
-  events = events.slice(-Math.min(limit, RING_MAX)).reverse(); // newest first
-  // Histogram across the *full* ring, not the filtered slice
+  if (bucket) events = events.filter((e) => e.bucket === bucket);
+  events = events.slice(-Math.min(limit, RING_MAX)).reverse();
   const histogram = ring.reduce((acc, e) => {
     acc[e.bucket] = (acc[e.bucket] || 0) + 1;
     return acc;
@@ -231,12 +261,10 @@ export function getCdpFetchTapBuffer({ limit = 50, bucket = null } = {}) {
     histogram,
     events,
     note:
-      "CDP-side fetch tap (globalThis.fetch wrap). Captures EXTENSION-RESPONSES " +
-      "on the CDP → merchant /settle and /verify hops. See cdp-fetch-tap.js " +
-      "for bucket definitions. Buffer keeps the most recent " +
-      RING_MAX +
-      " events.",
+      "CDP-side tap (undici diagnostics_channel hook). Captures " +
+      "EXTENSION-RESPONSES on the CDP -> merchant /settle and /verify hops. " +
+      "v2 swaps the v1 globalThis.fetch monkey-patch (broken: SDK captured " +
+      "fetch ref at module-load, bypassing the wrap) for diagnostics_channel " +
+      "events which are checked per-request and have no install-order race.",
   };
 }
-
-export const __cdpFetchTapInstallResult = installResult;
