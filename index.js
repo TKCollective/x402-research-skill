@@ -668,6 +668,12 @@ function buildDiscoveryManifest() {
   ];
   return {
     x402Version: 2,
+    // Top-level name + description required by Bazaar listing UI per
+    // x402trace bazaar-check (fardinvahdat/x402trace v0.3.0). The listing
+    // falls back to the raw URL when these are missing.
+    name: "AgentOracle Verification API",
+    description:
+      "Pay-per-query verification API for AI agents. Every /research call returns a structured summary with citations and a confidence score. Every /evaluate call returns a per-claim verdict with confidence threshold. /deep-research uses Sonar Pro for multi-step deep analysis. Settled in USDC on Base mainnet via x402. JWS-signed receipts. v0.2 receipt spec going to IETF early June 2026.",
     seller: {
       name: "AgentOracle",
       operator: "TKCollective LLC",
@@ -675,6 +681,7 @@ function buildDiscoveryManifest() {
       contact: "joe@agentoracle.co",
       jwks: "https://agentoracle.co/.well-known/jwks.json",
     },
+    accepts: items[0]?.accepts || [],
     items,
     pagination: { limit: items.length, offset: 0, total: items.length },
   };
