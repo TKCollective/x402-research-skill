@@ -2434,9 +2434,13 @@ function sendChallengeFor(routePath, price, tierNote, res) {
         network: "eip155:8453",
         asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
         payTo: "0xdF90200B0031051BbF7a66BB9387d2Ecf599e109",
-        // x402 v2 canonical field name is maxAmountRequired (not 'amount')
-        // per fardinvahdat/x402trace v0.3.0 strict reader.
-        maxAmountRequired: amountAtoms,
+        // Canonical x402 v2 field is `amount` (in atoms). `maxAmountRequired`
+        // was the v1 field name and is no longer correct on a v2 challenge.
+        // An earlier commit (0fe5f08b, 2026-05-19) mirrored maxAmountRequired
+        // alongside amount to satisfy fardinvahdat/x402trace v0.3.0, but that
+        // produced an invalid v2 wire shape — corrected here per the v2
+        // schema review on x402-foundation/x402#2207 (AsaiShota, Evan,
+        // 2026-05-20 02:12-02:31Z).
         amount: amountAtoms,
         maxTimeoutSeconds: 300,
         resource: `https://agentoracle.co${routePath}`,
