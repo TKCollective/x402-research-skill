@@ -183,15 +183,33 @@ describe("x402 Payment Flow", () => {
     expect(networks.some(n => n.includes("8453"))).toBe(true);
   });
 
-  // Stellar and SKALE are intentionally NOT advertised on the Bazaar-indexed
-  // /research and /deep-research routes — CDP's indexer rejects routes whose
-  // accepts[] contains networks outside its enum (commit 579923c2, 2026-05-03).
+  // Stellar is intentionally NOT advertised on the Bazaar-indexed /research and
+  // /deep-research routes — CDP's indexer rejects routes whose accepts[]
+  // contains networks outside its enum (see commit 579923c2, 2026-05-03).
   // Stellar accept definitions remain in the codebase (stellarAcceptResearch /
   // stellarAcceptDeep) for a future dedicated route when we wire it up.
-  // SKALE has a dedicated route ship landing on a feature branch — tests for
-  // it live on that branch and merge to main with the route itself.
   it.skip("402 response includes Stellar payment option (deferred — needs dedicated route)", () => {});
-  it.skip("402 response includes SKALE gasless option (deferred — see feat/skale-dedicated-route)", () => {});
+
+  // SKALE has its own dedicated route /deep-research/skale that advertises
+  // SKALE Network (eip155:1187947933) via PayAI as the only accept, so SKALE
+  // gasless callers get a real callable endpoint without disturbing CDP/Bazaar
+  // indexing of the main /research and /deep-research routes.
+  it("402 response on /deep-research/skale includes SKALE gasless option", async () => {
+    const { status, headers } = await api("POST", "/deep-research/skale", { query: "test" });
+    expect(status).toBe(402);
+    const challenge = decode402Header(headers);
+    expect(challenge).not.toBeNull();
+    const networks = challenge.accepts.map(a => a.network);
+    expect(networks.some(n => n.includes("1187947933"))).toBe(true);
+  });
+
+  it("402 response on /deep-research/skale advertises ONLY SKALE (no Base bleed)", async () => {
+    const { headers } = await api("POST", "/deep-research/skale", { query: "test" });
+    const challenge = decode402Header(headers);
+    const networks = challenge.accepts.map(a => a.network);
+    // Pure SKALE — no Base, no Stellar. Keeps the route surface honest.
+    expect(networks.every(n => n.includes("1187947933"))).toBe(true);
+  });
 
   it("402 response on /deep-research stays Base-only (CDP Bazaar compatibility)", async () => {
     const { headers } = await api("POST", "/deep-research", { query: "test" });
