@@ -421,9 +421,43 @@ const CDP_ENABLED = !!(process.env.CDP_API_KEY_ID && process.env.CDP_API_KEY_SEC
 let baseFacilitatorClient;
 let cdpFacilitatorClient = null;
 if (CDP_ENABLED) {
-  cdpFacilitatorClient = new HTTPFacilitatorClient(cdpFacilitator);
+  // Wrap CDP facilitator with the RipperMercs enrichment (x402#2207, 2026-05-25):
+  // CDP's bazaar processing requires both paymentPayload.resource (object form)
+  // and paymentPayload.extensions (echoed from challenge) to be present on every
+  // verify/settle call. Without either, EXTENSION-RESPONSES returns e30= ({})
+  // and the merchant is never indexed. We enrich here so ALL CDP calls (not just
+  // /bazaar-bootstrap) carry both fields.
+  const _rawCdpClient = new HTTPFacilitatorClient(cdpFacilitator);
+  const _enrichForCDP = (payload, requirements) => {
+    const enriched = { ...payload };
+    if (!enriched.resource || typeof enriched.resource === "string" || !enriched.resource.url) {
+      const reqResource = requirements && typeof requirements.resource === "string"
+        ? requirements.resource
+        : requirements && requirements.resource && requirements.resource.url
+          ? requirements.resource.url
+          : "https://agentoracle.co/research";
+      enriched.resource = {
+        url: reqResource,
+        description: requirements && requirements.description,
+        mimeType: (requirements && requirements.mimeType) || "application/json",
+      };
+    }
+    if (!enriched.extensions || Object.keys(enriched.extensions).length === 0) {
+      const reqExtensions = requirements && requirements.extensions;
+      if (reqExtensions && Object.keys(reqExtensions).length > 0) {
+        enriched.extensions = reqExtensions;
+      }
+    }
+    return enriched;
+  };
+  cdpFacilitatorClient = {
+    url: _rawCdpClient.url,
+    verify: (payload, requirements) => _rawCdpClient.verify(_enrichForCDP(payload, requirements), requirements),
+    settle: (payload, requirements) => _rawCdpClient.settle(_enrichForCDP(payload, requirements), requirements),
+    list: _rawCdpClient.list ? _rawCdpClient.list.bind(_rawCdpClient) : undefined,
+  };
   baseFacilitatorClient = cdpFacilitatorClient;
-  console.log("✅ Base facilitator: CDP (Bazaar-enabled)");
+  console.log("✅ Base facilitator: CDP (Bazaar-enabled, with x402#2207 enrichment)");
 } else {
   baseFacilitatorClient = new HTTPFacilitatorClient({ url: FACILITATOR_URL });
   console.log("✅ Base facilitator: xpay (CDP keys not set)");
@@ -1487,6 +1521,14 @@ if (CDP_ENABLED && cdpFacilitatorClient) {
           description: "Real-time research API for AI agents. $0.02 USDC per query on Base.",
           mimeType: "application/json",
         };
+      }
+
+      // RipperMercs fix (x402-foundation/x402#2207, 2026-05-25): CDP requires
+      // paymentPayload.extensions echoed from the 402 challenge. Without this,
+      // EXTENSION-RESPONSES returns e30= ({}) and bazaar processing is silently
+      // skipped. TensorFeed went from 1 → 29 indexed in <1h after applying this.
+      if (!paymentPayload.extensions || Object.keys(paymentPayload.extensions).length === 0) {
+        paymentPayload.extensions = bazaarResearch;
       }
 
       // PaymentRequirementsV2Schema (canonical, what CDP V2 verify expects):
