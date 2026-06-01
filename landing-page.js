@@ -1888,9 +1888,8 @@ a.validation-card__date:hover { color: var(--gold); }
           <p style="font-size:13px;color:var(--text-muted);margin:0;">Open-source verifier client on npm: <a href="https://github.com/TKCollective/agentoracle-receipt-verify" target="_blank" rel="noopener noreferrer" style="color:var(--gold);text-decoration:none;border-bottom:1px dashed var(--gold-dim);"><code style="font-family:var(--font-mono);font-size:12px;">@agentoracle/receipt-verify</code></a> &mdash; your end users get the same offline cryptographic guarantees regardless of which platform issued the receipt.</p>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px;min-width:200px;">
-          <a href="mailto:Joe@agentoracle.co?subject=AgentOracle%20platform-tier%20pricing" class="pricing-card__cta" style="background:var(--gold);color:#0A0A0A;border-color:var(--gold);text-align:center;font-family:var(--font-mono);font-size:12px;letter-spacing:0.02em;" onclick="navigator.clipboard.writeText('Joe@agentoracle.co');" title="Click to email or copy address">Joe@agentoracle.co</a>
-          <div style="font-size:11px;color:var(--text-muted);text-align:center;font-family:var(--font-mono);letter-spacing:0.04em;">click to email — or copy</div>
-          <a href="https://github.com/TKCollective/agentoracle-receipt-verify" target="_blank" rel="noopener noreferrer" class="pricing-card__cta" style="text-align:center;margin-top:4px;">View verifier on GitHub</a>
+          <a href="mailto:Joe@agentoracle.co?subject=AgentOracle%20platform-tier%20pricing" class="pricing-card__cta" id="platformTierTalkBtn" style="background:var(--gold);color:#0A0A0A;border-color:var(--gold);text-align:center;cursor:pointer;" onclick="event.preventDefault();navigator.clipboard.writeText('Joe@agentoracle.co').then(()=>{var b=document.getElementById('platformTierTalkBtn');var orig=b.textContent;b.textContent='Copied — Joe@agentoracle.co';setTimeout(()=>{b.textContent=orig;},2500);});window.location.href='mailto:Joe@agentoracle.co?subject=AgentOracle%20platform-tier%20pricing';" title="Click to copy and open your mail client">Talk to us</a>
+          <a href="https://github.com/TKCollective/agentoracle-receipt-verify" target="_blank" rel="noopener noreferrer" class="pricing-card__cta" style="text-align:center;">View verifier on GitHub</a>
         </div>
       </div>
     </div>
