@@ -4,7 +4,7 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AgentOracle — The Trust Layer for AI Agents | x402 Native</title>
+<title>AgentOracle — The Verification Layer for the Agent Economy | x402 Native</title>
 <meta name="description" content="Pay-per-query research API for AI agents. x402 protocol on Base mainnet + SKALE (gasless). Verify before you act — JWS-signed receipts, FEVER-calibrated confidence, USDC payments.">
 <link rel="canonical" href="https://agentoracle.co/">
 
@@ -12,24 +12,24 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AgentOracle">
 <meta property="og:url" content="https://agentoracle.co/">
-<meta property="og:title" content="AgentOracle — The Trust Layer for AI Agents">
+<meta property="og:title" content="AgentOracle — The Verification Layer for the Agent Economy">
 <meta property="og:description" content="Pay-per-query research API for AI agents. x402 on Base + SKALE. Verify before you act.">
-<meta property="og:image" content="https://agentoracle.co/og-image.png">
-<meta property="og:image:secure_url" content="https://agentoracle.co/og-image.png">
+<meta property="og:image" content="https://agentoracle.co/og-image.png?v=20260527">
+<meta property="og:image:secure_url" content="https://agentoracle.co/og-image.png?v=20260527">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="AgentOracle — Research API for AI Agents — POST /research, $0.02 USDC, Base">
+<meta property="og:image:alt" content="AgentOracle — The verification layer for the agent economy">
 
 <!-- Twitter / X -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@AgentOracle_AI">
 <meta name="twitter:creator" content="@AgentOracle_AI">
 <meta name="twitter:url" content="https://agentoracle.co/">
-<meta name="twitter:title" content="AgentOracle — The Trust Layer for AI Agents">
+<meta name="twitter:title" content="AgentOracle — The Verification Layer for the Agent Economy">
 <meta name="twitter:description" content="Pay-per-query research API for AI agents. x402 on Base + SKALE. Verify before you act.">
-<meta name="twitter:image" content="https://agentoracle.co/og-image.png">
-<meta name="twitter:image:alt" content="AgentOracle — Research API for AI Agents">
+<meta name="twitter:image" content="https://agentoracle.co/og-image.png?v=20260527">
+<meta name="twitter:image:alt" content="AgentOracle — The verification layer for the agent economy">
 
 <!-- Theme + favicons -->
 <meta name="theme-color" content="#0A0A0A">
@@ -1173,18 +1173,21 @@ a.validation-card__date:hover { color: var(--gold); }
       <span class="whats-new__pulse"></span>
       <span class="whats-new__label">New</span>
       <span class="whats-new__track" id="whatsNewTrack">
-        <span class="whats-new__item active" data-idx="0"><span class="whats-new__date">May 26</span><span class="whats-new__text">Live on SKALE Base — first paid settlement gasless on SKALE → <a class="whats-new__link" href="https://skale-base-explorer.skalenodes.com/tx/0x809361edad3ea6aebfacea978c6d6acf8cb32f7f03e4b5d13ee070e00c9f8e42" target="_blank" rel="noopener noreferrer">explorer</a></span></span>
-        <span class="whats-new__item" data-idx="1"><span class="whats-new__date">May 11</span><span class="whats-new__text">Tutorial #4: claim verification in AI content approval workflows → <a class="whats-new__link" href="https://dev.to/agentoracle/how-to-add-claim-verification-to-your-ai-content-approval-workflow-3797" target="_blank" rel="noopener noreferrer">dev.to</a></span></span>
-        <span class="whats-new__item" data-idx="2"><span class="whats-new__date">May 8</span><span class="whats-new__text">Indexed in Coinbase Bazaar — 8 settlements verified → <a class="whats-new__link" href="https://api.cdp.coinbase.com/platform/v2/x402/discovery/merchant?payTo=0xdF90200B0031051BbF7a66BB9387d2Ecf599e109" target="_blank" rel="noopener noreferrer">discovery</a></span></span>
-        <span class="whats-new__item" data-idx="3"><span class="whats-new__date">May 11</span><span class="whats-new__text">First external paid /research settlement → <a class="whats-new__link" href="https://basescan.org/tx/0x01e37297fd96b9ab0476d1f4d1b2b925db9de564458fd52cf9ad9cf092b79cd5" target="_blank" rel="noopener noreferrer">basescan</a></span></span>
-        <span class="whats-new__item" data-idx="4"><span class="whats-new__date">May 4</span><span class="whats-new__text">First x402 settlements live on Base → <a class="whats-new__link" href="https://basescan.org/tx/0x4c5cf98c9462638015b89348c65dbe71995b56df9cda5905c4264963dc34dd03" target="_blank" rel="noopener noreferrer">basescan</a></span></span>
-        <span class="whats-new__item" data-idx="5"><span class="whats-new__date">Apr 29</span><span class="whats-new__text">JWS receipt spec v0.1 public → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-receipt-spec" target="_blank" rel="noopener noreferrer">github</a></span></span>
+        <span class="whats-new__item active" data-idx="0"><span class="whats-new__date">Jun 1</span><span class="whats-new__text">Open-source receipt verifier published — offline JWS verification, MIT licensed → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-receipt-verify" target="_blank" rel="noopener noreferrer">github</a></span></span>
+        <span class="whats-new__item" data-idx="1"><span class="whats-new__date">Jun 1</span><span class="whats-new__text">Cross-operator benchmark live — open methodology, open submissions → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-benchmark" target="_blank" rel="noopener noreferrer">github</a></span></span>
+        <span class="whats-new__item" data-idx="2"><span class="whats-new__date">Jun 1</span><span class="whats-new__text">IETF I-D working repo public — draft-krausz-verification-state, target submission June → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-ietf-id" target="_blank" rel="noopener noreferrer">github</a></span></span>
+        <span class="whats-new__item" data-idx="3"><span class="whats-new__date">May 30</span><span class="whats-new__text">Receipt spec v0.3 — binary-halt gate + canonical/derived/version-bound mapping → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-receipt-spec/tree/v0.3-binary-halt" target="_blank" rel="noopener noreferrer">spec</a></span></span>
+        <span class="whats-new__item" data-idx="4"><span class="whats-new__date">May 28</span><span class="whats-new__text">AVeriTeC 2024 dev published — 57.6% overall, held-out 57.7%, MIT licensed → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-eval-harness" target="_blank" rel="noopener noreferrer">repo</a></span></span>
+        <span class="whats-new__item" data-idx="5"><span class="whats-new__date">May 27</span><span class="whats-new__text">Pinned in x402trace v0.3.3 — first operator-contributed fixture in the harness → <a class="whats-new__link" href="https://github.com/fardinvahdat/x402trace/releases/tag/v0.3.3" target="_blank" rel="noopener noreferrer">release</a></span></span>
+        <span class="whats-new__item" data-idx="6"><span class="whats-new__date">May 26</span><span class="whats-new__text">Live on SKALE Base — first paid settlement gasless on SKALE → <a class="whats-new__link" href="https://skale-base-explorer.skalenodes.com/tx/0x809361edad3ea6aebfacea978c6d6acf8cb32f7f03e4b5d13ee070e00c9f8e42" target="_blank" rel="noopener noreferrer">explorer</a></span></span>
+        <span class="whats-new__item" data-idx="7"><span class="whats-new__date">May 11</span><span class="whats-new__text">Tutorial #4: claim verification in AI content approval workflows → <a class="whats-new__link" href="https://dev.to/agentoracle/how-to-add-claim-verification-to-your-ai-content-approval-workflow-3797" target="_blank" rel="noopener noreferrer">dev.to</a></span></span>
+        <span class="whats-new__item" data-idx="8"><span class="whats-new__date">May 8</span><span class="whats-new__text">Indexed in Coinbase Bazaar — 8 settlements verified → <a class="whats-new__link" href="https://api.cdp.coinbase.com/platform/v2/x402/discovery/merchant?payTo=0xdF90200B0031051BbF7a66BB9387d2Ecf599e109" target="_blank" rel="noopener noreferrer">discovery</a></span></span>
       </span>
     </div>
     <h1 class="hero__headline">
       AI agents can act.<br><span class="hero__headline-gold">Most still can’t be trusted.</span>
     </h1>
-    <p class="hero__lede">AgentOracle is the trust layer for the agent economy. We decompose every claim, verify across 4 independent sources, and return a cryptographic receipt — before your agent takes any action or moves value.</p>
+    <p class="hero__lede">AgentOracle is the verification layer for the agent economy. We decompose every claim, verify across 4 independent sources, and return a cryptographic receipt — before your agent takes any action or moves value.</p>
     <div class="hero__cta-row">
       <a href="#playground" class="btn btn--primary">Try free — no wallet needed →</a>
       <a href="/business" class="btn btn--secondary" style="font-size:14px;">Talk to us about a pilot</a>
@@ -1876,6 +1879,20 @@ a.validation-card__date:hover { color: var(--gold); }
         <a href="https://agentoracle.co/.well-known/x402.json" class="pricing-card__cta" target="_blank" rel="noopener noreferrer">View Manifest</a>
       </div>
     </div>
+    <div class="reveal" style="max-width:960px;margin:48px auto 0;padding:32px;border:1px solid var(--gold-dim);border-radius:14px;background:linear-gradient(160deg, rgba(201,169,110,0.04), var(--surface));">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:24px;">
+        <div style="flex:1;min-width:280px;">
+          <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.12em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;">For agent orchestration platforms</div>
+          <h3 style="font-size:20px;font-weight:600;margin:0 0 8px;color:var(--text);">Platform-tier pricing &mdash; integrating verification at scale</h3>
+          <p style="font-size:14px;line-height:1.6;color:var(--text-muted);margin:0 0 12px;max-width:520px;">Building a platform that needs verification as a primitive? Volume-tier rates kick in automatically above 1M verifications/month. Includes white-label receipt branding, custom mapping documents under your namespace, SLA on availability and latency, and a dedicated integration channel.</p>
+          <p style="font-size:13px;color:var(--text-muted);margin:0;">Open-source verifier client on npm: <a href="https://github.com/TKCollective/agentoracle-receipt-verify" target="_blank" rel="noopener noreferrer" style="color:var(--gold);text-decoration:none;border-bottom:1px dashed var(--gold-dim);"><code style="font-family:var(--font-mono);font-size:12px;">@agentoracle/receipt-verify</code></a> &mdash; your end users get the same offline cryptographic guarantees regardless of which platform issued the receipt.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;min-width:180px;">
+          <a href="mailto:train@joekrausz.com?subject=AgentOracle%20platform-tier%20pricing" class="pricing-card__cta" style="background:var(--gold);color:#0A0A0A;border-color:var(--gold);text-align:center;">Talk to us</a>
+          <a href="https://github.com/TKCollective/agentoracle-receipt-verify" target="_blank" rel="noopener noreferrer" class="pricing-card__cta" style="text-align:center;">View verifier on GitHub</a>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -2029,7 +2046,7 @@ a.validation-card__date:hover { color: var(--gold); }
           <svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="footerRing" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#E8C878"/><stop offset="100%" stop-color="#A08840"/></linearGradient></defs><circle cx="13" cy="13" r="9" stroke="url(#footerRing)" stroke-width="2" fill="none"/><circle cx="13" cy="4" r="2" fill="#E8C878"/></svg>
           <span class="footer__brand-name">AgentOracle</span>
         </div>
-        <p class="footer__tagline">The trust layer for AI agents</p>
+        <p class="footer__tagline">The verification layer for the agent economy</p>
         <div class="footer__socials">
           <a href="https://x.com/AgentOracle_AI" class="footer__social-link" target="_blank" rel="noopener noreferrer" aria-label="X / Twitter"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
           <a href="https://github.com/TKCollective/x402-research-skill" class="footer__social-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg></a>
