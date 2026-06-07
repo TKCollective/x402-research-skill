@@ -1389,43 +1389,6 @@ a.validation-card__date:hover { color: var(--gold); }
   </div>
 </section>
 
-<!-- ECOSYSTEM VALIDATION QUOTES -->
-<section class="section validation-strip" id="validation">
-  <div class="reveal">
-    <div class="section-eyebrow" style="color: var(--gold);">ecosystem validation</div>
-    <h2 class="section-title">Independent verification from <span class="section-title-gold">the standards layer</span>.</h2>
-    <div class="validation-grid">
-      <figure class="validation-card">
-        <blockquote class="validation-card__quote">“Strong work. Looking forward to the eval harness. The <code>calibration.provisional</code> field is the right discipline.”</blockquote>
-        <figcaption class="validation-card__cite">
-          <span class="validation-card__name">Beenz</span>
-          <span class="validation-card__role">Mastercard Verifiable Intent RFC contributor</span>
-          <span class="validation-card__date">April 29, 2026 · #x402 Discord</span>
-        </figcaption>
-        <ul class="validation-card__metrics">
-          <li><span>Node jose</span><strong>PASS</strong></li>
-          <li><span>Python joserfc</span><strong>PASS</strong></li>
-          <li><span>Tamper test</span><strong>FAIL CLOSED</strong></li>
-        </ul>
-      </figure>
-      <figure class="validation-card">
-        <blockquote class="validation-card__quote">Coinbase engineering publicly engaged with our x402 implementation on the canonical explorer-issue thread — surfaced details, acknowledged the report, kept the discussion on the public record.</blockquote>
-        <figcaption class="validation-card__cite">
-          <span class="validation-card__name">ethanoroshiba</span>
-          <span class="validation-card__role">Coinbase · x402 Foundation</span>
-          <a class="validation-card__date" href="https://github.com/x402-foundation/x402/issues/2207" target="_blank" rel="noopener">May 7, 2026 · GitHub #2207 →</a>
-        </figcaption>
-        <ul class="validation-card__metrics">
-          <li><span>Transport</span><strong>6 / 6</strong></li>
-          <li><span>Payment</span><strong>8 / 8</strong></li>
-          <li><span>Bazaar ext.</span><strong>PASS</strong></li>
-        </ul>
-      </figure>
-    </div>
-    <p class="validation-strip__footer">Validator: <a href="https://agentic.market/validate" target="_blank" rel="noopener">agentic.market/validate</a> · 4 verified on-chain settlements on Base mainnet via CDP facilitator</p>
-  </div>
-</section>
-
 <!-- LIVE RECEIPT FEED MOCK -->
 <section class="section receipts-feed" id="receipts-feed">
   <div class="reveal">
