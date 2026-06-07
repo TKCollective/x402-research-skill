@@ -1175,7 +1175,7 @@ a.validation-card__date:hover { color: var(--gold); }
       <span class="whats-new__track" id="whatsNewTrack">
         <span class="whats-new__item active" data-idx="0"><span class="whats-new__date">Jun 1</span><span class="whats-new__text">Open-source receipt verifier published — offline JWS verification, MIT licensed → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-receipt-verify" target="_blank" rel="noopener noreferrer">github</a></span></span>
         <span class="whats-new__item" data-idx="1"><span class="whats-new__date">Jun 1</span><span class="whats-new__text">Cross-operator benchmark live — open methodology, open submissions → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-benchmark" target="_blank" rel="noopener noreferrer">github</a></span></span>
-        <span class="whats-new__item" data-idx="2"><span class="whats-new__date">Jun 1</span><span class="whats-new__text">IETF I-D working repo public — draft-krausz-verification-state, target submission June → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-ietf-id" target="_blank" rel="noopener noreferrer">github</a></span></span>
+        <span class="whats-new__item" data-idx="2"><span class="whats-new__date">Jun 6</span><span class="whats-new__text">IETF Internet-Draft FILED — draft-krausz-verification-state-00 → <a class="whats-new__link" href="https://datatracker.ietf.org/doc/draft-krausz-verification-state/" target="_blank" rel="noopener noreferrer">datatracker</a></span></span>
         <span class="whats-new__item" data-idx="3"><span class="whats-new__date">May 30</span><span class="whats-new__text">Receipt spec v0.3 — binary-halt gate + canonical/derived/version-bound mapping → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-receipt-spec/tree/v0.3-binary-halt" target="_blank" rel="noopener noreferrer">spec</a></span></span>
         <span class="whats-new__item" data-idx="4"><span class="whats-new__date">May 28</span><span class="whats-new__text">AVeriTeC 2024 dev published — 57.6% overall, held-out 57.7%, MIT licensed → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-eval-harness" target="_blank" rel="noopener noreferrer">repo</a></span></span>
         <span class="whats-new__item" data-idx="5"><span class="whats-new__date">May 27</span><span class="whats-new__text">Pinned in x402trace v0.3.3 — first operator-contributed fixture in the harness → <a class="whats-new__link" href="https://github.com/fardinvahdat/x402trace/releases/tag/v0.3.3" target="_blank" rel="noopener noreferrer">release</a></span></span>
@@ -1372,7 +1372,7 @@ a.validation-card__date:hover { color: var(--gold); }
       </a>
       <a class="verify-card" href="https://github.com/TKCollective/agentoracle-receipt-spec" target="_blank" rel="noopener noreferrer">
         <span class="verify-card__label">Open Spec</span>
-        <span class="verify-card__title">Receipt format v0.1</span>
+        <span class="verify-card__title">Receipt format v0.3</span>
         <span class="verify-card__desc">Three-axis freshness (signature · calibration · evidence). Aligned with W3C VC Confidence Method.</span>
         <span class="verify-card__mono">verification.* per W3C VC CM</span>
         <span class="verify-card__arrow">View on GitHub →</span>
@@ -1409,7 +1409,7 @@ a.validation-card__date:hover { color: var(--gold); }
         </ul>
       </figure>
       <figure class="validation-card">
-        <blockquote class="validation-card__quote">“The Coinbase engineering team publicly engaged on the canonical x402 issue, diagnosed our implementation, and tagged TKCollective directly.”</blockquote>
+        <blockquote class="validation-card__quote">Coinbase engineering publicly engaged with our x402 implementation on the canonical explorer-issue thread — surfaced details, acknowledged the report, kept the discussion on the public record.</blockquote>
         <figcaption class="validation-card__cite">
           <span class="validation-card__name">ethanoroshiba</span>
           <span class="validation-card__role">Coinbase · x402 Foundation</span>
@@ -1478,7 +1478,7 @@ a.validation-card__date:hover { color: var(--gold); }
       </div>
       <div class="who-uses__card">
         <div class="who-uses__role">Compliance Officers</div>
-        <p>EU AI Act Article 26 record-keeping, NIST AI RMF measurement — covered by cryptographic receipts that don’t require trusting us.</p>
+        <p>EU AI Act Article 12 record-keeping (high-risk AI systems, applies Aug 2, 2026), NIST AI RMF measurement — covered by cryptographic receipts that don’t require trusting us.</p>
       </div>
       <div class="who-uses__card">
         <div class="who-uses__role">Developer Tooling Founders</div>
@@ -1561,7 +1561,7 @@ a.validation-card__date:hover { color: var(--gold); }
       <span class="feature-row__num">03</span>
       <span class="feature-row__title">x402 native payments</span>
       <span class="feature-row__desc">HTTP-native micropayments on Base, SKALE, and Stellar. No API keys. Agents discover pricing via the x402 manifest and pay inline.</span>
-      <div class="feature-row__metric"><div class="feature-row__metric-bar"><div class="feature-row__metric-fill"></div></div><span class="feature-row__metric-value">$0.01/claim</span></div>
+      <div class="feature-row__metric"><div class="feature-row__metric-bar"><div class="feature-row__metric-fill"></div></div><span class="feature-row__metric-value">multi-chain</span></div>
     </div>
     <div class="feature-row reveal" style="--fill: 0.81">
       <span class="feature-row__num">04</span>
@@ -1859,7 +1859,7 @@ a.validation-card__date:hover { color: var(--gold); }
         <ul class="pricing-card__features">
           <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Full 4-source claim verification</li>
           <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Per-claim verdicts + evidence</li>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>ACT / VERIFY / REJECT output</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>act or halt output (binary gate, IETF -00)</li>
           <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Adversarial scanning included</li>
           <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>On-chain payment verification</li>
         </ul>
@@ -1988,11 +1988,11 @@ a.validation-card__date:hover { color: var(--gold); }
             <td style="padding:13px 20px;text-align:center;color:var(--text-faint);">No</td>
           </tr>
           <tr style="border-bottom:1px solid var(--border);">
-            <td style="padding:13px 20px;color:var(--text-muted);">Price per query</td>
-            <td style="padding:13px 20px;text-align:center;color:var(--gold);font-weight:700;">$0.01</td>
-            <td style="padding:13px 20px;text-align:center;color:var(--text-muted);">$0.005</td>
-            <td style="padding:13px 20px;text-align:center;color:var(--text-muted);">$0.005</td>
-            <td style="padding:13px 20px;text-align:center;color:var(--text-muted);">~$0.01</td>
+            <td style="padding:13px 20px;color:var(--text-muted);">Pricing</td>
+            <td style="padding:13px 20px;text-align:center;color:var(--gold);font-weight:700;">$0.02 / $0.10 tiers</td>
+            <td style="padding:13px 20px;text-align:center;color:var(--text-muted);">varies</td>
+            <td style="padding:13px 20px;text-align:center;color:var(--text-muted);">varies</td>
+            <td style="padding:13px 20px;text-align:center;color:var(--text-muted);">per-token</td>
           </tr>
           <tr style="background:rgba(201,169,110,0.03);">
             <td style="padding:13px 20px;color:var(--text);font-weight:600;">What you get</td>
