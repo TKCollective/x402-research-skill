@@ -5,13 +5,13 @@ export const BUSINESS_PAGE_HTML = `<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AgentOracle for Business — Verification for AI-generated content</title>
-<meta name="description" content="Pre-publication AI verification with cryptographic receipts. Pilot pricing for content agencies, regulated industries, and brand teams. $2,500/month.">
+<meta name="description" content="Pre-publication AI verification with cryptographic receipts. 60-day money-back pilots from $1,000 for content agencies, regulated industries, and brand teams.">
 
 <!-- Open Graph -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://agentoracle.co/business">
 <meta property="og:title" content="AgentOracle for Business">
-<meta property="og:description" content="Pre-publication AI verification with cryptographic receipts. Pilot pricing $2,500/month.">
+<meta property="og:description" content="Pre-publication AI verification with cryptographic receipts. 60-day money-back pilots from $1,000.">
 <meta property="og:image" content="https://agentoracle.co/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -254,12 +254,12 @@ a:hover { color: var(--gold-bright); }
       <div class="tier">
         <span class="tier__name">Developer</span>
         <div>
-          <span class="tier__price">$0.02</span>
+          <span class="tier__price">from $0.02</span>
           <span class="tier__price-unit">/ query</span>
         </div>
         <p class="tier__desc">Pay-per-call x402 API. No signup, no API key, no monthly minimum. Settle in USDC on Base.</p>
         <ul class="tier__features">
-          <li>POST /research, /deep-research, /research/batch</li>
+          <li>POST /research ($0.02), /deep-research ($0.10), /research/batch ($0.10)</li>
           <li>Same JWS receipt as enterprise tier</li>
           <li>Public JWKS, public spec, public benchmark</li>
           <li>MCP-native (npm + langchain-agentoracle)</li>
@@ -271,10 +271,10 @@ a:hover { color: var(--gold-bright); }
       <div class="tier tier--featured">
         <span class="tier__name">Business Pilot</span>
         <div>
-          <span class="tier__price">$2,500</span>
-          <span class="tier__price-unit">/ month</span>
+          <span class="tier__price">$1,000</span>
+          <span class="tier__price-unit">/ 60 days, money-back</span>
         </div>
-        <p class="tier__desc">Up to 50K verifications/month, custom dashboard, async Slack channel, NET-30 invoicing. Most popular for content agencies and brand teams.</p>
+        <p class="tier__desc">Launch offer: 60-day money-back pilot. Up to 50K verifications, custom dashboard, async Slack channel. Converts to $2,500/month at month 3 if you stay. For content agencies and brand teams.</p>
         <ul class="tier__features">
           <li>50,000 verifications / month</li>
           <li>Custom dashboard with audit log export</li>
@@ -292,12 +292,12 @@ a:hover { color: var(--gold-bright); }
         <div>
           <span class="tier__price">Custom</span>
         </div>
-        <p class="tier__desc">High volume, custom SLA, dedicated kid for receipt signing, on-prem deployment options.</p>
+        <p class="tier__desc">High volume, custom SLA, dedicated signing key (kid) for receipts, on-prem deployment options.</p>
         <ul class="tier__features">
           <li>Unlimited verifications</li>
-          <li>Dedicated signing key (your kid in JWKS)</li>
+          <li>Dedicated signing key (your kid value in JWKS)</li>
           <li>SLA guarantees and 99.9%+ uptime</li>
-          <li>Compliance review support (EU AI Act, NIST RMF, SOC 2 in progress)</li>
+          <li>Compliance review support (EU AI Act Article 12, NIST AI RMF, SOC 2 on roadmap)</li>
           <li>Annual contract, MSA, security review</li>
           <li>Engineering response time guarantees</li>
         </ul>
@@ -326,9 +326,9 @@ a:hover { color: var(--gold-bright); }
     <div class="compliance">
       <h3>Built for the regulations coming next</h3>
       <ul>
-        <li><strong>EU AI Act Article 26.</strong> Cryptographic record-keeping for AI system outputs. Receipts are tamper-evident and replayable.</li>
+        <li><strong>EU AI Act Article 12.</strong> Record-keeping for high-risk AI systems (applies Aug 2, 2026). Cryptographic receipts are tamper-evident and replayable.</li>
         <li><strong>NIST AI RMF Measurement.</strong> Per-claim confidence + provenance + source attribution.</li>
-        <li><strong>SOC 2 Type II.</strong> In progress. Available with the Enterprise tier roadmap.</li>
+        <li><strong>SOC 2 Type II.</strong> On roadmap, scoped with the Enterprise tier rollout.</li>
         <li><strong>Public JWKS.</strong> Any auditor can verify our receipts without trusting us. RFC 7515 / 7517 / 8037.</li>
       </ul>
     </div>
