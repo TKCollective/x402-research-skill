@@ -319,8 +319,8 @@ a:hover { color: var(--gold-bright); }
         <p class="proof-card__cite"><strong>Beenz</strong> \u2014 Mastercard Verifiable Intent RFC contributor. Independently verified the receipt spec end-to-end (Node + Python). Tamper test failed closed.</p>
       </div>
       <div class="proof-card">
-        <p class="proof-card__quote">\u201cThe Coinbase engineering team publicly engaged on the canonical x402 issue thread, diagnosed our implementation, and tagged TKCollective directly.\u201d</p>
-        <p class="proof-card__cite"><strong>ethanoroshiba</strong> \u2014 Coinbase / x402 Foundation. <a href="https://github.com/x402-foundation/x402/issues/2207" target="_blank" rel="noopener">View thread \u2192</a></p>
+        <p class="proof-card__quote">\u201cCoinbase engineering publicly engaged with our x402 implementation on the canonical explorer-issue thread, surfaced details, acknowledged the report, kept the discussion on the public record.\u201d</p>
+        <p class="proof-card__cite"><a href="https://github.com/x402-foundation/x402/issues/2207" target="_blank" rel="noopener">x402 Foundation GitHub #2207 \u2192</a></p>
       </div>
     </div>
     <div class="compliance">
