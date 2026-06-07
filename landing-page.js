@@ -1128,6 +1128,18 @@ a.validation-card__date:hover { color: var(--gold); }
   .footer__grid { grid-template-columns: 1fr 1fr; }
   .footer { padding: 40px 24px 32px; }
 }
+
+/* Proof / credentials grid */
+.proof { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 32px; }
+@media (max-width: 960px) { .proof { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .proof { grid-template-columns: 1fr; } }
+.proof-card { padding: 22px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: inherit; transition: border-color 0.2s, transform 0.2s; }
+.proof-card:hover { border-color: rgba(201,169,110,0.5); transform: translateY(-2px); }
+.proof-card__label { font-size: 10.5px; color: var(--gold); font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace); letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; }
+.proof-card__title { font-size: 15px; color: var(--text); font-weight: 700; letter-spacing: -0.01em; line-height: 1.35; margin-top: 2px; }
+.proof-card__desc { font-size: 13px; color: var(--text-muted); line-height: 1.55; margin-top: 4px; flex-grow: 1; }
+.proof-card__arrow { font-size: 12px; color: var(--gold-dim, rgba(201,169,110,0.7)); font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace); margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(201,169,110,0.12); letter-spacing: 0.01em; }
+.proof-card:hover .proof-card__arrow { color: var(--gold); }
 </style>
 </head>
 <body>
@@ -1855,6 +1867,54 @@ a.validation-card__date:hover { color: var(--gold); }
           <a href="https://github.com/TKCollective/agentoracle-receipt-verify" target="_blank" rel="noopener noreferrer" class="pricing-card__cta" style="text-align:center;">View verifier on GitHub</a>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="credentials" style="position:relative;z-index:2;">
+  <div style="max-width:1240px;margin:0 auto;padding:0 40px;">
+    <div class="reveal" style="text-align:center;margin-bottom:16px;">
+      <div class="section-eyebrow">credentials</div>
+      <h2 class="section-title">Cryptographic proof, <span class="section-title-gold">not vendor claims</span>.</h2>
+      <p class="section-subtitle">Six public artifacts. Every one independently verifiable.</p>
+    </div>
+    <div class="proof reveal">
+      <a class="proof-card" href="https://datatracker.ietf.org/doc/draft-krausz-verification-state/" target="_blank" rel="noopener">
+        <span class="proof-card__label">IETF Internet-Draft \u2014 Filed</span>
+        <span class="proof-card__title">draft-krausz-verification-state-00</span>
+        <span class="proof-card__desc">June 6, 2026 \u00b7 17 pages \u00b7 individual submission on the IETF datatracker \u00b7 6 RFC references \u00b7 sibling to environment-state family.</span>
+        <span class="proof-card__arrow">View on datatracker \u2192</span>
+      </a>
+      <a class="proof-card" href="https://github.com/TKCollective/agentoracle-receipt-spec/tree/v0.3-binary-halt" target="_blank" rel="noopener">
+        <span class="proof-card__label">Public Receipt Spec v0.3</span>
+        <span class="proof-card__title">agentoracle-receipt-spec</span>
+        <span class="proof-card__desc">Binary-halt gate \u00b7 canonical/derived/version-bound mapping \u00b7 4 ADRs \u00b7 content-addressed via v_gate_mapping_hash \u00b7 MIT licensed.</span>
+        <span class="proof-card__arrow">View on GitHub \u2192</span>
+      </a>
+      <a class="proof-card" href="https://github.com/TKCollective/agentoracle-receipt-verify" target="_blank" rel="noopener">
+        <span class="proof-card__label">Reference Verifier</span>
+        <span class="proof-card__title">agentoracle-receipt-verify</span>
+        <span class="proof-card__desc">TypeScript JWS verifier \u00b7 offline verification of any v0.3 receipt \u00b7 no facilitator dependency \u00b7 MIT licensed.</span>
+        <span class="proof-card__arrow">View on GitHub \u2192</span>
+      </a>
+      <a class="proof-card" href="https://github.com/TKCollective/agentoracle-benchmark" target="_blank" rel="noopener">
+        <span class="proof-card__label">AVeriTeC 2024 Benchmark</span>
+        <span class="proof-card__title">agentoracle-benchmark v0.1</span>
+        <span class="proof-card__desc">57.6% overall \u00b7 57.7% held-out (vs ~30% paper baseline) \u00b7 open methodology \u00b7 open submissions \u00b7 MIT licensed.</span>
+        <span class="proof-card__arrow">View results \u2192</span>
+      </a>
+      <a class="proof-card" href="https://x.com/i/broadcasts/1DGLddwXNvYGm" target="_blank" rel="noopener">
+        <span class="proof-card__label">SKALE Developer Showcase</span>
+        <span class="proof-card__title">Live broadcast \u00b7 June 4, 2026</span>
+        <span class="proof-card__desc">30-minute on-stage demo of AgentOracle on SKALE Base \u00b7 gasless USDC.e settles \u00b7 V2 envelope \u00b7 agents paying agents live.</span>
+        <span class="proof-card__arrow">Watch the broadcast \u2192</span>
+      </a>
+      <a class="proof-card" href="https://agentic.market" target="_blank" rel="noopener">
+        <span class="proof-card__label">Coinbase Bazaar \u2014 Indexed</span>
+        <span class="proof-card__title">Live merchant since 2026-05-26</span>
+        <span class="proof-card__desc">Listed on Coinbase Bazaar discovery \u00b7 public engagement on x402-foundation repo (issues #2207, #2549, #2557) \u00b7 our spec contributions on the public record.</span>
+        <span class="proof-card__arrow">View on Bazaar \u2192</span>
+      </a>
     </div>
   </div>
 </section>
