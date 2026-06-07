@@ -1903,11 +1903,11 @@ a.validation-card__date:hover { color: var(--gold); }
         <span class="proof-card__desc">57.6% overall \u00b7 57.7% held-out (vs ~30% paper baseline) \u00b7 open methodology \u00b7 open submissions \u00b7 MIT licensed.</span>
         <span class="proof-card__arrow">View results \u2192</span>
       </a>
-      <a class="proof-card" href="https://x.com/i/broadcasts/1DGLddwXNvYGm" target="_blank" rel="noopener">
-        <span class="proof-card__label">SKALE Developer Showcase</span>
-        <span class="proof-card__title">Live broadcast \u00b7 June 4, 2026</span>
-        <span class="proof-card__desc">30-minute on-stage demo of AgentOracle on SKALE Base \u00b7 gasless USDC.e settles \u00b7 V2 envelope \u00b7 agents paying agents live.</span>
-        <span class="proof-card__arrow">Watch the broadcast \u2192</span>
+      <a class="proof-card" href="https://agenttrust.uk" target="_blank" rel="noopener">
+        <span class="proof-card__label">Peer-Audited</span>
+        <span class="proof-card__title">AgentTrust \u00b7 VERIFIED 100</span>
+        <span class="proof-card__desc">Independent third-party audit \u00b7 listed in verified-providers section \u00b7 audited June 2026 \u00b7 gold badge.</span>
+        <span class="proof-card__arrow">View at agenttrust.uk \u2192</span>
       </a>
       <a class="proof-card" href="https://agentic.market" target="_blank" rel="noopener">
         <span class="proof-card__label">Coinbase Bazaar \u2014 Indexed</span>
