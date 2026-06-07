@@ -132,13 +132,17 @@ a:hover { color: var(--gold-bright); }
 .step__title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 8px; letter-spacing: -0.005em; }
 .step p { font-size: 13.5px; color: var(--text-muted); line-height: 1.6; }
 
-/* Trust strip — proof */
-.proof { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 32px; }
-@media (max-width: 720px) { .proof { grid-template-columns: 1fr; } }
-.proof-card { padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
-.proof-card__quote { font-size: 17px; line-height: 1.65; color: var(--text); font-style: italic; margin-bottom: 16px; letter-spacing: -0.005em; }
-.proof-card__cite { font-size: 14px; color: var(--text-muted); line-height: 1.55; }
-.proof-card__cite strong { color: var(--gold); font-weight: 700; }
+/* Trust strip — proof of work (credentials grid) */
+.proof { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 32px; }
+@media (max-width: 960px) { .proof { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .proof { grid-template-columns: 1fr; } }
+.proof-card { padding: 22px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: inherit; transition: border-color 0.2s, transform 0.2s; }
+.proof-card:hover { border-color: rgba(201,169,110,0.5); transform: translateY(-2px); }
+.proof-card__label { font-size: 10.5px; color: var(--gold); font-family: var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; }
+.proof-card__title { font-size: 15px; color: var(--text); font-weight: 700; letter-spacing: -0.01em; line-height: 1.35; margin-top: 2px; }
+.proof-card__desc { font-size: 13px; color: var(--text-muted); line-height: 1.55; margin-top: 4px; flex-grow: 1; }
+.proof-card__arrow { font-size: 12px; color: var(--gold-dim); font-family: var(--font-mono); margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(201,169,110,0.12); letter-spacing: 0.01em; }
+.proof-card:hover .proof-card__arrow { color: var(--gold); }
 
 /* Compliance strip */
 .compliance { background: var(--surface); padding: 48px 32px; border-radius: 12px; border: 1px solid var(--border); margin-top: 32px; }
@@ -314,14 +318,42 @@ a:hover { color: var(--gold-bright); }
     <div class="section__eyebrow">why we are different</div>
     <h2 class="section__title">Cryptographic proof, not vendor claims.</h2>
     <div class="proof">
-      <div class="proof-card">
-        <p class="proof-card__quote">\u201cStrong work. Looking forward to the eval harness. The calibration.provisional field is the right discipline.\u201d</p>
-        <p class="proof-card__cite"><strong>Beenz</strong> \u2014 Mastercard Verifiable Intent RFC contributor. Independently verified the receipt spec end-to-end (Node + Python). Tamper test failed closed.</p>
-      </div>
-      <div class="proof-card">
-        <p class="proof-card__quote">\u201cCoinbase engineering publicly engaged with our x402 implementation on the canonical explorer-issue thread, surfaced details, acknowledged the report, kept the discussion on the public record.\u201d</p>
-        <p class="proof-card__cite"><a href="https://github.com/x402-foundation/x402/issues/2207" target="_blank" rel="noopener">x402 Foundation GitHub #2207 \u2192</a></p>
-      </div>
+      <a class="proof-card" href="https://datatracker.ietf.org/doc/draft-krausz-verification-state/" target="_blank" rel="noopener">
+        <span class="proof-card__label">IETF Internet-Draft \u2014 Filed</span>
+        <span class="proof-card__title">draft-krausz-verification-state-00</span>
+        <span class="proof-card__desc">June 6, 2026 \u00b7 17 pages \u00b7 individual submission on the IETF datatracker \u00b7 6 RFC references \u00b7 sibling to environment-state family.</span>
+        <span class="proof-card__arrow">View on datatracker \u2192</span>
+      </a>
+      <a class="proof-card" href="https://github.com/TKCollective/agentoracle-receipt-spec/tree/v0.3-binary-halt" target="_blank" rel="noopener">
+        <span class="proof-card__label">Public Receipt Spec v0.3</span>
+        <span class="proof-card__title">agentoracle-receipt-spec</span>
+        <span class="proof-card__desc">Binary-halt gate \u00b7 canonical/derived/version-bound mapping \u00b7 4 ADRs \u00b7 content-addressed via v_gate_mapping_hash \u00b7 MIT licensed.</span>
+        <span class="proof-card__arrow">View on GitHub \u2192</span>
+      </a>
+      <a class="proof-card" href="https://github.com/TKCollective/agentoracle-receipt-verify" target="_blank" rel="noopener">
+        <span class="proof-card__label">Reference Verifier</span>
+        <span class="proof-card__title">agentoracle-receipt-verify</span>
+        <span class="proof-card__desc">TypeScript JWS verifier \u00b7 offline verification of any v0.3 receipt \u00b7 no facilitator dependency \u00b7 MIT licensed.</span>
+        <span class="proof-card__arrow">View on GitHub \u2192</span>
+      </a>
+      <a class="proof-card" href="https://github.com/TKCollective/agentoracle-benchmark" target="_blank" rel="noopener">
+        <span class="proof-card__label">AVeriTeC 2024 Benchmark</span>
+        <span class="proof-card__title">agentoracle-benchmark v0.1</span>
+        <span class="proof-card__desc">57.6% overall \u00b7 57.7% held-out (vs ~30% paper baseline) \u00b7 open methodology \u00b7 open submissions \u00b7 MIT licensed.</span>
+        <span class="proof-card__arrow">View results \u2192</span>
+      </a>
+      <a class="proof-card" href="https://agenttrust.uk" target="_blank" rel="noopener">
+        <span class="proof-card__label">Peer-Audited</span>
+        <span class="proof-card__title">AgentTrust \u00b7 VERIFIED 100</span>
+        <span class="proof-card__desc">Independent third-party audit \u00b7 listed in verified-providers section \u00b7 audited June 2026 \u00b7 gold badge.</span>
+        <span class="proof-card__arrow">View at agenttrust.uk \u2192</span>
+      </a>
+      <a class="proof-card" href="https://agentic.market" target="_blank" rel="noopener">
+        <span class="proof-card__label">Coinbase Bazaar \u2014 Indexed</span>
+        <span class="proof-card__title">Live merchant since 2026-05-26</span>
+        <span class="proof-card__desc">Listed on Coinbase Bazaar discovery \u00b7 public engagement on x402-foundation repo (issues #2207, #2549, #2557) \u00b7 our spec contributions on the public record.</span>
+        <span class="proof-card__arrow">View on Bazaar \u2192</span>
+      </a>
     </div>
     <div class="compliance">
       <h3>Built for the regulations coming next</h3>
