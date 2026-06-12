@@ -1817,6 +1817,10 @@ const x402Manifest = {
       "x402-v2",
       "verification",
       "truth-oracle",
+      "signed-receipts",
+      "pre-action-verification",
+      "agent-verification",
+      "ietf-draft",
       "hallucination-detection",
       "fact-checking",
       "agent-trust",
@@ -1884,8 +1888,8 @@ const x402Manifest = {
       url: "https://agentoracle.co/research",
       method: "POST",
       description:
-        "Real-time research — natural-language question in, structured JSON out with summary, key facts, citations, and confidence score. " +
-        "Powered by Perplexity Sonar. Pass tier='deep' to upgrade to Sonar Pro at $0.10.",
+        "Pre-action verification layer for AI agents — natural-language claim or query in, structured JSON out with summary, key facts, citations, confidence score, and JWS-signed receipt. " +
+        "Offline-verifiable per draft-krausz-verification-state-00. Sonar-backed. Pass tier='deep' to upgrade to Sonar Pro at $0.10.",
       mimeType: "application/json",
       outputSchema: {
         input: {
@@ -1931,7 +1935,7 @@ const x402Manifest = {
       url: "https://agentoracle.co/deep-research",
       method: "POST",
       description:
-        "Deep research with comprehensive analysis — detailed JSON with expert findings, powered by Perplexity Sonar Pro.",
+        "Deep pre-action verification — multi-source analysis with Sonar Pro, per-claim confidence, and offline-verifiable JWS-signed receipt per draft-krausz-verification-state-00.",
       mimeType: "application/json",
       outputSchema: {
         input: {
@@ -1976,7 +1980,7 @@ const x402Manifest = {
       url: "https://agentoracle.co/research/batch",
       method: "POST",
       description:
-        "Batch research — submit up to 5 queries in one request, processed in parallel. Returns array of structured results.",
+        "Batch pre-action verification — up to 5 verifications per call, processed in parallel. Each result carries confidence + JWS-signed receipt.",
       mimeType: "application/json",
       outputSchema: {
         input: {
