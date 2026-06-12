@@ -629,7 +629,7 @@ function buildDiscoveryManifest() {
       resource: "https://agentoracle.co/research",
       type: "http",
       x402Version: 2,
-      description: "Load when an agent needs current external facts beyond training cutoff, citations with confidence scoring, or verifiable structured research. $0.02 USDC per query on Base.",
+      description: "Load when an agent needs pre-action verification of factual claims — multi-source confidence scoring with JWS-signed receipt, offline-verifiable per draft-krausz-verification-state. $0.02 USDC per query on Base.",
       mimeType: "application/json",
       accepts: [{
         scheme: "exact",
@@ -642,9 +642,9 @@ function buildDiscoveryManifest() {
       }],
       lastUpdated,
       metadata: {
-        category: "research",
+        category: "verification",
         provider: "AgentOracle (TKCollective LLC)",
-        tags: ["research", "perplexity", "agents", "rag", "verifiable"],
+        tags: ["verification", "signed-receipts", "pre-action-verification", "agent-verification", "agents", "ietf-draft", "research", "perplexity"],
         method: "POST", bodyType: "json",
         homepage: "https://agentoracle.co",
         jwks: "https://agentoracle.co/.well-known/jwks.json",
@@ -655,7 +655,7 @@ function buildDiscoveryManifest() {
       resource: "https://agentoracle.co/deep-research",
       type: "http",
       x402Version: 2,
-      description: "Load when an agent needs comprehensive multi-source analysis with deep reasoning, not a quick fact lookup. Powered by Sonar Pro. $0.10 USDC per query on Base.",
+      description: "Load when an agent needs deep pre-action verification before a high-stakes action — multi-source analysis + per-claim confidence + JWS-signed receipt. Sonar Pro backend. $0.10 USDC per query on Base.",
       mimeType: "application/json",
       accepts: [{
         scheme: "exact",
@@ -668,9 +668,9 @@ function buildDiscoveryManifest() {
       }],
       lastUpdated,
       metadata: {
-        category: "research",
+        category: "verification",
         provider: "AgentOracle (TKCollective LLC)",
-        tags: ["research", "deep", "perplexity-pro", "agents"],
+        tags: ["verification", "signed-receipts", "deep-verification", "pre-action-verification", "agents", "ietf-draft", "research", "perplexity-pro"],
         method: "POST", bodyType: "json",
       },
       extensions: { bazaar: bazaarDeep },
@@ -679,7 +679,7 @@ function buildDiscoveryManifest() {
       resource: "https://agentoracle.co/research/batch",
       type: "http",
       x402Version: 2,
-      description: "Load when an agent needs up to 5 research queries answered in parallel in a single call, with the same citation+confidence output as /research. $0.10 USDC per batch on Base.",
+      description: "Load when an agent needs up to 5 pre-action verifications in parallel — same confidence scoring + signed receipts as /research. $0.10 USDC per batch on Base.",
       mimeType: "application/json",
       accepts: [{
         scheme: "exact",
@@ -692,9 +692,9 @@ function buildDiscoveryManifest() {
       }],
       lastUpdated,
       metadata: {
-        category: "research",
+        category: "verification",
         provider: "AgentOracle (TKCollective LLC)",
-        tags: ["research", "batch", "agents"],
+        tags: ["verification", "signed-receipts", "batch-verification", "pre-action-verification", "agents", "ietf-draft", "research"],
         method: "POST", bodyType: "json",
       },
       extensions: { bazaar: bazaarResearch },
@@ -707,7 +707,7 @@ function buildDiscoveryManifest() {
     // falls back to the raw URL when these are missing.
     name: "AgentOracle Verification API",
     description:
-      "Pay-per-query verification API for AI agents. Every /research call returns a structured summary with citations and a confidence score. Every /evaluate call returns a per-claim verdict with confidence threshold. /deep-research uses Sonar Pro for multi-step deep analysis. Settled in USDC on Base mainnet via x402. JWS-signed receipts. v0.2 receipt spec going to IETF early June 2026.",
+      "Pre-action verification layer for AI agents. /evaluate returns per-claim verdict + confidence + JWS-signed receipt. /research returns structured citations + confidence + signed receipt. /deep-research adds Sonar Pro multi-step analysis. /deep-research/skale settles gasless on SKALE Base. Receipts are offline-verifiable per draft-krausz-verification-state-00, filed at IETF June 6, 2026. Second conforming implementer (AgentTrust) live since June 8.",
     seller: {
       name: "AgentOracle",
       operator: "TKCollective LLC",
@@ -799,13 +799,13 @@ const routeConfig = {
   // Hard length cap: ~250 chars (CDP facilitator schema rejects longer).
   "POST /research": {
     accepts: researchAccepts,
-    description: "Load when an agent needs current external facts beyond training cutoff, citations with confidence scoring, or verifiable structured research. $0.02 USDC per query on Base.",
+    description: "Load when an agent needs pre-action verification of factual claims — multi-source confidence scoring with JWS-signed receipt, offline-verifiable per draft-krausz-verification-state. $0.02 USDC per query on Base.",
     mimeType: "application/json",
     extensions: { ...bazaarResearch },
   },
   "POST /deep-research": {
     accepts: deepAccepts,
-    description: "Load when an agent needs comprehensive multi-source analysis with deep reasoning, not a quick fact lookup. Powered by Sonar Pro. $0.10 USDC per query on Base.",
+    description: "Load when an agent needs deep pre-action verification before a high-stakes action — multi-source analysis + per-claim confidence + JWS-signed receipt. Sonar Pro backend. $0.10 USDC per query on Base.",
     mimeType: "application/json",
     extensions: { ...bazaarDeep },
   },
@@ -813,12 +813,12 @@ const routeConfig = {
   // network. No bazaar extension on purpose (see deepSkaleAccepts comment).
   "POST /deep-research/skale": {
     accepts: deepSkaleAccepts,
-    description: "Load when an agent on SKALE Network needs gasless multi-source deep analysis. Same backend as /deep-research. Powered by Sonar Pro. $0.10 USDC per query on SKALE.",
+    description: "Load when an agent on SKALE Network needs gasless pre-action verification — same multi-source confidence + JWS-signed receipt as /deep-research, settled on SKALE Base. $0.10 USDC.e per query.",
     mimeType: "application/json",
   },
   "POST /research/batch": {
     accepts: batchAccepts,
-    description: "Load when an agent needs up to 5 research queries answered in parallel in a single call, with the same citation+confidence output as /research. $0.10 USDC per batch on Base.",
+    description: "Load when an agent needs up to 5 pre-action verifications in parallel — same confidence scoring + signed receipts as /research. $0.10 USDC per batch on Base.",
     mimeType: "application/json",
     extensions: { ...bazaarResearch },
   },
@@ -1041,17 +1041,17 @@ function recordSettleEvent(ev) {
 const RESOURCE_MAP = {
   "/research": {
     url: "https://agentoracle.co/research",
-    description: "Real-time research API for AI agents. Send any natural-language question, get structured JSON with summary, key facts, sources, and confidence scoring. Powered by Perplexity Sonar. $0.02 USDC per query on Base.",
+    description: "Pre-action verification layer for AI agents. Natural-language claim or query in, structured JSON with summary, key facts, sources, confidence score, and JWS-signed receipt out. Offline-verifiable per draft-krausz-verification-state. $0.02 USDC per query on Base.",
     mimeType: "application/json",
   },
   "/deep-research": {
     url: "https://agentoracle.co/deep-research",
-    description: "Deep research mode powered by Sonar Pro. $0.10 USDC per query on Base.",
+    description: "Deep pre-action verification — multi-source analysis with Sonar Pro + per-claim confidence + JWS-signed receipt. $0.10 USDC per query on Base.",
     mimeType: "application/json",
   },
   "/research/batch": {
     url: "https://agentoracle.co/research/batch",
-    description: "Batch research API \u2014 up to 5 queries per call. $0.10 USDC per batch on Base.",
+    description: "Batch pre-action verification \u2014 up to 5 verifications per call, each with confidence + JWS-signed receipt. $0.10 USDC per batch on Base.",
     mimeType: "application/json",
   },
 };
@@ -1494,7 +1494,7 @@ if (CDP_ENABLED && cdpFacilitatorClient) {
           error: "Payment required",
           resource: {
             url: "https://agentoracle.co/research",
-            description: "Real-time research API for AI agents. $0.02 USDC per query on Base.",
+            description: "Pre-action verification layer for AI agents \u2014 JWS-signed receipt with each call. $0.02 USDC per query on Base.",
             mimeType: "application/json",
           },
           accepts: [{
@@ -1518,7 +1518,7 @@ if (CDP_ENABLED && cdpFacilitatorClient) {
       if (!paymentPayload.resource || typeof paymentPayload.resource === "string" || !paymentPayload.resource.url) {
         paymentPayload.resource = {
           url: "https://agentoracle.co/research",
-          description: "Real-time research API for AI agents. $0.02 USDC per query on Base.",
+          description: "Pre-action verification layer for AI agents \u2014 JWS-signed receipt with each call. $0.02 USDC per query on Base.",
           mimeType: "application/json",
         };
       }
@@ -1796,13 +1796,13 @@ const x402Manifest = {
     legal_name: "AgentOracle",
     tagline: "Pre-action truth oracle for AI agents.",
     description:
-      "AgentOracle is a pay-per-query verification API for AI agents. " +
-      "Four-source adversarial verification (Sonar + Sonar Pro + Adversarial + Gemma 4) " +
-      "returns confidence scores, refuted claims, and plain-English recommendations " +
-      "so agents can refuse to act on hallucinated facts. " +
-      "Also offers pay-per-query real-time research (standard $0.02, deep $0.10). " +
-      "No API keys needed — pay with USDC on Base via x402. " +
-      "Cached results within 24hrs at 50% off.",
+      "AgentOracle is a pre-action verification layer for AI agents. " +
+      "Multi-source adversarial verification (Sonar + Sonar Pro + Adversarial + Gemma 4) " +
+      "returns per-claim confidence, refuted/verified/unverifiable verdicts, " +
+      "and an offline-verifiable JWS-signed receipt per draft-krausz-verification-state " +
+      "(filed at IETF June 6, 2026). Second conforming implementer (AgentTrust) live since June 8. " +
+      "Pay per call in USDC on Base, SKALE Base (gasless), or Stellar — no API keys. " +
+      "Cached results within 24h at 50% off.",
     operator: "AgentOracle",
     mission:
       "Make truth a first-class primitive in agent infrastructure: " +
@@ -2038,9 +2038,9 @@ const x402Manifest = {
   ],
   // ── Legacy fields preserved for backward compatibility with older Bazaar / x402 v1 consumers ──
   // These are non-canonical but kept so we don't regress Decixa's daily probe or any other existing client.
-  name: "AgentOracle Research API",
+  name: "AgentOracle Verification API",
   description:
-    "Pay-per-query verification + research API for AI agents. Verify before you act with 4-source adversarial confidence scoring, or run real-time Sonar/Sonar Pro queries with structured JSON output. No API keys — pay with USDC on Base via x402.",
+    "Pre-action verification layer for AI agents \u2014 multi-source confidence scoring with JWS-signed receipts, content-addressed, offline-verifiable per draft-krausz-verification-state. Pay per call in USDC on Base, SKALE Base (gasless), or Stellar. No API keys.",
   endpoints: [
     {
       path: "/preview",
@@ -2441,7 +2441,7 @@ function researchMetadataDoc(routePath, price, tierNote) {
   return {
     endpoint: routePath,
     method: "POST",
-    description: "Real-time research API for AI agents. Natural-language query, structured JSON with summary, key facts, sources, and confidence scoring." + (tierNote ? " " + tierNote : ""),
+    description: "Pre-action verification layer for AI agents. Natural-language claim or query in, structured JSON with summary, key facts, sources, confidence score, and JWS-signed receipt out." + (tierNote ? " " + tierNote : ""),
     pricing: `${price} USDC per query on Base (x402 gated)`,
     discovery: {
       indexed_in_cdp_bazaar: true,
@@ -4243,7 +4243,7 @@ app.listen(PORT, () => {
 const MCP_TOOLS = [
   {
     name: "research",
-    description: "Real-time research on any topic via AgentOracle. Returns structured JSON: summary, key_facts, sources, confidence_score (0.00–1.00). Free preview mode on remote server — run locally with X402_PRIVATE_KEY for full paid results ($0.02 USDC).",
+    description: "Pre-action factual-claim verification via AgentOracle. Returns structured JSON: summary, key_facts, sources, confidence_score (0.00\u20131.00), and JWS-signed receipt. Free preview mode on remote server \u2014 run locally with X402_PRIVATE_KEY for full paid results ($0.02 USDC).",
     inputSchema: { type: "object", properties: { query: { type: "string", description: "Research question or topic" } }, required: ["query"] }
   },
   {
@@ -4275,7 +4275,7 @@ app.post("/mcp", express.json(), async (req, res) => {
       return ok({
         protocolVersion: "2024-11-05",
         capabilities: { tools: {} },
-        serverInfo: { name: "agentoracle", version: "1.9.0", description: "Pay-per-query research API for AI agents via x402 on Base, SKALE, and Stellar" }
+        serverInfo: { name: "agentoracle", version: "1.9.0", description: "Pre-action verification layer for AI agents \u2014 JWS-signed receipts on Base, SKALE Base (gasless), and Stellar via x402" }
       });
     }
     if (method === "notifications/initialized" || method === "ping") return res.status(204).end();
@@ -4290,7 +4290,7 @@ app.post("/mcp", express.json(), async (req, res) => {
 
       if (name === "get-manifest") {
         const manifest = {
-          name: "AgentOracle Research API", version: "1.9.0", baseUrl: "https://agentoracle.co",
+          name: "AgentOracle Verification API", version: "1.9.0", baseUrl: "https://agentoracle.co",
           endpoints: {
             "/research": { price: "$0.02 USDC", networks: ["base", "skale", "stellar"], description: "Full paid research query" },
             "/preview": { price: "free", rateLimit: "20/hour", description: "Truncated preview" },
@@ -4329,7 +4329,7 @@ app.post("/mcp", express.json(), async (req, res) => {
 app.get("/mcp", (_req, res) => {
   res.json({
     name: "agentoracle", version: "1.9.0",
-    description: "Pay-per-query research API for AI agents via x402 on Base, SKALE, and Stellar",
+    description: "Pre-action verification layer for AI agents \u2014 JWS-signed receipts on Base, SKALE Base (gasless), and Stellar via x402",
     transport: "streamable-http", endpoint: "https://agentoracle.co/mcp",
     tools: MCP_TOOLS.map(t => ({ name: t.name, description: t.description }))
   });
