@@ -1197,9 +1197,9 @@ a.validation-card__date:hover { color: var(--gold); }
       </span>
     </div>
     <h1 class="hero__headline">
-      AI agents can act.<br><span class="hero__headline-gold">Most still can’t be trusted.</span>
+      Factual claim verification<br><span class="hero__headline-gold">for AI agents.</span>
     </h1>
-    <p class="hero__lede">AgentOracle is the verification layer for the agent economy. We decompose every claim, verify across 4 independent sources, and return a cryptographic receipt — before your agent takes any action or moves value.</p>
+    <p class="hero__lede">Source-grounded, benchmarked on AVeriTeC, with a signed receipt anyone can verify offline. When your agent makes a claim, we check whether it's actually true — before it acts.</p>
     <div class="hero__cta-row">
       <a href="#playground" class="btn btn--primary">Try free — no wallet needed →</a>
       <a href="/business" class="btn btn--secondary" style="font-size:14px;">Talk to us about a pilot</a>
