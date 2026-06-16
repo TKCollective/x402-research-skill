@@ -1200,6 +1200,7 @@ a.validation-card__date:hover { color: var(--gold); }
       Factual claim verification<br><span class="hero__headline-gold">for AI agents.</span>
     </h1>
     <p class="hero__lede">Source-grounded, benchmarked on AVeriTeC, with a signed receipt anyone can verify offline. When your agent makes a claim, we check whether it's actually true — before it acts.</p>
+    <p style="font-family:var(--font-mono);font-size:13px;color:var(--gold);margin:-20px 0 28px 0;letter-spacing:0.01em;"><a href="https://datatracker.ietf.org/doc/draft-krausz-verification-state/" target="_blank" rel="noopener noreferrer" style="color:var(--gold);text-decoration:none;border-bottom:1px dashed var(--gold-dim);">Filed as an IETF Internet-Draft, June 6, 2026 →</a></p>
     <div class="hero__cta-row">
       <a href="#playground" class="btn btn--primary">Try free — no wallet needed →</a>
       <a href="/business" class="btn btn--secondary" style="font-size:14px;">Talk to us about a pilot</a>
