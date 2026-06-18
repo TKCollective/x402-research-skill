@@ -530,6 +530,12 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
 .verify-card__arrow { font-family: var(--font-mono); font-size: 12px; color: var(--gold); margin-top: 4px; letter-spacing: 0.04em; }
 .verify-strip__footer { text-align: center; font-size: 12px; color: var(--text-faint); font-family: var(--font-mono); letter-spacing: 0.04em; }
 .verify-strip__footer strong { color: var(--text-muted); font-weight: 500; }
+.verify-strip__proof { margin-top: 40px; padding: 22px 26px; border: 1px solid rgba(201,169,110,0.18); border-radius: 10px; background: rgba(201,169,110,0.03); max-width: 920px; margin-left: auto; margin-right: auto; }
+.verify-strip__proof-label { display: inline-block; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+.verify-strip__proof-text { margin: 0; font-size: 14.5px; line-height: 1.65; color: var(--text-muted); letter-spacing: -0.003em; }
+.verify-strip__proof-text a { color: var(--gold); text-decoration: none; border-bottom: 1px dashed rgba(201,169,110,0.4); transition: border-color 0.15s; }
+.verify-strip__proof-text a:hover { border-bottom-color: var(--gold); border-bottom-style: solid; }
+@media (max-width: 720px) { .verify-strip__proof { padding: 18px 20px; margin-top: 32px; } .verify-strip__proof-text { font-size: 14px; } }
 
 /* === SECTIONS === */
 /* === ECOSYSTEM VALIDATION QUOTES === */
@@ -1397,6 +1403,10 @@ a.validation-card__date:hover { color: var(--gold); }
         <span class="verify-card__mono">node verify_node.mjs → VERIFIED OK</span>
         <span class="verify-card__arrow">View examples →</span>
       </a>
+    </div>
+    <div class="verify-strip__proof">
+      <span class="verify-strip__proof-label">Independently validated</span>
+      <p class="verify-strip__proof-text"><a href="https://github.com/giskard09/argentum-core/tree/main/examples/conformance/agentoracle-v1" target="_blank" rel="noopener noreferrer">Conformance suite merged</a> into argentum-core (action-ref-v1) — byte-identical <code style="font-family:var(--font-mono);color:var(--gold);font-size:13px;">action_ref</code> across two issuers (AgentOracle + AgentTrust) under the same envelope. <a href="https://github.com/wangbin9953/erc8210-aap/pull/4" target="_blank" rel="noopener noreferrer">Submitted as a candidate receipt profile</a> to ERC-8210.</p>
     </div>
     <p class="verify-strip__footer">Built on open standards: <strong>RFC 7515 / 7517 / 8037 (JWS · JWK · EdDSA)</strong> · <strong>W3C Verifiable Credentials Confidence Method</strong> · <strong>x402 on Base + SKALE</strong></p>
   </div>
