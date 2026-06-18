@@ -530,12 +530,22 @@ button { font: inherit; background: none; border: none; color: inherit; cursor: 
 .verify-card__arrow { font-family: var(--font-mono); font-size: 12px; color: var(--gold); margin-top: 4px; letter-spacing: 0.04em; }
 .verify-strip__footer { text-align: center; font-size: 12px; color: var(--text-faint); font-family: var(--font-mono); letter-spacing: 0.04em; }
 .verify-strip__footer strong { color: var(--text-muted); font-weight: 500; }
-.verify-strip__proof { margin-top: 40px; padding: 22px 26px; border: 1px solid rgba(201,169,110,0.18); border-radius: 10px; background: rgba(201,169,110,0.03); max-width: 920px; margin-left: auto; margin-right: auto; }
-.verify-strip__proof-label { display: inline-block; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
-.verify-strip__proof-text { margin: 0; font-size: 14.5px; line-height: 1.65; color: var(--text-muted); letter-spacing: -0.003em; }
-.verify-strip__proof-text a { color: var(--gold); text-decoration: none; border-bottom: 1px dashed rgba(201,169,110,0.4); transition: border-color 0.15s; }
-.verify-strip__proof-text a:hover { border-bottom-color: var(--gold); border-bottom-style: solid; }
-@media (max-width: 720px) { .verify-strip__proof { padding: 18px 20px; margin-top: 32px; } .verify-strip__proof-text { font-size: 14px; } }
+.proof-tier-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 44px; max-width: 1080px; margin-left: auto; margin-right: auto; }
+.proof-tier { padding: 22px 24px; border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; background: rgba(255,255,255,0.015); display: flex; flex-direction: column; }
+.proof-tier__label { display: block; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin-bottom: 14px; }
+.proof-tier__list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.proof-tier__list li { font-size: 13.5px; line-height: 1.55; color: var(--text-muted); letter-spacing: -0.003em; }
+.proof-tier__list a { color: var(--gold); text-decoration: none; border-bottom: 1px dashed rgba(201,169,110,0.4); transition: border-color 0.15s; }
+.proof-tier__list a:hover { border-bottom-color: var(--gold); border-bottom-style: solid; }
+.proof-tier__note { font-size: 12px; color: var(--text-faint); margin-top: 4px; font-style: italic; }
+@media (max-width: 880px) { .proof-tier-grid { grid-template-columns: 1fr; gap: 12px; margin-top: 32px; } }
+.shipped-timeline { margin-top: 18px; padding: 16px 24px; border: 1px solid rgba(201,169,110,0.15); border-radius: 10px; background: rgba(201,169,110,0.025); display: flex; align-items: center; gap: 22px; flex-wrap: wrap; max-width: 1080px; margin-left: auto; margin-right: auto; }
+.shipped-timeline__label { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); white-space: nowrap; }
+.shipped-timeline__items { display: flex; gap: 24px; flex-wrap: wrap; flex: 1; }
+.shipped-timeline__item { display: flex; align-items: baseline; gap: 8px; }
+.shipped-timeline__date { font-family: var(--font-mono); font-size: 11px; color: var(--gold); letter-spacing: 0.04em; white-space: nowrap; }
+.shipped-timeline__text { font-size: 13px; color: var(--text-muted); letter-spacing: -0.003em; }
+@media (max-width: 720px) { .shipped-timeline { padding: 14px 18px; gap: 14px; } .shipped-timeline__items { gap: 14px; } .shipped-timeline__date, .shipped-timeline__text { font-size: 12px; } }
 
 /* === SECTIONS === */
 /* === ECOSYSTEM VALIDATION QUOTES === */
@@ -1186,7 +1196,7 @@ a.validation-card__date:hover { color: var(--gold); }
 
 <section class="hero">
   <div>
-    <div class="hero__eyebrow">trust infrastructure</div>
+    <div class="hero__eyebrow">verification layer</div>
     <div class="whats-new" aria-label="What's new">
       <span class="whats-new__pulse"></span>
       <span class="whats-new__label">New</span>
@@ -1213,11 +1223,6 @@ a.validation-card__date:hover { color: var(--gold); }
       <span class="hero__install-cmd" onclick="navigator.clipboard.writeText('npx agentoracle-mcp');this.textContent='Copied!';setTimeout(()=>{this.textContent='$ npx agentoracle-mcp'},1500)" style="cursor:pointer;font-family:var(--font-mono);font-size:14px;color:var(--gold);border-bottom:1px dashed var(--gold-dim);padding-bottom:2px;font-weight:600;" title="Click to copy">$ npx agentoracle-mcp</span>
     </div>
     <p style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);margin-top:10px;letter-spacing:0.02em;">Works with Claude Desktop, Cursor, and Windsurf. Verify before you act.</p>
-    <a href="https://api.cdp.coinbase.com/platform/v2/x402/discovery/merchant?payTo=0xdF90200B0031051BbF7a66BB9387d2Ecf599e109" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:6px 12px;background:rgba(208,170,87,0.08);border:1px solid var(--gold-dim);border-radius:999px;font-family:var(--font-mono);font-size:11px;color:var(--gold);text-decoration:none;font-weight:600;letter-spacing:0.04em;" title="Click to verify on Coinbase Developer Platform"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ADE80;box-shadow:0 0 6px #4ADE80;"></span>INDEXED IN COINBASE BAZAAR · 8 SETTLEMENTS · LIVE ON SKALE · verify →</a>
-    <div style="margin-top:8px;display:flex;gap:16px;flex-wrap:wrap;">
-      <span onclick="navigator.clipboard.writeText('pip install langchain-agentoracle');this.textContent='Copied!';setTimeout(()=>{this.textContent='pip install langchain-agentoracle'},1500)" style="cursor:pointer;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);" title="Click to copy">pip install langchain-agentoracle</span>
-      <span onclick="navigator.clipboard.writeText('npm install agentoracle-verify');this.textContent='Copied!';setTimeout(()=>{this.textContent='npm install agentoracle-verify'},1500)" style="cursor:pointer;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);" title="Click to copy">npm install agentoracle-verify</span>
-    </div>
   </div>
 
   <div class="eval-panel">
@@ -1404,9 +1409,41 @@ a.validation-card__date:hover { color: var(--gold); }
         <span class="verify-card__arrow">View examples →</span>
       </a>
     </div>
-    <div class="verify-strip__proof">
-      <span class="verify-strip__proof-label">Independently validated</span>
-      <p class="verify-strip__proof-text"><a href="https://github.com/giskard09/argentum-core/tree/main/examples/conformance/agentoracle-v1" target="_blank" rel="noopener noreferrer">Conformance suite merged</a> into argentum-core (action-ref-v1) — byte-identical <code style="font-family:var(--font-mono);color:var(--gold);font-size:13px;">action_ref</code> across two issuers (AgentOracle + AgentTrust) under the same envelope. <a href="https://github.com/wangbin9953/erc8210-aap/pull/4" target="_blank" rel="noopener noreferrer">Submitted as a candidate receipt profile</a> to ERC-8210.</p>
+    <div class="proof-tier-grid">
+      <div class="proof-tier">
+        <span class="proof-tier__label">Standards</span>
+        <ul class="proof-tier__list">
+          <li><a href="https://datatracker.ietf.org/doc/draft-krausz-verification-state/" target="_blank" rel="noopener noreferrer">IETF draft-krausz-verification-state-01</a> — filed June 6, 2026</li>
+          <li><a href="https://github.com/wangbin9953/erc8210-aap/pull/4" target="_blank" rel="noopener noreferrer">ERC-8210 receipt profile</a> — submitted as candidate entry</li>
+          <li><a href="https://github.com/TKCollective/agentoracle-receipt-spec/tree/v0.3-binary-halt" target="_blank" rel="noopener noreferrer">verification.v0.3 spec</a> — MIT licensed</li>
+        </ul>
+      </div>
+      <div class="proof-tier">
+        <span class="proof-tier__label">Implementations</span>
+        <ul class="proof-tier__list">
+          <li><a href="https://agentoracle.co/.well-known/jwks.json" target="_blank" rel="noopener noreferrer">AgentOracle</a> — primary issuer (this site)</li>
+          <li><a href="https://agenttrust.uk/.well-known/jwks.json" target="_blank" rel="noopener noreferrer">AgentTrust</a> — independent second implementer</li>
+          <li>Byte-identical <code style="font-family:var(--font-mono);color:var(--gold);font-size:12.5px;">action_ref</code> under one envelope</li>
+        </ul>
+      </div>
+      <div class="proof-tier">
+        <span class="proof-tier__label">External validation</span>
+        <ul class="proof-tier__list">
+          <li><a href="https://github.com/giskard09/argentum-core/tree/main/examples/conformance/agentoracle-v1" target="_blank" rel="noopener noreferrer">argentum-core conformance suite</a> — merged June 17, 2026</li>
+          <li><a href="https://github.com/TKCollective/agentoracle-eval-harness" target="_blank" rel="noopener noreferrer">AVeriTeC benchmark</a> — 57.6% overall, MIT licensed</li>
+          <li><a href="https://api.cdp.coinbase.com/platform/v2/x402/discovery/merchant?payTo=0xdF90200B0031051BbF7a66BB9387d2Ecf599e109" target="_blank" rel="noopener noreferrer">Indexed in Coinbase Bazaar</a> — live on SKALE Base</li>
+        </ul>
+      </div>
+    </div>
+    <div class="shipped-timeline">
+      <span class="shipped-timeline__label">What's shipped</span>
+      <div class="shipped-timeline__items">
+        <div class="shipped-timeline__item"><span class="shipped-timeline__date">May 26</span><span class="shipped-timeline__text">Live on SKALE Base</span></div>
+        <div class="shipped-timeline__item"><span class="shipped-timeline__date">May 27</span><span class="shipped-timeline__text">Pinned in x402trace v0.3.3</span></div>
+        <div class="shipped-timeline__item"><span class="shipped-timeline__date">Jun 6</span><span class="shipped-timeline__text">IETF draft filed</span></div>
+        <div class="shipped-timeline__item"><span class="shipped-timeline__date">Jun 12</span><span class="shipped-timeline__text">IETF -01 revision</span></div>
+        <div class="shipped-timeline__item"><span class="shipped-timeline__date">Jun 17</span><span class="shipped-timeline__text">argentum-core conformance merged</span></div>
+      </div>
     </div>
     <p class="verify-strip__footer">Built on open standards: <strong>RFC 7515 / 7517 / 8037 (JWS · JWK · EdDSA)</strong> · <strong>W3C Verifiable Credentials Confidence Method</strong> · <strong>x402 on Base + SKALE</strong></p>
   </div>
