@@ -707,7 +707,7 @@ function buildDiscoveryManifest() {
     // falls back to the raw URL when these are missing.
     name: "AgentOracle Verification API",
     description:
-      "Pre-action verification layer for AI agents. /evaluate returns per-claim verdict + confidence + JWS-signed receipt. /research returns structured citations + confidence + signed receipt. /deep-research adds Sonar Pro multi-step analysis. /deep-research/skale settles gasless on SKALE Base. Receipts are offline-verifiable per draft-krausz-verification-state-00, filed at IETF June 6, 2026. Second conforming implementer (AgentTrust) live since June 8.",
+      "Pre-action verification layer for AI agents. /evaluate returns per-claim verdict + confidence + JWS-signed receipt. /research returns structured citations + confidence + signed receipt. /deep-research adds Sonar Pro multi-step analysis. /deep-research/skale settles gasless on SKALE Base. Receipts are offline-verifiable per draft-krausz-verification-state-01 (filed at IETF June 6, 2026; -01 published June 12, 2026). Second conforming implementer (AgentTrust) live since June 8, 2026.",
     seller: {
       name: "AgentOracle",
       operator: "TKCollective LLC",
@@ -1889,7 +1889,7 @@ const x402Manifest = {
       method: "POST",
       description:
         "Pre-action verification layer for AI agents — natural-language claim or query in, structured JSON out with summary, key facts, citations, confidence score, and JWS-signed receipt. " +
-        "Offline-verifiable per draft-krausz-verification-state-00. Sonar-backed. Pass tier='deep' to upgrade to Sonar Pro at $0.10.",
+        "Offline-verifiable per draft-krausz-verification-state-01. Sonar-backed. Pass tier='deep' to upgrade to Sonar Pro at $0.10.",
       mimeType: "application/json",
       outputSchema: {
         input: {
@@ -1935,7 +1935,7 @@ const x402Manifest = {
       url: "https://agentoracle.co/deep-research",
       method: "POST",
       description:
-        "Deep pre-action verification — multi-source analysis with Sonar Pro, per-claim confidence, and offline-verifiable JWS-signed receipt per draft-krausz-verification-state-00.",
+        "Deep pre-action verification — multi-source analysis with Sonar Pro, per-claim confidence, and offline-verifiable JWS-signed receipt per draft-krausz-verification-state-01.",
       mimeType: "application/json",
       outputSchema: {
         input: {

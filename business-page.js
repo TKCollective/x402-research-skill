@@ -320,14 +320,14 @@ a:hover { color: var(--gold-bright); }
     <div class="proof">
       <a class="proof-card" href="https://datatracker.ietf.org/doc/draft-krausz-verification-state/" target="_blank" rel="noopener">
         <span class="proof-card__label">IETF Internet-Draft \u2014 Filed</span>
-        <span class="proof-card__title">draft-krausz-verification-state-00</span>
-        <span class="proof-card__desc">June 6, 2026 \u00b7 17 pages \u00b7 individual submission on the IETF datatracker \u00b7 6 RFC references \u00b7 sibling to environment-state family.</span>
+        <span class="proof-card__title">draft-krausz-verification-state-01</span>
+        <span class="proof-card__desc">Filed June 6, 2026 \u00b7 -01 published June 12, 2026 \u00b7 17 pages \u00b7 individual submission on the IETF datatracker \u00b7 8 RFC references \u00b7 sibling to environment-state family.</span>
         <span class="proof-card__arrow">View on datatracker \u2192</span>
       </a>
       <a class="proof-card" href="https://github.com/TKCollective/agentoracle-receipt-spec/tree/v0.3-binary-halt" target="_blank" rel="noopener">
         <span class="proof-card__label">Public Receipt Spec v0.3</span>
         <span class="proof-card__title">agentoracle-receipt-spec</span>
-        <span class="proof-card__desc">Binary-halt gate \u00b7 canonical/derived/version-bound mapping \u00b7 4 ADRs \u00b7 content-addressed via v_gate_mapping_hash \u00b7 MIT licensed.</span>
+        <span class="proof-card__desc">Binary-halt gate \u00b7 canonical/derived/version-bound mapping \u00b7 2 ADRs \u00b7 content-addressed via v_gate_mapping_hash \u00b7 MIT licensed.</span>
         <span class="proof-card__arrow">View on GitHub \u2192</span>
       </a>
       <a class="proof-card" href="https://github.com/TKCollective/agentoracle-receipt-verify" target="_blank" rel="noopener">

@@ -1203,7 +1203,7 @@ a.validation-card__date:hover { color: var(--gold); }
       <span class="whats-new__track" id="whatsNewTrack">
         <span class="whats-new__item active" data-idx="0"><span class="whats-new__date">Jun 1</span><span class="whats-new__text">Open-source receipt verifier published — offline JWS verification, MIT licensed → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-receipt-verify" target="_blank" rel="noopener noreferrer">github</a></span></span>
         <span class="whats-new__item" data-idx="1"><span class="whats-new__date">Jun 1</span><span class="whats-new__text">Cross-operator benchmark live — open methodology, open submissions → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-benchmark" target="_blank" rel="noopener noreferrer">github</a></span></span>
-        <span class="whats-new__item" data-idx="2"><span class="whats-new__date">Jun 6</span><span class="whats-new__text">IETF Internet-Draft FILED — draft-krausz-verification-state-00 → <a class="whats-new__link" href="https://datatracker.ietf.org/doc/draft-krausz-verification-state/" target="_blank" rel="noopener noreferrer">datatracker</a></span></span>
+        <span class="whats-new__item" data-idx="2"><span class="whats-new__date">Jun 6</span><span class="whats-new__text">IETF Internet-Draft FILED — draft-krausz-verification-state-01 → <a class="whats-new__link" href="https://datatracker.ietf.org/doc/draft-krausz-verification-state/" target="_blank" rel="noopener noreferrer">datatracker</a></span></span>
         <span class="whats-new__item" data-idx="3"><span class="whats-new__date">May 30</span><span class="whats-new__text">Receipt spec v0.3 — binary-halt gate + canonical/derived/version-bound mapping → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-receipt-spec/tree/v0.3-binary-halt" target="_blank" rel="noopener noreferrer">spec</a></span></span>
         <span class="whats-new__item" data-idx="4"><span class="whats-new__date">May 28</span><span class="whats-new__text">AVeriTeC 2024 dev published — 57.6% overall, held-out 57.7%, MIT licensed → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-eval-harness" target="_blank" rel="noopener noreferrer">repo</a></span></span>
         <span class="whats-new__item" data-idx="5"><span class="whats-new__date">May 27</span><span class="whats-new__text">Pinned in x402trace v0.3.3 — first operator-contributed fixture in the harness → <a class="whats-new__link" href="https://github.com/fardinvahdat/x402trace/releases/tag/v0.3.3" target="_blank" rel="noopener noreferrer">release</a></span></span>
@@ -1523,7 +1523,7 @@ a.validation-card__date:hover { color: var(--gold); }
   <div class="reveal">
     <div class="section-eyebrow">how it works</div>
     <h2 class="section-title">From claim to <span class="section-title-gold">verifiable, auditable answer</span>.</h2>
-    <p class="section-subtitle">Four steps. Every response. No exceptions.</p>
+    <p class="section-subtitle">4-source verification pipeline · gracefully degrades under budget.</p>
   </div>
   <div class="flow reveal">
     <div class="flow-step">
@@ -1762,7 +1762,7 @@ a.validation-card__date:hover { color: var(--gold); }
     <div class="reveal" style="text-align:center;margin-bottom:48px;">
       <div class="section-eyebrow" style="color:rgba(96,165,250,0.5);">live demo</div>
       <h2 class="section-title">Evaluate <span class="section-title-gold">any text</span></h2>
-      <p class="section-subtitle">Submit any content and get per-claim verification in real time. No payment required to start.</p>
+      <p class="section-subtitle">Submit any content and get per-claim verification synchronously. No payment required to start.</p>
     </div>
     <div class="playground reveal">
       <textarea id="pg-input" rows="3">OpenAI acquired Anthropic in 2026. Bitcoin was created by Satoshi Nakamoto. LangGraph leads agent frameworks.</textarea>
@@ -1929,14 +1929,14 @@ a.validation-card__date:hover { color: var(--gold); }
     <div class="proof reveal">
       <a class="proof-card" href="https://datatracker.ietf.org/doc/draft-krausz-verification-state/" target="_blank" rel="noopener">
         <span class="proof-card__label">IETF Internet-Draft \u2014 Filed</span>
-        <span class="proof-card__title">draft-krausz-verification-state-00</span>
-        <span class="proof-card__desc">June 6, 2026 \u00b7 17 pages \u00b7 individual submission on the IETF datatracker \u00b7 6 RFC references \u00b7 sibling to environment-state family.</span>
+        <span class="proof-card__title">draft-krausz-verification-state-01</span>
+        <span class="proof-card__desc">Filed June 6, 2026 \u00b7 -01 published June 12, 2026 \u00b7 17 pages \u00b7 individual submission on the IETF datatracker \u00b7 8 RFC references \u00b7 sibling to environment-state family.</span>
         <span class="proof-card__arrow">View on datatracker \u2192</span>
       </a>
       <a class="proof-card" href="https://github.com/TKCollective/agentoracle-receipt-spec/tree/v0.3-binary-halt" target="_blank" rel="noopener">
         <span class="proof-card__label">Public Receipt Spec v0.3</span>
         <span class="proof-card__title">agentoracle-receipt-spec</span>
-        <span class="proof-card__desc">Binary-halt gate \u00b7 canonical/derived/version-bound mapping \u00b7 4 ADRs \u00b7 content-addressed via v_gate_mapping_hash \u00b7 MIT licensed.</span>
+        <span class="proof-card__desc">Binary-halt gate \u00b7 canonical/derived/version-bound mapping \u00b7 2 ADRs \u00b7 content-addressed via v_gate_mapping_hash \u00b7 MIT licensed.</span>
         <span class="proof-card__arrow">View on GitHub \u2192</span>
       </a>
       <a class="proof-card" href="https://github.com/TKCollective/agentoracle-receipt-verify" target="_blank" rel="noopener">
