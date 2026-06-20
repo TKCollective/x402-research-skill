@@ -1429,7 +1429,7 @@ a.validation-card__date:hover { color: var(--gold); }
       <div class="proof-tier">
         <span class="proof-tier__label">External validation</span>
         <ul class="proof-tier__list">
-          <li><a href="https://github.com/giskard09/argentum-core/tree/main/examples/conformance/agentoracle-v1" target="_blank" rel="noopener noreferrer">argentum-core conformance suite</a> — merged June 17, 2026</li>
+          <li><a href="https://github.com/giskard09/argentum-core/tree/main/examples/conformance/agentoracle-v1" target="_blank" rel="noopener noreferrer">argentum-core conformance suite</a> — merged June 17, 2026 · <a href="https://github.com/giskard09/argentum-core/blob/main/docs/mycelium-provider-protocol.md" target="_blank" rel="noopener noreferrer">Mycelium Provider</a></li>
           <li><a href="https://github.com/TKCollective/agentoracle-eval-harness" target="_blank" rel="noopener noreferrer">AVeriTeC benchmark</a> — 57.6% overall, MIT licensed</li>
           <li><a href="https://api.cdp.coinbase.com/platform/v2/x402/discovery/merchant?payTo=0xdF90200B0031051BbF7a66BB9387d2Ecf599e109" target="_blank" rel="noopener noreferrer">Indexed in Coinbase Bazaar</a> — live on SKALE Base</li>
         </ul>
