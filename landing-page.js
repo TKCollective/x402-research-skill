@@ -1565,7 +1565,7 @@ a.validation-card__date:hover { color: var(--gold); }
   <div class="reveal">
     <div class="section-eyebrow">capabilities</div>
     <h2 class="section-title">Built for agents. <span class="section-title-gold">Designed for trust.</span></h2>
-    <p class="section-subtitle">Every response is machine-readable. Every claim gets a confidence score. Every source gets a reputation. No API keys.</p>
+    <p class="section-subtitle">Every response is machine-readable. Every claim gets a confidence score. JWS-signed receipts. No API keys.</p>
   </div>
   <div class="features-ledger">
     <div class="feature-row reveal" style="--fill: 0.97">
@@ -1907,7 +1907,7 @@ a.validation-card__date:hover { color: var(--gold); }
         <div style="flex:1;min-width:280px;">
           <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.12em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;">For agent orchestration platforms</div>
           <h3 style="font-size:20px;font-weight:600;margin:0 0 8px;color:var(--text);">Platform-tier pricing &mdash; integrating verification at scale</h3>
-          <p style="font-size:14px;line-height:1.6;color:var(--text-muted);margin:0 0 12px;max-width:520px;">Building a platform that needs verification as a primitive? Volume-tier rates kick in automatically above 1M verifications/month. Includes white-label receipt branding, custom mapping documents under your namespace, SLA on availability and latency, and a dedicated integration channel.</p>
+          <p style="font-size:14px;line-height:1.6;color:var(--text-muted);margin:0 0 12px;max-width:520px;">Building a platform that needs verification as a primitive? Volume pricing available for high-throughput integrations. Includes white-label receipt branding, custom mapping documents under your namespace, priority support, and a dedicated integration channel.</p>
           <p style="font-size:13px;color:var(--text-muted);margin:0;">Open-source verifier client on npm: <a href="https://github.com/TKCollective/agentoracle-receipt-verify" target="_blank" rel="noopener noreferrer" style="color:var(--gold);text-decoration:none;border-bottom:1px dashed var(--gold-dim);"><code style="font-family:var(--font-mono);font-size:12px;">@agentoracle/receipt-verify</code></a> &mdash; your end users get the same offline cryptographic guarantees regardless of which platform issued the receipt.</p>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px;min-width:200px;">
