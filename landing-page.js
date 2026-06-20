@@ -5,7 +5,7 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AgentOracle — The Verification Layer for the Agent Economy | x402 Native</title>
-<meta name="description" content="Pay-per-query research API for AI agents. x402 protocol on Base mainnet + SKALE (gasless). Verify before you act — JWS-signed receipts, FEVER-calibrated confidence, USDC payments.">
+<meta name="description" content="Pay-per-query research API for AI agents. x402 protocol on Base mainnet + SKALE (gasless). Verify before you act — JWS-signed receipts, multi-source agreement-weighted confidence, USDC payments.">
 <link rel="canonical" href="https://agentoracle.co/">
 
 <!-- Open Graph (Facebook, LinkedIn, Discord, Slack) -->
@@ -1397,7 +1397,7 @@ a.validation-card__date:hover { color: var(--gold); }
       <a class="verify-card" href="https://github.com/TKCollective/agentoracle-receipt-spec" target="_blank" rel="noopener noreferrer">
         <span class="verify-card__label">Open Spec</span>
         <span class="verify-card__title">Receipt format v0.3</span>
-        <span class="verify-card__desc">Three-axis freshness (signature · calibration · evidence). Aligned with W3C VC Confidence Method.</span>
+        <span class="verify-card__desc">Three-axis freshness (signature · agreement · evidence). Aligned with W3C VC Confidence Method.</span>
         <span class="verify-card__mono">verification.* per W3C VC CM</span>
         <span class="verify-card__arrow">View on GitHub →</span>
       </a>
@@ -1471,7 +1471,7 @@ a.validation-card__date:hover { color: var(--gold); }
       <div class="receipt-card">
         <div class="receipt-card__hd"><span class="receipt-card__time">3:21 PM</span><span class="receipt-card__verdict receipt-card__verdict--abstain">ABSTAIN</span></div>
         <div class="receipt-card__claim">“Acme Corp’s Q3 2025 earnings exceeded guidance by 12%.”</div>
-        <div class="receipt-card__meta"><span>confidence 0.41</span><span>insufficient sources</span><span>calibration.provisional: true</span></div>
+        <div class="receipt-card__meta"><span>confidence 0.41</span><span>insufficient sources</span><span>agreement.provisional: true</span></div>
         <div class="receipt-card__sig">eyJhbGciOiJFZERTQSIsImtpZCI6ImFvLXJlY2VpcHQtMjAyNi0wNC0&hellip;</div>
       </div>
       <div class="receipt-card">
@@ -2205,7 +2205,7 @@ async function runEvaluation() {
     { name: 'Sonar', start: 2500, end: 6000 },
     { name: 'Sonar Pro', start: 2700, end: 7000 },
     { name: 'Adversarial', start: 2900, end: 8500 },
-    { name: 'Gemma 4 calibrate', start: 8500, end: 11000 }
+    { name: 'Gemma 4 cross-check', start: 8500, end: 11000 }
   ];
   var stageTimers = [];
   function renderPipeline() {

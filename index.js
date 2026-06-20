@@ -3696,7 +3696,7 @@ app.get("/evaluate", (_req, res) => {
   res.json({
     endpoint: "/evaluate",
     method: "POST",
-    description: "Per-claim verification with confidence scoring. Tiered, FEVER-calibrated.",
+    description: "Per-claim verification with confidence scoring. Tiered, multi-source agreement-weighted.",
     request_body: {
       content: "string OR object — the claim or content to verify",
       url: "string — optional, fetch and verify content at this URL",

@@ -15,7 +15,7 @@
 
 AI agents hallucinate. AgentOracle doesn't let them act on it.
 
-Every claim passes through 4-source verification — Sonar, Sonar Pro, Adversarial scanning, and Gemma 4 calibration — before it gets a `"recommendation": "act"`. Per-claim confidence scores from 0.00 to 1.00. No API keys. No accounts. Pay $0.01 per claim via [x402](https://x402.org) on Base, SKALE (gasless), and Stellar.
+Every claim passes through 4-source verification — Sonar, Sonar Pro, Adversarial scanning, and Gemma 4 cross-checking — before it gets a `"recommendation": "act"`. Per-claim confidence scores from 0.00 to 1.00, multi-source agreement-weighted. No API keys. No accounts. Pay $0.01 per claim via [x402](https://x402.org) on Base, SKALE (gasless), and Stellar.
 
 **[agentoracle.co](https://agentoracle.co) · [Live Demo](https://agentoracle.co/#playground) · [x402 Manifest](https://agentoracle.co/.well-known/x402.json)**
 
