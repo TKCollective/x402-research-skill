@@ -55,6 +55,7 @@ import { LANDING_PAGE_HTML } from "./landing-page.js";
 import { DEMO_PAGE_HTML, DEMO_VIDEO_HTML } from "./demo-pages.js";
 import { BUSINESS_PAGE_HTML } from "./business-page.js";
 import { FAVICON_ICO, FAVICON_SVG, FAVICON_16, FAVICON_32, APPLE_TOUCH, OG_IMAGE } from "./favicons.js";
+import { registerVGateCompose, COMPOSED_PUBLIC_JWK } from "./v_gate_compose.js";
 
 // ── x402 v2 SDK imports ──────────────────────────────────────────
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
@@ -2272,7 +2273,10 @@ const AGENT_ORACLE_JWKS = {
       kid: "ao-receipt-2026-04-ed25519-f2753b7c",
       alg: "EdDSA",
       use: "sig"
-    }
+    },
+    // v0.3+composed envelope signer — sibling endpoint /v1/v_gate.
+    // Wired into AgentTrust's /v1/compose orchestrator. Public key only.
+    COMPOSED_PUBLIC_JWK
   ]
 };
 app.get("/.well-known/jwks.json", (_req, res) => {
@@ -2281,6 +2285,13 @@ app.get("/.well-known/jwks.json", (_req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.json(AGENT_ORACLE_JWKS);
 });
+
+// ═══════════════════════════════════════════════════════════════════
+//  POST /v1/v_gate — composed envelope sibling endpoint
+//  Wired into AgentTrust's /v1/compose orchestrator.
+//  Conformance: TKCollective/agentoracle-receipt-spec#2
+// ═══════════════════════════════════════════════════════════════════
+registerVGateCompose(app);
 
 // ═══════════════════════════════════════════════════════════════════
 //  GET /health — Health check with feature flags
@@ -4338,5 +4349,4 @@ app.get("/mcp", (_req, res) => {
     tools: MCP_TOOLS.map(t => ({ name: t.name, description: t.description }))
   });
 });
-// deploy 1776123308
- 1776123308
+// deploy marker v_gate_compose 1782568200
