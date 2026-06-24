@@ -142,6 +142,53 @@ function evaluateVerdict({ claim_hash, mcp_content, mapping_context }) {
 }
 
 function registerVGateCompose(app) {
+  // POST /v1/sign
+  //
+  // Symmetric signing primitive paired with AgentTrust's /v1/sign. Takes
+  // pre-canonicalized bytes, returns AO's JWS signature entry over them.
+  // Used by orchestrators that build the composed canonical payload
+  // themselves and need both signers to cover identical bytes.
+  //
+  // Request:  { "canonical_bytes_b64u": "..." }
+  // Response: { "protected": "...", "signature": "...", "kid": "..." }
+  app.post("/v1/sign", async (req, res) => {
+    try {
+      const { canonical_bytes_b64u } = req.body || {};
+      if (!canonical_bytes_b64u || typeof canonical_bytes_b64u !== "string") {
+        return res.status(400).json({
+          error: "missing_or_invalid_canonical_bytes_b64u",
+          message:
+            "canonical_bytes_b64u is required and must be a base64url-encoded string",
+        });
+      }
+      // Validate it's actually base64url and parseable.
+      const decoded = b64uDecode(canonical_bytes_b64u);
+      if (decoded.length === 0) {
+        return res.status(400).json({ error: "empty_canonical_bytes" });
+      }
+
+      const protectedHeader = {
+        alg: "EdDSA",
+        kid: COMPOSED_KID,
+        typ: "application/vnd.verification.v0.3+composed+jws",
+      };
+      const protectedB64u = b64uEncode(JSON.stringify(protectedHeader));
+      const signingInput = Buffer.from(
+        protectedB64u + "." + canonical_bytes_b64u,
+        "ascii"
+      );
+      const signature = crypto.sign(null, signingInput, getPrivateKey());
+      return res.status(200).json({
+        protected: protectedB64u,
+        signature: b64uEncode(signature),
+        kid: COMPOSED_KID,
+      });
+    } catch (err) {
+      console.error("[/v1/sign] error:", err);
+      return res.status(500).json({ error: err.message || "sign_internal_error" });
+    }
+  });
+
   // POST /v1/v_gate
   //
   // Request body:
