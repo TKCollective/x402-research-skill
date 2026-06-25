@@ -141,7 +141,210 @@ function evaluateVerdict({ claim_hash, mcp_content, mapping_context }) {
   return { verdict: "act", confidence: 0.87 };
 }
 
+// AgentTrust orchestration constants (used by /v1/compose).
+const AT_BASE_URL = process.env.AT_BASE_URL || "https://agenttrust.uk";
+
 function registerVGateCompose(app) {
+  // POST /v1/sign/batch
+  //
+  // Bulk sign primitive: N canonical_bytes_b64u in, N signature entries out.
+  // Useful for high-frequency agent loops that need to sign many envelopes
+  // in a single round-trip.
+  //
+  // Request:  { "canonical_bytes_b64u": ["...", "...", ...] }
+  // Response: { "signatures": [ { protected, signature, kid }, ... ], "kid": "..." }
+  app.post("/v1/sign/batch", async (req, res) => {
+    try {
+      const body = req.body || {};
+      const list = body.canonical_bytes_b64u;
+      if (!Array.isArray(list) || list.length === 0) {
+        return res.status(400).json({
+          error: "missing_or_invalid_canonical_bytes_b64u",
+          message: "canonical_bytes_b64u must be a non-empty array of base64url strings",
+        });
+      }
+      if (list.length > 100) {
+        return res.status(400).json({ error: "batch_size_limit", message: "max 100 items per batch" });
+      }
+      const key = getPrivateKey();
+      const protectedHeader = {
+        alg: "EdDSA",
+        kid: COMPOSED_KID,
+        typ: "application/vnd.verification.v0.3+composed+jws",
+      };
+      const protectedB64u = b64uEncode(JSON.stringify(protectedHeader));
+      const out = [];
+      for (const bytes of list) {
+        if (!bytes || typeof bytes !== "string") {
+          return res.status(400).json({ error: "item_invalid", message: "every item must be a base64url string" });
+        }
+        const signingInput = Buffer.from(protectedB64u + "." + bytes, "ascii");
+        const signature = crypto.sign(null, signingInput, key);
+        out.push({
+          protected: protectedB64u,
+          signature: b64uEncode(signature),
+          kid: COMPOSED_KID,
+        });
+      }
+      return res.status(200).json({ signatures: out, kid: COMPOSED_KID, count: out.length });
+    } catch (err) {
+      console.error("[/v1/sign/batch] error:", err);
+      return res.status(500).json({ error: err.message || "sign_batch_internal_error" });
+    }
+  });
+
+  // POST /v1/compose
+  //
+  // Server-side orchestrator for the 2-signer composed envelope (AO + AT).
+  // Caller supplies {claim_hash, mcp_content}. AO computes its v_gate, asks
+  // AgentTrust for v_gate_skill via /v1/compose, builds the canonical payload
+  // with both blocks (preserving AT extension fields), JCS canonicalizes, then
+  // signs locally and also asks AT to sign the same canonical bytes via its
+  // /v1/sign endpoint. Returns the assembled 2-signer JWS general serialization.
+  //
+  // Pote (AgentTrust) approved the Option B flow on 2026-06-23.
+  //
+  // Request:  { "claim_hash": "sha256-...", "mcp_content": { ... } }
+  // Response: {
+  //   "jws": { "payload": "<b64u canonical>", "signatures": [AT, AO] },
+  //   "canonical_sha256": "sha256-<hex>",
+  //   "composed_decision": "act" | "halt",
+  //   "signers": [{issuer, kid}, ...]
+  // }
+  app.post("/v1/compose", async (req, res) => {
+    const start = Date.now();
+    try {
+      const { claim_hash, mcp_content } = req.body || {};
+      if (!claim_hash || typeof claim_hash !== "string") {
+        return res.status(400).json({
+          error: "missing_or_invalid_claim_hash",
+          message: "claim_hash is required and must be a sha256-prefixed string",
+        });
+      }
+
+      // STEP 1: Call AT /v1/compose for v_gate_skill block.
+      let atResp;
+      try {
+        const r = await fetch(`${AT_BASE_URL}/v1/compose`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ claim_hash, mcp_content }),
+        });
+        if (!r.ok) {
+          return res.status(502).json({
+            error: "at_compose_failed",
+            upstream_status: r.status,
+            upstream_body: await r.text(),
+          });
+        }
+        atResp = await r.json();
+      } catch (err) {
+        return res.status(502).json({ error: "at_unreachable", message: err.message });
+      }
+      const v_gate_skill = atResp?.payload?.v_gate_skill;
+      const at_extensions = {
+        subject: atResp?.payload?.subject,
+        signature_meta: atResp?.payload?.signature_meta,
+        receipt_version: atResp?.payload?.receipt_version,
+      };
+      if (!v_gate_skill) {
+        return res.status(502).json({ error: "at_returned_no_v_gate_skill" });
+      }
+
+      // STEP 2: Compute AO v_gate verdict block.
+      const aoVerdict = evaluateVerdict({ claim_hash, mcp_content });
+      const v_gate = {
+        issuer: "agentoracle.co",
+        mapping_id: AO_MAPPING_ID,
+        mapping_hash: AO_MAPPING_HASH,
+        verdict: aoVerdict.verdict,
+        signed_at: new Date().toISOString(),
+      };
+      if (aoVerdict.confidence !== undefined) v_gate.confidence = aoVerdict.confidence;
+      if (aoVerdict.reason !== undefined) v_gate.reason = aoVerdict.reason;
+
+      // STEP 3: Assemble canonical payload with both sibling blocks.
+      const verdicts = [v_gate.verdict, v_gate_skill.verdict].filter(Boolean);
+      const composed_decision =
+        verdicts.length > 0 && verdicts.every((v) => v === "act") ? "act" : "halt";
+      const payload = {
+        envelope_kind: "verification.v0.3+composed",
+        composed_decision,
+        composed_decision_rule: "AND_PRESENT",
+        v_gate,
+        v_gate_skill,
+        ...at_extensions,
+      };
+      // Drop any AT extension keys that came back undefined.
+      for (const k of Object.keys(payload)) {
+        if (payload[k] === undefined) delete payload[k];
+      }
+
+      // STEP 4: JCS canonicalize.
+      const canonical_bytes = Buffer.from(jcs(payload), "utf-8");
+      const canonical_bytes_b64u = b64uEncode(canonical_bytes);
+      const canonical_sha256 =
+        "sha256-" + crypto.createHash("sha256").update(canonical_bytes).digest("hex");
+
+      // STEP 5: AO signs the canonical bytes (locally).
+      const aoProtected = {
+        alg: "EdDSA",
+        kid: COMPOSED_KID,
+        typ: "application/vnd.verification.v0.3+composed+jws",
+      };
+      const aoProtectedB64u = b64uEncode(JSON.stringify(aoProtected));
+      const aoSigningInput = Buffer.from(
+        aoProtectedB64u + "." + canonical_bytes_b64u,
+        "ascii"
+      );
+      const aoSigBytes = crypto.sign(null, aoSigningInput, getPrivateKey());
+      const aoSigEntry = {
+        protected: aoProtectedB64u,
+        signature: b64uEncode(aoSigBytes),
+      };
+
+      // STEP 6: Ask AT to sign the same canonical bytes via /v1/sign.
+      let atSigEntry;
+      try {
+        const r = await fetch(`${AT_BASE_URL}/v1/sign`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ canonical_bytes_b64u }),
+        });
+        if (!r.ok) {
+          return res.status(502).json({
+            error: "at_sign_failed",
+            upstream_status: r.status,
+            upstream_body: await r.text(),
+          });
+        }
+        const j = await r.json();
+        atSigEntry = { protected: j.protected, signature: j.signature };
+      } catch (err) {
+        return res.status(502).json({ error: "at_sign_unreachable", message: err.message });
+      }
+
+      const elapsed_ms = Date.now() - start;
+      return res.status(200).json({
+        jws: {
+          payload: canonical_bytes_b64u,
+          signatures: [atSigEntry, aoSigEntry],
+        },
+        canonical_sha256,
+        canonical_bytes_length: canonical_bytes.length,
+        composed_decision,
+        signers: [
+          { issuer: "agenttrust.uk", kid: JSON.parse(b64uDecode(atSigEntry.protected).toString()).kid },
+          { issuer: "agentoracle.co", kid: COMPOSED_KID },
+        ],
+        elapsed_ms,
+      });
+    } catch (err) {
+      console.error("[/v1/compose] error:", err);
+      return res.status(500).json({ error: err.message || "compose_internal_error" });
+    }
+  });
+
   // POST /v1/sign
   //
   // Symmetric signing primitive paired with AgentTrust's /v1/sign. Takes
