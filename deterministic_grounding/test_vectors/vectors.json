@@ -1,0 +1,325 @@
+{
+  "$schema_note": "Phase 1 deterministic-grounding test suite. Every vector must produce exactly the expected outcome. Source-fixture servers are mounted by the runner in-process so the tests are hermetic — no real network. The acceptance bar is byte-deterministic: vector either passes or the suite fails.",
+
+  "classifier_vectors": [
+    {
+      "id": "cls-001-field-lookup-positive",
+      "input": {
+        "source_uri": "http://localhost/ehr/4421",
+        "field_path": "$.patient.labs.hba1c",
+        "expected_value": 7.2
+      },
+      "expected": { "kind": "field_lookup", "reason": "ok" }
+    },
+    {
+      "id": "cls-002-field-lookup-string-expected",
+      "input": {
+        "source_uri": "http://localhost/x",
+        "field_path": "$.name",
+        "expected_value": "AgentOracle"
+      },
+      "expected": { "kind": "field_lookup", "reason": "ok" }
+    },
+    {
+      "id": "cls-003-comparison-positive",
+      "input": {
+        "source_uri": "http://localhost/q",
+        "field_paths": ["$.q3", "$.q2"],
+        "operator": ">"
+      },
+      "expected": { "kind": "comparison", "reason": "ok" }
+    },
+    {
+      "id": "cls-004-range-positive",
+      "input": {
+        "source_uri": "http://localhost/x",
+        "field_path": "$.rate",
+        "range": [4.5, 5.0]
+      },
+      "expected": { "kind": "range", "reason": "ok" }
+    },
+    {
+      "id": "cls-005-set-membership-positive",
+      "input": {
+        "source_uri": "http://localhost/x",
+        "field_path": "$.drug",
+        "operator": "in",
+        "set": ["A", "B", "C"]
+      },
+      "expected": { "kind": "set_membership", "reason": "ok" }
+    },
+    {
+      "id": "cls-006-citation-existence-positive",
+      "input": {
+        "source_uri": "http://localhost/rfc/8785",
+        "section": "3.2.2.3"
+      },
+      "expected": { "kind": "citation_existence", "reason": "ok" }
+    },
+    {
+      "id": "cls-101-missing-source-uri",
+      "input": { "field_path": "$.x", "expected_value": 1 },
+      "expected": { "kind": "probabilistic", "reason": "no_deterministic_shape_matched" }
+    },
+    {
+      "id": "cls-102-missing-field-path",
+      "input": { "source_uri": "http://localhost/x", "expected_value": 1 },
+      "expected": { "kind": "probabilistic", "reason": "no_deterministic_shape_matched" }
+    },
+    {
+      "id": "cls-103-comparison-wrong-array-len",
+      "input": {
+        "source_uri": "http://localhost/x",
+        "field_paths": ["$.a"],
+        "operator": ">"
+      },
+      "expected": { "kind": "probabilistic", "reason": "comparison_needs_two_field_paths" }
+    },
+    {
+      "id": "cls-104-range-inverted-endpoints",
+      "input": {
+        "source_uri": "http://localhost/x",
+        "field_path": "$.r",
+        "range": [10, 1]
+      },
+      "expected": { "kind": "probabilistic", "reason": "range_lo_greater_than_hi" }
+    },
+    {
+      "id": "cls-105-set-membership-missing-set",
+      "input": {
+        "source_uri": "http://localhost/x",
+        "field_path": "$.drug",
+        "operator": "in"
+      },
+      "expected": { "kind": "probabilistic", "reason": "set_membership_missing_set" }
+    },
+    {
+      "id": "cls-106-citation-existence-missing-section",
+      "input": { "source_uri": "http://localhost/rfc/8785" },
+      "expected": { "kind": "probabilistic", "reason": "no_deterministic_shape_matched" }
+    },
+    {
+      "id": "cls-107-non-scalar-expected",
+      "input": {
+        "source_uri": "http://localhost/x",
+        "field_path": "$.x",
+        "expected_value": { "nested": "object" }
+      },
+      "expected": { "kind": "probabilistic", "reason": "field_lookup_expected_value_not_scalar" }
+    }
+  ],
+
+  "field_lookup_vectors": [
+    {
+      "id": "fl-001-positive-match-number",
+      "fixture": "ehr_basic",
+      "input": {
+        "source_uri": "MOCK://ehr_basic",
+        "field_path": "$.patient.labs.hba1c",
+        "expected_value": 7.2
+      },
+      "expected": { "status": "resolved", "match": true, "observed_value": 7.2 }
+    },
+    {
+      "id": "fl-002-positive-match-string",
+      "fixture": "ehr_basic",
+      "input": {
+        "source_uri": "MOCK://ehr_basic",
+        "field_path": "$.patient.name",
+        "expected_value": "Alice Smith"
+      },
+      "expected": { "status": "resolved", "match": true }
+    },
+    {
+      "id": "fl-003-positive-mismatch",
+      "fixture": "ehr_basic",
+      "input": {
+        "source_uri": "MOCK://ehr_basic",
+        "field_path": "$.patient.labs.hba1c",
+        "expected_value": 9.9
+      },
+      "expected": { "status": "resolved", "match": false, "observed_value": 7.2 }
+    },
+    {
+      "id": "fl-004-numeric-string-coercion",
+      "fixture": "ehr_basic",
+      "input": {
+        "source_uri": "MOCK://ehr_basic",
+        "field_path": "$.patient.labs.hba1c",
+        "expected_value": "7.2"
+      },
+      "expected": { "status": "resolved", "match": true }
+    },
+    {
+      "id": "fl-005-array-index-resolution",
+      "fixture": "labs_list",
+      "input": {
+        "source_uri": "MOCK://labs_list",
+        "field_path": "$.results[0].value",
+        "expected_value": 4.1
+      },
+      "expected": { "status": "resolved", "match": true }
+    },
+    {
+      "id": "fl-006-quoted-key-with-spaces",
+      "fixture": "ehr_basic",
+      "input": {
+        "source_uri": "MOCK://ehr_basic",
+        "field_path": "$.patient[\"middle name\"]",
+        "expected_value": "Q"
+      },
+      "expected": { "status": "resolved", "match": true }
+    },
+    {
+      "id": "fl-101-escalate-missing-key",
+      "fixture": "ehr_basic",
+      "input": {
+        "source_uri": "MOCK://ehr_basic",
+        "field_path": "$.patient.labs.nonexistent",
+        "expected_value": 1
+      },
+      "expected": { "status": "escalate", "reason_prefix": "path_unresolved" }
+    },
+    {
+      "id": "fl-102-escalate-non-scalar-observed",
+      "fixture": "ehr_basic",
+      "input": {
+        "source_uri": "MOCK://ehr_basic",
+        "field_path": "$.patient",
+        "expected_value": "x"
+      },
+      "expected": { "status": "escalate", "reason": "observed_value_not_scalar" }
+    },
+    {
+      "id": "fl-103-escalate-non-json",
+      "fixture": "non_json",
+      "input": {
+        "source_uri": "MOCK://non_json",
+        "field_path": "$.x",
+        "expected_value": 1
+      },
+      "expected": { "status": "escalate", "reason": "non_json_response" }
+    },
+    {
+      "id": "fl-104-escalate-404",
+      "fixture": "not_found",
+      "input": {
+        "source_uri": "MOCK://not_found",
+        "field_path": "$.x",
+        "expected_value": 1
+      },
+      "expected": { "status": "escalate", "reason_prefix": "fetch_http_404" }
+    },
+    {
+      "id": "fl-105-escalate-cross-type",
+      "fixture": "ehr_basic",
+      "input": {
+        "source_uri": "MOCK://ehr_basic",
+        "field_path": "$.patient.consented",
+        "expected_value": "yes"
+      },
+      "expected": { "status": "resolved", "match": false }
+    },
+    {
+      "id": "fl-106-array-out-of-bounds",
+      "fixture": "labs_list",
+      "input": {
+        "source_uri": "MOCK://labs_list",
+        "field_path": "$.results[99].value",
+        "expected_value": 1
+      },
+      "expected": { "status": "escalate", "reason_prefix": "path_unresolved:index_out_of_bounds" }
+    }
+  ],
+
+  "comparison_vectors": [
+    {
+      "id": "cmp-001-gt-true",
+      "fixture": "quarterly",
+      "input": {
+        "source_uri": "MOCK://quarterly",
+        "field_paths": ["$.q3.revenue", "$.q2.revenue"],
+        "operator": ">"
+      },
+      "expected": { "status": "resolved", "match": true, "left_value": 1200, "right_value": 1000 }
+    },
+    {
+      "id": "cmp-002-gt-false",
+      "fixture": "quarterly",
+      "input": {
+        "source_uri": "MOCK://quarterly",
+        "field_paths": ["$.q1.revenue", "$.q2.revenue"],
+        "operator": ">"
+      },
+      "expected": { "status": "resolved", "match": false }
+    },
+    {
+      "id": "cmp-003-eq-numeric-string",
+      "fixture": "quarterly",
+      "input": {
+        "source_uri": "MOCK://quarterly",
+        "field_paths": ["$.q1.target_str", "$.q1.revenue"],
+        "operator": "=="
+      },
+      "expected": { "status": "resolved", "match": true }
+    },
+    {
+      "id": "cmp-101-non-numeric-escalate",
+      "fixture": "quarterly",
+      "input": {
+        "source_uri": "MOCK://quarterly",
+        "field_paths": ["$.q3.label", "$.q2.revenue"],
+        "operator": ">"
+      },
+      "expected": { "status": "escalate", "reason": "left_value_not_numeric" }
+    },
+    {
+      "id": "cmp-102-missing-operator",
+      "fixture": "quarterly",
+      "input": {
+        "source_uri": "MOCK://quarterly",
+        "field_paths": ["$.q3.revenue", "$.q2.revenue"]
+      },
+      "expected": { "status": "escalate", "reason": "unsupported_operator" }
+    }
+  ],
+
+  "fixtures": {
+    "ehr_basic": {
+      "status": 200,
+      "body": {
+        "patient": {
+          "name": "Alice Smith",
+          "middle name": "Q",
+          "consented": true,
+          "labs": { "hba1c": 7.2, "ldl": 110 }
+        }
+      }
+    },
+    "labs_list": {
+      "status": 200,
+      "body": {
+        "results": [
+          { "name": "ldl", "value": 4.1 },
+          { "name": "hdl", "value": 1.3 }
+        ]
+      }
+    },
+    "non_json": {
+      "status": 200,
+      "raw_body": "<html><body>not json</body></html>"
+    },
+    "not_found": {
+      "status": 404,
+      "raw_body": "Not Found"
+    },
+    "quarterly": {
+      "status": 200,
+      "body": {
+        "q1": { "revenue": 950, "target_str": "950", "label": "Q1" },
+        "q2": { "revenue": 1000, "label": "Q2" },
+        "q3": { "revenue": 1200, "label": "Q3" }
+      }
+    }
+  }
+}
