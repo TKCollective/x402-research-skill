@@ -550,9 +550,81 @@ function registerVGateCompose(app) {
       // converged). Three orthogonal axes — provenance (mycelium_trail_id),
       // freshness (ao_calibration.valid_until), precedence (anchor). The anchor
       // sibling carries {method, reference, recompute_cmd} when a Mycelium trail
-      // has confirmed for THIS canonical_sha256; otherwise the field is absent.
+      // has confirmed for THIS canonical action; otherwise the field is absent.
       // Never null. Never fabricated.
-      const anchor = trailCache.get(canonical_sha256) || null;
+      //
+      // Serverless-safe: we query the Mycelium provider directly via
+      // GET /trails/verify?agent_id=&action_ref= on every call, since per-Lambda
+      // in-process caches don't survive across Vercel invocations. The action_ref
+      // (recomputed from screen_ref.screen JCS) is the stable identity across
+      // calls with identical inputs; the trail is whatever the provider has
+      // anchored for that (agent_id, action_ref) pair.
+      // Synchronous submit + poll inside the request handler. Vercel's per-Lambda
+      // in-process state and the provider's /trails/verify endpoint are both
+      // unreliable for serverless reads, so the safe pattern is: POST the trail
+      // now, then GET the returned trail_id in a tight poll loop. If anchor
+      // confirms within budget, populate; otherwise stay absent.
+      let anchor = null;
+      if (MYCELIUM_SELF_CERTIFIED && screen_ref && screen_ref.action_ref && screen_ref.screen) {
+        try {
+          const submitR = await fetch(`${MYCELIUM_PROVIDER_URL}/nexus/trail`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              packet_version: "1.0",
+              action_ref: screen_ref.action_ref,
+              service: MYCELIUM_SERVICE_ID,
+              preimage: {
+                agent_id: screen_ref.screen.agent_id,
+                action_type: screen_ref.screen.action_type,
+                scope: screen_ref.screen.scope,
+                ts: screen_ref.screen.timestamp,
+              },
+              payment_hash: payload.subject?.claim_hash || canonical_sha256,
+              output_hash: canonical_sha256,
+              hash_algo: "SHA-256",
+              preimage_format: "jcs",
+              timestamp: timestamp_ms || Date.now(),
+            }),
+          });
+          if (submitR.ok) {
+            const sj = await submitR.json();
+            const trail_id = sj?.trail_id;
+            if (trail_id) {
+              // Poll GET /trails/{id} every 3s up to 24s.
+              for (let i = 0; i < 8; i++) {
+                try {
+                  const gr = await fetch(`${MYCELIUM_PROVIDER_URL}/trails/${trail_id}`);
+                  if (gr.ok) {
+                    const gj = await gr.json();
+                    if (gj?.tx_hash && typeof gj.timestamp === "number") {
+                      const block_time_ms = gj.timestamp * 1000;
+                      const outcome_ts_ms = timestamp_ms;
+                      const precedence =
+                        typeof outcome_ts_ms === "number" && block_time_ms < outcome_ts_ms;
+                      anchor = {
+                        method: "on-chain",
+                        tier: "on-chain",
+                        reference: trail_id,
+                        tx_hash: gj.tx_hash,
+                        anchor_block_time: gj.timestamp,
+                        precedence,
+                        recompute_cmd: `curl -s ${MYCELIUM_PROVIDER_URL}/mycelium/trails/${trail_id}/verify_chain`,
+                      };
+                      break;
+                    }
+                  }
+                } catch {
+                  // keep polling
+                }
+                await new Promise((r) => setTimeout(r, 3000));
+              }
+            }
+          }
+        } catch {
+          // Silent. Anchor stays absent if provider is unreachable.
+        }
+      }
 
       // Conformance-registry compatible governance block. Reports AO's signature
       // as the primary admission signer; co_signers discloses the multi-issuer
@@ -573,13 +645,9 @@ function registerVGateCompose(app) {
         ],
       };
       if (anchor) governance.anchor = anchor; // absent-not-null grammar
-
-      // Kick off async trail submission for THIS envelope so the NEXT verifier
-      // run for the same canonical_sha256 can serve the anchor field. Fire-and-
-      // forget; failure leaves the cache unchanged.
-      submitTrailAsync(canonical_sha256, canonical_bytes_b64u, Date.now(), screen_ref, payload.subject).catch(
-        () => {}
-      );
+      // Trail submission is now inline above (synchronous submit + poll). The
+      // older fire-and-forget submitTrailAsync was Vercel-unsafe: per-Lambda
+      // in-process caches don't survive across invocations.
 
       return res.status(200).json({
         jws: {
