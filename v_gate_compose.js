@@ -322,6 +322,25 @@ function registerVGateCompose(app) {
   //   "composed_decision": "act" | "halt",
   //   "signers": [{issuer, kid}, ...]
   // }
+  // Static conformance-sample envelope for babyblueviper1's harness referee.
+  // Bare GET /v1/compose can't mint a valid screen_ref, so the referee call
+  // returns anchor=null and the row reads pending. This endpoint serves a
+  // pre-generated anchored envelope (2-signer + screen_ref block + Mycelium
+  // on-chain anchor with precedence:true) so the harness has a deterministic
+  // recompute source. canonical_bytes_utf8 + signatures are byte-stable;
+  // anchor proof is recompute-verifiable via the published recompute_cmd.
+  let CONFORMANCE_SAMPLE = null;
+  try {
+    CONFORMANCE_SAMPLE = require("./conformance_sample.json");
+  } catch {}
+  app.get("/v1/conformance/sample", (req, res) => {
+    if (!CONFORMANCE_SAMPLE) {
+      return res.status(503).json({ error: "conformance_sample_unavailable" });
+    }
+    res.setHeader("Cache-Control", "public, max-age=300");
+    return res.status(200).json(CONFORMANCE_SAMPLE);
+  });
+
   app.post("/v1/compose", async (req, res) => {
     const start = Date.now();
     try {
