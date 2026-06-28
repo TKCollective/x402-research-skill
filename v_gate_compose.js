@@ -186,6 +186,7 @@ async function submitTrailAsync(canonical_sha256, canonical_bytes_b64u, outcome_
       j.anchor_block_time * 1000 < outcome_ts_ms;
     trailCache.set(canonical_sha256, {
       method: "on-chain",
+      tier: "on-chain", // babyblueviper1 autogen#7353: discloses which clock the anchor rests on
       reference: j.trail_id,
       anchor_block_time: j.anchor_block_time,
       precedence,
