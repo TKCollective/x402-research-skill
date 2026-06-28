@@ -562,6 +562,19 @@ function registerVGateCompose(app) {
       const envelope_hash_bytes = Buffer.from(envelope_hash_hex, "hex");
       const admission_sig = crypto.sign(null, envelope_hash_bytes, getPrivateKey());
 
+      // AT cosigner identity — published key from agenttrust.uk JWKS, hardcoded
+      // here for stable fixture-alone recompute (rpelevin autogen#7353 verifier
+      // key-source binding: every cosigner block needs pubkey + pubkey_hash +
+      // key_source so referees can verify multi-signer admission without an
+      // out-of-band JWKS fetch). Resolution evidence stays externally
+      // verifiable via the published_jwks URL for stale-key checks.
+      const AT_PUBKEY_HEX = "98e73aa9d4c701092ccd3f3f450be9ce6293727b41087d5ff9dc83c2e2a91312";
+      const AT_PUBKEY_HASH = crypto
+        .createHash("sha256")
+        .update(Buffer.from(AT_PUBKEY_HEX, "hex"))
+        .digest("hex");
+      const AT_JWKS_URL = "https://agenttrust.uk/.well-known/jwks.json";
+
       // Anchor sibling (autogen#7353 design, vstantch + babyblueviper1 + giskard09
       // converged). Three orthogonal axes — provenance (mycelium_trail_id),
       // freshness (ao_calibration.valid_until), precedence (anchor). The anchor
@@ -656,6 +669,10 @@ function registerVGateCompose(app) {
           {
             issuer: "agenttrust.uk",
             kid: at_kid_decoded.kid,
+            pubkey: AT_PUBKEY_HEX,
+            pubkey_hash: AT_PUBKEY_HASH,
+            key_source: "published_jwks",
+            jwks_url: AT_JWKS_URL,
             jws_signature: b64uToHex(atSigEntry.signature),
           },
         ],
