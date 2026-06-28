@@ -1,1 +1,16 @@
-{"projectId":"prj_ev4FTdnmmhhCoc9wj4CDR91O3Wu6","orgId":"team_gSZfgREZa8KfQq3WrwkOnBNW","projectName":"x402-research-skill"}
+{
+  "projectId": "prj_ev4FTdnmmhhCoc9wj4CDR91O3Wu6",
+  "orgId": "team_gSZfgREZa8KfQq3WrwkOnBNW",
+  "projectName": "x402-research-skill",
+  "settings": {
+    "createdAt": 1773183732314,
+    "framework": "express",
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}

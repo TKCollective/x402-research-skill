@@ -267,7 +267,7 @@ function registerVGateCompose(app) {
   app.post("/v1/compose", async (req, res) => {
     const start = Date.now();
     try {
-      const { claim_hash, mcp_content, agent_id, timestamp_ms } = req.body || {};
+      const { claim_hash, mcp_content, agent_id, timestamp_ms, screen_ref } = req.body || {};
       if (!claim_hash || typeof claim_hash !== "string") {
         return res.status(400).json({
           error: "missing_or_invalid_claim_hash",
@@ -336,8 +336,58 @@ function registerVGateCompose(app) {
       if (aoVerdict.confidence !== undefined) v_gate.confidence = aoVerdict.confidence;
       if (aoVerdict.reason !== undefined) v_gate.reason = aoVerdict.reason;
 
-      // STEP 3: Assemble canonical payload with both sibling blocks.
+      // STEP 2b: Validate optional screen_ref sibling block (Presidio leg).
+      // Shape locked by vstantch on x402#2332 (2026-06-28): action-ref-v1
+      // pointer with {issuer, verdict, screen:{agent_id, action_type, scope,
+      // timestamp}, action_ref, mapping_id}. action_ref recomputes from JCS of
+      // the screen object alone; the caller passes the full block verbatim,
+      // we don't fabricate it.
+      if (screen_ref !== undefined) {
+        if (!screen_ref || typeof screen_ref !== "object" || Array.isArray(screen_ref)) {
+          return res.status(400).json({ error: "invalid_screen_ref", message: "screen_ref must be an object" });
+        }
+        const required = ["issuer", "verdict", "screen", "action_ref", "mapping_id"];
+        for (const k of required) {
+          if (screen_ref[k] === undefined) {
+            return res.status(400).json({ error: "invalid_screen_ref", message: `screen_ref.${k} required` });
+          }
+        }
+        if (!screen_ref.screen || typeof screen_ref.screen !== "object") {
+          return res.status(400).json({ error: "invalid_screen_ref", message: "screen_ref.screen must be an object" });
+        }
+        const screenReq = ["agent_id", "action_type", "scope", "timestamp"];
+        for (const k of screenReq) {
+          if (typeof screen_ref.screen[k] !== "string") {
+            return res.status(400).json({ error: "invalid_screen_ref", message: `screen_ref.screen.${k} must be a string` });
+          }
+        }
+        // Recompute action_ref locally — never trust the caller's emitted hash.
+        const screenJcs = jcs(screen_ref.screen);
+        const recomputed = crypto.createHash("sha256").update(screenJcs, "utf-8").digest("hex");
+        if (recomputed !== screen_ref.action_ref) {
+          return res.status(400).json({
+            error: "screen_ref_action_ref_mismatch",
+            message: "caller-supplied action_ref does not recompute from JCS(screen)",
+            recomputed,
+          });
+        }
+        // Bind to the top-level action identity — same instant AT and AO sign.
+        if (agent_id !== undefined && screen_ref.screen.agent_id !== agent_id) {
+          return res.status(400).json({
+            error: "screen_ref_agent_id_mismatch",
+            message: "screen_ref.screen.agent_id must equal top-level agent_id",
+          });
+        }
+      }
+
+      // STEP 3: Assemble canonical payload with all present sibling blocks.
       const verdicts = [v_gate.verdict, v_gate_skill.verdict].filter(Boolean);
+      if (screen_ref) {
+        // PII_BLOCKED is a halt-class verdict; only "act" / "PII_REDACTED" /
+        // "clean-allow" compose to act under AND_PRESENT.
+        const screenAct = screen_ref.verdict === "act" || screen_ref.verdict === "PII_REDACTED" || screen_ref.verdict === "clean-allow";
+        verdicts.push(screenAct ? "act" : "halt");
+      }
       const composed_decision =
         verdicts.length > 0 && verdicts.every((v) => v === "act") ? "act" : "halt";
       const payload = {
@@ -348,6 +398,7 @@ function registerVGateCompose(app) {
         v_gate_skill,
         ...at_extensions,
       };
+      if (screen_ref) payload.screen_ref = screen_ref;
       // Action identity fields go at the top level, above all sibling blocks.
       // RFC 3339 with three fractional digits derived deterministically from
       // timestamp_ms — the same encoding the Presidio screen_ref preimage uses
