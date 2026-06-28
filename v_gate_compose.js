@@ -267,12 +267,32 @@ function registerVGateCompose(app) {
   app.post("/v1/compose", async (req, res) => {
     const start = Date.now();
     try {
-      const { claim_hash, mcp_content } = req.body || {};
+      const { claim_hash, mcp_content, agent_id, timestamp_ms } = req.body || {};
       if (!claim_hash || typeof claim_hash !== "string") {
         return res.status(400).json({
           error: "missing_or_invalid_claim_hash",
           message: "claim_hash is required and must be a sha256-prefixed string",
         });
+      }
+      // Optional top-level action identity fields. When present, they become
+      // top-level keys in the canonical payload so every co-signer (AO, AT,
+      // Presidio screen_ref) attests the SAME action. The screen_ref preimage
+      // (action-ref-v1) is derived from {agent_id, action_type, scope,
+      // timestamp} — these two fields are the action's, not the screen's, so
+      // they have to live above all sibling blocks.
+      if (agent_id !== undefined && typeof agent_id !== "string") {
+        return res.status(400).json({
+          error: "invalid_agent_id",
+          message: "agent_id must be a string (DID or URN) when supplied",
+        });
+      }
+      if (timestamp_ms !== undefined) {
+        if (typeof timestamp_ms !== "number" || !Number.isInteger(timestamp_ms) || timestamp_ms <= 0) {
+          return res.status(400).json({
+            error: "invalid_timestamp_ms",
+            message: "timestamp_ms must be a positive integer (milliseconds since Unix epoch)",
+          });
+        }
       }
 
       // STEP 1: Call AT /v1/compose for v_gate_skill block.
@@ -328,6 +348,18 @@ function registerVGateCompose(app) {
         v_gate_skill,
         ...at_extensions,
       };
+      // Action identity fields go at the top level, above all sibling blocks.
+      // RFC 3339 with three fractional digits derived deterministically from
+      // timestamp_ms — the same encoding the Presidio screen_ref preimage uses
+      // (vstantch x402#2332 2026-06-28). Keeps the act bound to a single
+      // instant across AO, AT, and Presidio signatures.
+      if (agent_id !== undefined) payload.agent_id = agent_id;
+      if (timestamp_ms !== undefined) {
+        payload.timestamp_ms = timestamp_ms;
+        const d = new Date(timestamp_ms);
+        const ms = String(d.getUTCMilliseconds()).padStart(3, "0");
+        payload.timestamp = d.toISOString().replace(/\.\d{3}Z$/, `.${ms}Z`);
+      }
       // Drop any AT extension keys that came back undefined.
       for (const k of Object.keys(payload)) {
         if (payload[k] === undefined) delete payload[k];
