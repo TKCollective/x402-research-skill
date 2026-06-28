@@ -144,6 +144,58 @@ function evaluateVerdict({ claim_hash, mcp_content, mapping_context }) {
 // AgentTrust orchestration constants (used by /v1/compose).
 const AT_BASE_URL = process.env.AT_BASE_URL || "https://agenttrust.uk";
 
+// Mycelium Provider constants for the temporal-precedence anchor sibling.
+// AgentOracle is a declared Mycelium Provider per giskard09's confirmation on
+// autogen#7353 (2026-06-28). Once /payg/account/self-certify activates trail
+// submission, /v1/compose attaches anchor.method='on-chain' with a Mycelium
+// trail reference; until then the anchor sibling stays ABSENT (not null) per
+// the absent-not-null grammar.
+const MYCELIUM_PROVIDER_URL = process.env.MYCELIUM_PROVIDER_URL || "https://argentum.giskard09.com";
+const MYCELIUM_SELF_CERTIFIED =
+  process.env.MYCELIUM_SELF_CERTIFIED === "true" ||
+  process.env.MYCELIUM_SELF_CERTIFIED === "1";
+
+// In-process cache of the most recent trail returned by the Mycelium Provider
+// for the canonical_sha256 we just signed. Populated by submitTrailAsync() and
+// read by the next /v1/compose call when the trail has confirmed on chain.
+const trailCache = new Map(); // canonical_sha256 -> { method, reference, anchor_block_time, precedence, recompute_cmd }
+
+async function submitTrailAsync(canonical_sha256, canonical_bytes_b64u, outcome_ts_ms) {
+  // Fire-and-forget submission to the Mycelium Provider. Failures are silent
+  // by design — the anchor sibling stays absent until a successful confirmation
+  // lands. We never fabricate anchor metadata.
+  if (!MYCELIUM_SELF_CERTIFIED) return;
+  try {
+    const r = await fetch(`${MYCELIUM_PROVIDER_URL}/payg/trail/submit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        canonical_sha256,
+        canonical_bytes_b64u,
+        outcome_ts_ms,
+      }),
+    });
+    if (!r.ok) return;
+    const j = await r.json();
+    if (!j?.trail_id || !j?.anchor_block_time) return;
+    // Precedence only holds if the anchor block time is strictly less than the
+    // outcome timestamp the caller cares about. The same-block case is rejected.
+    const precedence =
+      typeof j.anchor_block_time === "number" &&
+      typeof outcome_ts_ms === "number" &&
+      j.anchor_block_time * 1000 < outcome_ts_ms;
+    trailCache.set(canonical_sha256, {
+      method: "on-chain",
+      reference: j.trail_id,
+      anchor_block_time: j.anchor_block_time,
+      precedence,
+      recompute_cmd: j.recompute_cmd || null,
+    });
+  } catch {
+    // Silent. Anchor stays absent.
+  }
+}
+
 function registerVGateCompose(app) {
   // POST /v1/sign/batch
   //
@@ -340,6 +392,14 @@ function registerVGateCompose(app) {
       const envelope_hash_bytes = Buffer.from(envelope_hash_hex, "hex");
       const admission_sig = crypto.sign(null, envelope_hash_bytes, getPrivateKey());
 
+      // Anchor sibling (autogen#7353 design, vstantch + babyblueviper1 + giskard09
+      // converged). Three orthogonal axes — provenance (mycelium_trail_id),
+      // freshness (ao_calibration.valid_until), precedence (anchor). The anchor
+      // sibling carries {method, reference, recompute_cmd} when a Mycelium trail
+      // has confirmed for THIS canonical_sha256; otherwise the field is absent.
+      // Never null. Never fabricated.
+      const anchor = trailCache.get(canonical_sha256) || null;
+
       // Conformance-registry compatible governance block. Reports AO's signature
       // as the primary admission signer; co_signers discloses the multi-issuer
       // architecture. See babyblueviper1/preaction-governance-conformance.
@@ -358,6 +418,14 @@ function registerVGateCompose(app) {
           },
         ],
       };
+      if (anchor) governance.anchor = anchor; // absent-not-null grammar
+
+      // Kick off async trail submission for THIS envelope so the NEXT verifier
+      // run for the same canonical_sha256 can serve the anchor field. Fire-and-
+      // forget; failure leaves the cache unchanged.
+      submitTrailAsync(canonical_sha256, canonical_bytes_b64u, Date.now()).catch(
+        () => {}
+      );
 
       return res.status(200).json({
         jws: {
