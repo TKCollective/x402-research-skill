@@ -325,6 +325,32 @@ function registerVGateCompose(app) {
       }
 
       const elapsed_ms = Date.now() - start;
+
+      // Helper: hex-encode a base64url string for the conformance harness shape.
+      const b64uToHex = (s) => b64uDecode(s).toString("hex");
+      const envelope_hash_hex = canonical_sha256.replace(/^sha256-/, "");
+      const ao_pub_hex = b64uToHex(COMPOSED_PUBLIC_JWK.x);
+      const at_kid_decoded = JSON.parse(b64uDecode(atSigEntry.protected).toString());
+
+      // Conformance-registry compatible governance block. Reports AO's signature
+      // as the primary, co_signers disclose the multi-issuer architecture.
+      // See babyblueviper1/preaction-governance-conformance for the harness contract.
+      const governance = {
+        envelope_hash: envelope_hash_hex,
+        canonical_bytes_utf8: canonical_bytes.toString("utf-8"),
+        verifier_pubkey: ao_pub_hex,
+        signature: b64uToHex(aoSigEntry.signature),
+        sig_scheme: "ed25519-jcs",
+        kid: COMPOSED_KID,
+        co_signers: [
+          {
+            issuer: "agenttrust.uk",
+            kid: at_kid_decoded.kid,
+            signature: b64uToHex(atSigEntry.signature),
+          },
+        ],
+      };
+
       return res.status(200).json({
         jws: {
           payload: canonical_bytes_b64u,
@@ -334,9 +360,10 @@ function registerVGateCompose(app) {
         canonical_bytes_length: canonical_bytes.length,
         composed_decision,
         signers: [
-          { issuer: "agenttrust.uk", kid: JSON.parse(b64uDecode(atSigEntry.protected).toString()).kid },
+          { issuer: "agenttrust.uk", kid: at_kid_decoded.kid },
           { issuer: "agentoracle.co", kid: COMPOSED_KID },
         ],
+        governance,
         elapsed_ms,
       });
     } catch (err) {
