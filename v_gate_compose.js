@@ -326,27 +326,35 @@ function registerVGateCompose(app) {
 
       const elapsed_ms = Date.now() - start;
 
-      // Helper: hex-encode a base64url string for the conformance harness shape.
+      // Helper: hex-encode a base64url string.
       const b64uToHex = (s) => b64uDecode(s).toString("hex");
       const envelope_hash_hex = canonical_sha256.replace(/^sha256-/, "");
       const ao_pub_hex = b64uToHex(COMPOSED_PUBLIC_JWK.x);
       const at_kid_decoded = JSON.parse(b64uDecode(atSigEntry.protected).toString());
 
+      // Sign the envelope hash DIRECTLY with the same AO key so a conformance
+      // verifier can check Ed25519(envelope_hash_raw_bytes) without parsing the
+      // JWS signing input convention. The JWS signature in jws.signatures still
+      // covers (protected || "." || payload) per RFC 7515; this is an additional
+      // commitment over the same hash by the same key, exposed for harness checks.
+      const envelope_hash_bytes = Buffer.from(envelope_hash_hex, "hex");
+      const admission_sig = crypto.sign(null, envelope_hash_bytes, getPrivateKey());
+
       // Conformance-registry compatible governance block. Reports AO's signature
-      // as the primary, co_signers disclose the multi-issuer architecture.
-      // See babyblueviper1/preaction-governance-conformance for the harness contract.
+      // as the primary admission signer; co_signers discloses the multi-issuer
+      // architecture. See babyblueviper1/preaction-governance-conformance.
       const governance = {
         envelope_hash: envelope_hash_hex,
         canonical_bytes_utf8: canonical_bytes.toString("utf-8"),
         verifier_pubkey: ao_pub_hex,
-        signature: b64uToHex(aoSigEntry.signature),
+        signature: admission_sig.toString("hex"),
         sig_scheme: "ed25519-jcs",
         kid: COMPOSED_KID,
         co_signers: [
           {
             issuer: "agenttrust.uk",
             kid: at_kid_decoded.kid,
-            signature: b64uToHex(atSigEntry.signature),
+            jws_signature: b64uToHex(atSigEntry.signature),
           },
         ],
       };
