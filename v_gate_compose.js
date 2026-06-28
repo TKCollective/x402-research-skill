@@ -383,13 +383,25 @@ function registerVGateCompose(app) {
       }
 
       // STEP 2: Compute AO v_gate verdict block.
+      // signed_at is deterministic from top-level timestamp_ms when provided
+      // so that identical inputs produce a byte-identical canonical envelope
+      // and the same canonical_sha256 — required for trail-cache hits across
+      // calls and for any external verifier reproducing the envelope from
+      // request inputs. Falls back to wall-clock when timestamp_ms is absent.
       const aoVerdict = evaluateVerdict({ claim_hash, mcp_content });
       const v_gate = {
         issuer: "agentoracle.co",
         mapping_id: AO_MAPPING_ID,
         mapping_hash: AO_MAPPING_HASH,
         verdict: aoVerdict.verdict,
-        signed_at: new Date().toISOString(),
+        signed_at:
+          timestamp_ms !== undefined
+            ? (() => {
+                const d = new Date(timestamp_ms);
+                const ms = String(d.getUTCMilliseconds()).padStart(3, "0");
+                return d.toISOString().replace(/\.\d{3}Z$/, `.${ms}Z`);
+              })()
+            : new Date().toISOString(),
       };
       if (aoVerdict.confidence !== undefined) v_gate.confidence = aoVerdict.confidence;
       if (aoVerdict.reason !== undefined) v_gate.reason = aoVerdict.reason;
