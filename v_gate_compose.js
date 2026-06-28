@@ -150,7 +150,9 @@ const AT_BASE_URL = process.env.AT_BASE_URL || "https://agenttrust.uk";
 // submission, /v1/compose attaches anchor.method='on-chain' with a Mycelium
 // trail reference; until then the anchor sibling stays ABSENT (not null) per
 // the absent-not-null grammar.
-const MYCELIUM_PROVIDER_URL = process.env.MYCELIUM_PROVIDER_URL || "https://argentum.giskard09.com";
+const MYCELIUM_PROVIDER_URL = process.env.MYCELIUM_PROVIDER_URL || "https://argentum.rgiskard.xyz";
+const MYCELIUM_API_KEY = process.env.MYCELIUM_API_KEY || "";
+const MYCELIUM_SERVICE_ID = process.env.MYCELIUM_SERVICE_ID || "agentoracle-v1";
 const MYCELIUM_SELF_CERTIFIED =
   process.env.MYCELIUM_SELF_CERTIFIED === "true" ||
   process.env.MYCELIUM_SELF_CERTIFIED === "1";
@@ -160,37 +162,93 @@ const MYCELIUM_SELF_CERTIFIED =
 // read by the next /v1/compose call when the trail has confirmed on chain.
 const trailCache = new Map(); // canonical_sha256 -> { method, reference, anchor_block_time, precedence, recompute_cmd }
 
-async function submitTrailAsync(canonical_sha256, canonical_bytes_b64u, outcome_ts_ms) {
+async function submitTrailAsync(canonical_sha256, canonical_bytes_b64u, outcome_ts_ms, screen_ref, payload_subject) {
   // Fire-and-forget submission to the Mycelium Provider. Failures are silent
   // by design — the anchor sibling stays absent until a successful confirmation
   // lands. We never fabricate anchor metadata.
+  //
+  // Endpoint: /nexus/trail (on-chain anchor track) when we have a screen_ref
+  // preimage to authenticate via action_ref recomputation. Falls back to
+  // /external/trail (karma-only, no on-chain anchor) when api_key is configured
+  // and no screen_ref is present — still useful for karma accrual but anchor
+  // sibling stays absent because there's no Arbitrum confirmation to cite.
   if (!MYCELIUM_SELF_CERTIFIED) return;
   try {
-    const r = await fetch(`${MYCELIUM_PROVIDER_URL}/payg/trail/submit`, {
+    let endpoint, body;
+    if (screen_ref && screen_ref.action_ref && screen_ref.screen) {
+      // NEXUS-format receipt: auth is action_ref recomputation from preimage,
+      // no Ed25519 signature carried (the composed envelope already carries
+      // three Ed25519 sigs against the canonical bytes).
+      endpoint = `${MYCELIUM_PROVIDER_URL}/nexus/trail`;
+      body = {
+        packet_version: "1.0",
+        action_ref: screen_ref.action_ref,
+        service: MYCELIUM_SERVICE_ID,
+        preimage: {
+          agent_id: screen_ref.screen.agent_id,
+          action_type: screen_ref.screen.action_type,
+          scope: screen_ref.screen.scope,
+          ts: screen_ref.screen.timestamp,
+        },
+        payment_hash: payload_subject?.claim_hash || canonical_sha256,
+        output_hash: canonical_sha256,
+        hash_algo: "SHA-256",
+        preimage_format: "jcs",
+        timestamp: outcome_ts_ms,
+      };
+    } else if (MYCELIUM_API_KEY) {
+      // Karma-only path — no on-chain anchor surfaces from this call.
+      endpoint = `${MYCELIUM_PROVIDER_URL}/external/trail`;
+      body = {
+        api_key: MYCELIUM_API_KEY,
+        action_ref: canonical_sha256.replace(/^sha256-/, ""),
+      };
+    } else {
+      return;
+    }
+    const r = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        canonical_sha256,
-        canonical_bytes_b64u,
-        outcome_ts_ms,
-      }),
+      body: JSON.stringify(body),
     });
     if (!r.ok) return;
     const j = await r.json();
-    if (!j?.trail_id || !j?.anchor_block_time) return;
-    // Precedence only holds if the anchor block time is strictly less than the
-    // outcome timestamp the caller cares about. The same-block case is rejected.
+    const trail_id = j?.trail_id || j?.mycelium_trail_id;
+    if (!trail_id) return;
+    // Poll GET /trails/{trail_id} for confirmation. POST returns committed but
+    // anchor=pending; GET returns tx_hash + anchor timestamp once Arbitrum
+    // confirms. Anchor sibling only populates when tx_hash is set AND the
+    // block timestamp strictly precedes outcome_ts_ms.
+    let tx_hash = null;
+    let anchor_block_time = null;
+    for (let i = 0; i < 12; i++) {
+      await new Promise((r) => setTimeout(r, 10_000));
+      try {
+        const g = await fetch(`${MYCELIUM_PROVIDER_URL}/trails/${trail_id}`);
+        if (!g.ok) continue;
+        const gj = await g.json();
+        if (gj?.tx_hash && typeof gj.timestamp === "number") {
+          tx_hash = gj.tx_hash;
+          anchor_block_time = gj.timestamp;
+          break;
+        }
+      } catch {
+        // keep polling
+      }
+    }
+    if (!tx_hash || typeof anchor_block_time !== "number") return;
+    // Strict precedence: block_time(seconds) * 1000 < outcome_ts_ms.
+    // Same-block case is rejected.
     const precedence =
-      typeof j.anchor_block_time === "number" &&
-      typeof outcome_ts_ms === "number" &&
-      j.anchor_block_time * 1000 < outcome_ts_ms;
+      typeof outcome_ts_ms === "number" && anchor_block_time * 1000 < outcome_ts_ms;
     trailCache.set(canonical_sha256, {
       method: "on-chain",
       tier: "on-chain", // babyblueviper1 autogen#7353: discloses which clock the anchor rests on
-      reference: j.trail_id,
-      anchor_block_time: j.anchor_block_time,
+      reference: trail_id,
+      tx_hash,
+      anchor_block_time,
       precedence,
-      recompute_cmd: j.recompute_cmd || null,
+      recompute_cmd: `curl -s ${MYCELIUM_PROVIDER_URL}/mycelium/trails/${trail_id}/verify_chain`,
     });
   } catch {
     // Silent. Anchor stays absent.
@@ -507,7 +565,7 @@ function registerVGateCompose(app) {
       // Kick off async trail submission for THIS envelope so the NEXT verifier
       // run for the same canonical_sha256 can serve the anchor field. Fire-and-
       // forget; failure leaves the cache unchanged.
-      submitTrailAsync(canonical_sha256, canonical_bytes_b64u, Date.now()).catch(
+      submitTrailAsync(canonical_sha256, canonical_bytes_b64u, Date.now(), screen_ref, payload.subject).catch(
         () => {}
       );
 
