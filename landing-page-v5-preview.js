@@ -757,20 +757,23 @@ a.validation-card__date:hover { color: var(--gold); }
 .hero__eyebrow::before { display: none; }
 
 /* === SECTION TITLE GOLD UNDERLINE === */
+/* Use native text-decoration so the gold underline follows the text line-by-
+   line on wrap, instead of an absolutely-positioned ::after pseudo-element
+   that drew a single horizontal line across the multi-line wrap point. */
 .section-title-gold {
   color: var(--gold);
-  position: relative;
-  display: inline-block;
+  text-decoration: underline;
+  text-decoration-color: rgba(201,169,110,0.4);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+  -webkit-text-decoration-color: rgba(201,169,110,0.4);
 }
-.section-title-gold::after {
-  content: '';
-  position: absolute;
-  bottom: -4px; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--gold), transparent);
-  border-radius: 1px;
-  opacity: 0.4;
+@supports (text-decoration-skip-ink: auto) {
+  .section-title-gold { text-decoration-skip-ink: auto; }
 }
+/* Old ::after underline disabled — caused mid-paragraph horizontal line
+   when title text wrapped on mobile. Kept rule with content:none for safety. */
+.section-title-gold::after { content: none !important; }
 
 /* === BANNER GRADIENT UPGRADE === */
 .banner__inner {
@@ -1251,7 +1254,7 @@ a.validation-card__date:hover { color: var(--gold); }
         <div class="pipeline-line" data-line="1">
           <span class="pipeline-line__time">[00:00.211]</span>
           <span class="pipeline-line__source"></span>
-          <span class="pipeline-line__msg"><span>4 claims</span> extracted via Gemma 4</span>
+          <span class="pipeline-line__msg"><span>4 claims</span> extracted via decomposer</span>
         </div>
         <div class="pipeline-line" data-line="2">
           <span class="pipeline-line__time">[00:00.216]</span>
@@ -1338,10 +1341,10 @@ a.validation-card__date:hover { color: var(--gold); }
 
     <div class="eval-panel__footer">
       <div class="eval-panel__sources">
-        <span class="eval-panel__source">sonar</span>
-        <span class="eval-panel__source">sonar-pro</span>
+        <span class="eval-panel__source">model-a</span>
+        <span class="eval-panel__source">model-b</span>
         <span class="eval-panel__source">adversarial</span>
-        <span class="eval-panel__source">gemma-4</span>
+        <span class="eval-panel__source">extractor</span>
       </div>
       <span class="eval-replay" id="evalReplay">↻ replay</span>
       <span class="eval-panel__meta">eval_a9f2c1 · Base L2</span>
@@ -1386,46 +1389,46 @@ a.validation-card__date:hover { color: var(--gold); }
      commands, and reproduces every claim end-to-end from page bytes alone.
      ======================================================================== -->
 <section class="section recompute-demo" id="recompute" style="position:relative;z-index:2;padding-top:96px;padding-bottom:96px;">
-  <div style="max-width:1100px;margin:0 auto;padding:0 40px;">
+  <div style="max-width:1100px;margin:0 auto;padding:0 24px;box-sizing:border-box;">
     <div class="reveal" style="text-align:center;margin-bottom:40px;">
       <div class="section-eyebrow" style="color:rgba(201,169,110,0.7);">verify it yourself</div>
-      <h2 class="section-title">Don't take our word for it. <span class="section-title-gold">Verify any AgentOracle envelope yourself</span> in one command.</h2>
-      <p class="section-subtitle" style="max-width:760px;">We hand you the bytes. The math is yours.</p>
+      <h2 class="section-title"><span class="section-title-gold">Verify any AgentOracle envelope</span> in one command.</h2>
+      <p class="section-subtitle" style="max-width:760px;">Don't take our word for it. We hand you the bytes. The math is yours.</p>
     </div>
 
-    <div class="reveal" style="background:var(--surface-2);border:1px solid var(--border-mid);border-radius:14px;padding:28px 32px;margin-bottom:32px;font-family:var(--font-mono);font-size:13px;line-height:1.7;color:var(--text);overflow-x:auto;">
+    <div class="reveal" style="background:var(--surface-2);border:1px solid var(--border-mid);border-radius:14px;padding:24px 20px;margin-bottom:32px;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text);box-sizing:border-box;">
       <div style="color:var(--text-faint);font-size:11px;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:14px;">Step 1 — fetch a live signed envelope</div>
-      <div style="white-space:pre;"><span style="color:var(--gold);">$</span> curl -s https://agentoracle.co/v1/conformance/sample</div>
+      <div style="white-space:pre-wrap;word-break:break-all;"><span style="color:var(--gold);">$</span> curl -s https://agentoracle.co/v1/conformance/sample</div>
       <div style="color:var(--text-faint);font-size:11px;text-transform:uppercase;letter-spacing:0.14em;margin-top:24px;margin-bottom:14px;">Step 2 — hash the canonical bytes (envelope_hash recomputes)</div>
-      <div style="white-space:pre;">  <span style="color:var(--text-muted);">// SHA-256 of governance.canonical_bytes_utf8 == envelope_hash</span></div>
-      <div style="color:var(--text-faint);font-size:11px;text-transform:uppercase;letter-spacing:0.14em;margin-top:24px;margin-bottom:14px;">Step 3 — verify both signatures against the published JWKS</div>
-      <div style="white-space:pre;">  <span style="color:var(--text-muted);">// Ed25519.verify(jws.signatures[*], envelope_hash, co_signers[*].pubkey)</span></div>
+      <div style="white-space:pre-wrap;word-break:break-word;">  <span style="color:var(--text-muted);">// SHA-256 of governance.canonical_bytes_utf8 == envelope_hash</span></div>
+      <div style="color:var(--text-faint);font-size:11px;text-transform:uppercase;letter-spacing:0.14em;margin-top:24px;margin-bottom:14px;">Step 3 — verify the signatures against the published JWKS</div>
+      <div style="white-space:pre-wrap;word-break:break-word;">  <span style="color:var(--text-muted);">// Ed25519.verify(jws.signatures[*], envelope_hash, co_signers[*].pubkey)</span></div>
       <div style="color:var(--text-faint);font-size:11px;text-transform:uppercase;letter-spacing:0.14em;margin-top:24px;margin-bottom:14px;">Step 4 — recompute the on-chain anchor binding</div>
-      <div style="white-space:pre;">  <span style="color:var(--text-muted);">// SHA-256(JCS(anchor.anchor_proof.preimage)) == anchor.action_ref</span></div>
-      <div style="white-space:pre;">  <span style="color:var(--text-muted);">// anchor.action_ref == calldata at anchor.tx_hash on Arbitrum</span></div>
-      <div style="white-space:pre;">  <span style="color:var(--text-muted);">// block_time(anchor.anchor_block) * 1000 < timestamp_ms  // strict precedence</span></div>
+      <div style="white-space:pre-wrap;word-break:break-word;">  <span style="color:var(--text-muted);">// SHA-256(JCS(anchor.anchor_proof.preimage)) == anchor.action_ref</span></div>
+      <div style="white-space:pre-wrap;word-break:break-word;">  <span style="color:var(--text-muted);">// anchor.action_ref == calldata at anchor.tx_hash on Arbitrum</span></div>
+      <div style="white-space:pre-wrap;word-break:break-word;">  <span style="color:var(--text-muted);">// block_time(anchor.anchor_block) * 1000 &lt; timestamp_ms   // strict precedence</span></div>
     </div>
 
     <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px;">
-      <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;">
+      <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;box-sizing:border-box;">
         <div style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:var(--text-faint);margin-bottom:6px;">canonical_envelope</div>
         <div style="font-family:var(--font-mono);font-size:13px;color:var(--green);font-weight:700;">recomputes byte-identical</div>
       </div>
-      <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;">
+      <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;box-sizing:border-box;">
         <div style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:var(--text-faint);margin-bottom:6px;">admission_invariant</div>
-        <div style="font-family:var(--font-mono);font-size:13px;color:var(--green);font-weight:700;">2 independent signers verify</div>
+        <div style="font-family:var(--font-mono);font-size:13px;color:var(--green);font-weight:700;">independent signers verify</div>
       </div>
-      <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;">
+      <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;box-sizing:border-box;">
         <div style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:var(--text-faint);margin-bottom:6px;">anchoring_existence</div>
         <div style="font-family:var(--font-mono);font-size:13px;color:var(--green);font-weight:700;">Arbitrum tx, recomputable</div>
       </div>
-      <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;">
+      <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;box-sizing:border-box;">
         <div style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:var(--text-faint);margin-bottom:6px;">anchoring_precedence</div>
         <div style="font-family:var(--font-mono);font-size:13px;color:var(--green);font-weight:700;">strict, block_time &lt; outcome</div>
       </div>
     </div>
 
-    <p class="reveal" style="text-align:center;font-family:var(--font-mono);font-size:12px;color:var(--text-faint);max-width:720px;margin:0 auto;line-height:1.7;">Same recompute chain re-verified independently by the public <a href="https://github.com/babyblueviper1/preaction-governance-conformance" target="_blank" rel="noopener noreferrer" style="color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(201,169,110,0.3);">preaction-governance-conformance</a> board — not by us, with the steps published.</p>
+    <p class="reveal" style="text-align:center;font-family:var(--font-mono);font-size:12px;color:var(--text-faint);max-width:720px;margin:0 auto;line-height:1.7;">This sample carries two of the three signers (Presidio's leg signs offline against a fixed canonical, public on <a href="https://github.com/x402-foundation/x402/issues/2332" target="_blank" rel="noopener noreferrer" style="color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(201,169,110,0.3);">x402#2332</a>). Same recompute chain re-verified independently by the public <a href="https://github.com/babyblueviper1/preaction-governance-conformance" target="_blank" rel="noopener noreferrer" style="color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(201,169,110,0.3);">preaction-governance-conformance</a> board — not by us, with the steps published.</p>
   </div>
 </section>
 
@@ -1582,7 +1585,7 @@ a.validation-card__date:hover { color: var(--gold); }
       <div class="flow-step__icon"><svg viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><circle cx="12" cy="12" r="3"/></svg></div>
       <div class="flow-step__title">Claim Decomposition</div>
       <div class="flow-step__desc">We break complex statements into verifiable atomic claims. Each one stands alone.</div>
-      <span class="flow-step__chip">gemma 4</span>
+      <span class="flow-step__chip">extractor</span>
     </div>
     <div class="flow-arrow"><svg viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="8" x2="22" y2="8"/><polyline points="16 2 22 8 16 14"/></svg></div>
     <div class="flow-step">
@@ -1946,7 +1949,7 @@ a.validation-card__date:hover { color: var(--gold); }
         <div class="pricing-card__unit">per query &middot; USDC &middot; Base &middot; SKALE &middot; Stellar</div>
         <ul class="pricing-card__features">
           <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Multi-step deep analysis</li>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Sonar Pro engine</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Deep-research engine</li>
           <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Comprehensive source verification</li>
           <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Higher confidence scoring</li>
           <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Extended context window</li>
@@ -1954,13 +1957,13 @@ a.validation-card__date:hover { color: var(--gold); }
         <a href="https://agentoracle.co/.well-known/x402.json" class="pricing-card__cta" target="_blank" rel="noopener noreferrer">View Manifest</a>
       </div>
     </div>
-    <div class="reveal" style="max-width:960px;margin:48px auto 0;padding:32px;border:1px solid var(--gold-dim);border-radius:14px;background:linear-gradient(160deg, rgba(201,169,110,0.04), var(--surface));">
+    <div class="reveal" style="max-width:960px;margin:48px auto 0;padding:28px 24px;border:1px solid var(--gold-dim);border-radius:14px;background:linear-gradient(160deg, rgba(201,169,110,0.04), var(--surface));box-sizing:border-box;overflow-wrap:break-word;word-wrap:break-word;">
       <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:24px;">
         <div style="flex:1;min-width:280px;">
           <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.12em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;">For agent orchestration platforms</div>
           <h3 style="font-size:20px;font-weight:600;margin:0 0 8px;color:var(--text);">Platform-tier pricing &mdash; integrating verification at scale</h3>
           <p style="font-size:14px;line-height:1.6;color:var(--text-muted);margin:0 0 12px;max-width:520px;">Building a platform that needs verification as a primitive? Volume pricing available for high-throughput integrations. Includes white-label receipt branding, custom mapping documents under your namespace, priority support, and a dedicated integration channel.</p>
-          <p style="font-size:13px;color:var(--text-muted);margin:0;">Open-source verifier client on npm: <a href="https://github.com/TKCollective/agentoracle-receipt-verify" target="_blank" rel="noopener noreferrer" style="color:var(--gold);text-decoration:none;border-bottom:1px dashed var(--gold-dim);"><code style="font-family:var(--font-mono);font-size:12px;">@agentoracle/receipt-verify</code></a> &mdash; your end users get the same offline cryptographic guarantees regardless of which platform issued the receipt.</p>
+          <p style="font-size:13px;color:var(--text-muted);margin:0;overflow-wrap:break-word;">Open-source verifier client on npm: <a href="https://github.com/TKCollective/agentoracle-receipt-verify" target="_blank" rel="noopener noreferrer" style="color:var(--gold);text-decoration:none;border-bottom:1px dashed var(--gold-dim);overflow-wrap:break-word;word-break:break-all;"><code style="font-family:var(--font-mono);font-size:12px;overflow-wrap:break-word;word-break:break-all;">@agentoracle/receipt-verify</code></a> &mdash; your end users get the same offline cryptographic guarantees regardless of which platform issued the receipt.</p>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px;min-width:200px;">
           <a href="mailto:Joe@agentoracle.co?subject=AgentOracle%20platform-tier%20pricing" class="pricing-card__cta" id="platformTierTalkBtn" style="background:var(--gold);color:#0A0A0A;border-color:var(--gold);text-align:center;cursor:pointer;" onclick="event.preventDefault();navigator.clipboard.writeText('Joe@agentoracle.co').then(()=>{var b=document.getElementById('platformTierTalkBtn');var orig=b.textContent;b.textContent='Copied — Joe@agentoracle.co';setTimeout(()=>{b.textContent=orig;},2500);});window.location.href='mailto:Joe@agentoracle.co?subject=AgentOracle%20platform-tier%20pricing';" title="Click to copy and open your mail client">Talk to us</a>
@@ -2262,11 +2265,11 @@ async function runEvaluation() {
 
   // Staged pipeline progress
   var stages = [
-    { name: 'Gemma 4 decompose', start: 0, end: 2500 },
-    { name: 'Sonar', start: 2500, end: 6000 },
-    { name: 'Sonar Pro', start: 2700, end: 7000 },
+    { name: 'Decompose', start: 0, end: 2500 },
+    { name: 'Model A', start: 2500, end: 6000 },
+    { name: 'Model B', start: 2700, end: 7000 },
     { name: 'Adversarial', start: 2900, end: 8500 },
-    { name: 'Gemma 4 cross-check', start: 8500, end: 11000 }
+    { name: 'Cross-check', start: 8500, end: 11000 }
   ];
   var stageTimers = [];
   function renderPipeline() {
