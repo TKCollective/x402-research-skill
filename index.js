@@ -3282,17 +3282,25 @@ app.get("/defi", (_req, res) => {
 //  Landing Page — served inline (no static files needed)
 // ═══════════════════════════════════════════════════════════════════
 
+// Production landing — v5 promoted 2026-06-30 after Joe approved on mobile +
+// desktop review. Keeping LANDING_PAGE_HTML import + /v4-archive route for
+// rollback safety in case anything surfaces post-deploy.
 app.get("/", (_req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.send(LANDING_PAGE_HTML);
+  res.send(LANDING_PAGE_V5_HTML);
 });
 
-// v5 preview — staged for review on mobile + desktop before promotion to /
-// Production / route stays unchanged until explicit approval.
+// /v5-preview kept as an alias for any existing links shared during review.
 app.get("/v5-preview", (_req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.setHeader("X-Robots-Tag", "noindex, nofollow");
   res.send(LANDING_PAGE_V5_HTML);
+});
+
+// /v4-archive serves the previous landing for rollback / comparison.
+app.get("/v4-archive", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  res.send(LANDING_PAGE_HTML);
 });
 
 // ── Demo Pages — interactive walkthrough + terminal animation ────
