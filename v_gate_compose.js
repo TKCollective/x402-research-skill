@@ -646,9 +646,20 @@ function registerVGateCompose(app) {
                         tier: "on-chain",
                         reference: trail_id,
                         tx_hash: gj.tx_hash,
+                        anchor_block: gj.anchor_block,
                         anchor_block_time: gj.timestamp,
                         precedence,
                         canonicalization_profile_id: CANONICALIZATION_PROFILE_ID,
+                        // Preimage exposure for end-to-end anchor-existence recompute
+                        // (giskard09 commit b4508eb 2026-06-30; babyblueviper1
+                        // acceptance criterion on autogen#7353: sha256(preimage_bytes)
+                        // must reproduce the on-chain calldata arg AND be reconstructable
+                        // from the trail's own public content). anchor_proof.preimage
+                        // is the four-field action-ref preimage; SHA-256(JCS(preimage))
+                        // = action_ref, which is what the Arbitrum tx commits to.
+                        anchor_proof: gj.anchor_proof || null,
+                        action_ref: gj.action_ref || null,
+                        proof_url: `${MYCELIUM_PROVIDER_URL}/trails/${trail_id}`,
                         recompute_cmd: `curl -s ${MYCELIUM_PROVIDER_URL}/mycelium/trails/${trail_id}/verify_chain`,
                       };
                       break;
