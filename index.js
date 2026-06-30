@@ -52,6 +52,7 @@ import express from "express";
 import cors from "cors";
 import axios from "axios";
 import { LANDING_PAGE_HTML } from "./landing-page.js";
+import { LANDING_PAGE_V5_HTML } from "./landing-page-v5-preview.js";
 import { DEMO_PAGE_HTML, DEMO_VIDEO_HTML } from "./demo-pages.js";
 import { BUSINESS_PAGE_HTML } from "./business-page.js";
 import { BENCHMARKS_HTML } from "./benchmarks-page.js";
@@ -3284,6 +3285,14 @@ app.get("/defi", (_req, res) => {
 app.get("/", (_req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.send(LANDING_PAGE_HTML);
+});
+
+// v5 preview — staged for review on mobile + desktop before promotion to /
+// Production / route stays unchanged until explicit approval.
+app.get("/v5-preview", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  res.send(LANDING_PAGE_V5_HTML);
 });
 
 // ── Demo Pages — interactive walkthrough + terminal animation ────
