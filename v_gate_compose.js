@@ -180,15 +180,21 @@ async function submitTrailAsync(canonical_sha256, canonical_bytes_b64u, outcome_
       // no Ed25519 signature carried (the composed envelope already carries
       // three Ed25519 sigs against the canonical bytes).
       endpoint = `${MYCELIUM_PROVIDER_URL}/nexus/trail`;
+      // Field name `timestamp` (not `ts`) per giskard09/argentum-core
+      // profiles/jcs-rfc8785-action-ref-v1 (commit e76be64, 2026-06-29):
+      // canonicalization is content-addressed and field set is
+      // {action_type, agent_id, scope, timestamp}, timestamp as string.
       body = {
         packet_version: "1.0",
+        canonicalization_profile_id:
+          "8c7f71754e3daae1a0390d5e0287d51097d011e40df36bf15cad5c0f47efa05a",
         action_ref: screen_ref.action_ref,
         service: MYCELIUM_SERVICE_ID,
         preimage: {
           agent_id: screen_ref.screen.agent_id,
           action_type: screen_ref.screen.action_type,
           scope: screen_ref.screen.scope,
-          ts: screen_ref.screen.timestamp,
+          timestamp: screen_ref.screen.timestamp,
         },
         payment_hash: payload_subject?.claim_hash || canonical_sha256,
         output_hash: canonical_sha256,
@@ -593,6 +599,8 @@ function registerVGateCompose(app) {
       // unreliable for serverless reads, so the safe pattern is: POST the trail
       // now, then GET the returned trail_id in a tight poll loop. If anchor
       // confirms within budget, populate; otherwise stay absent.
+      const CANONICALIZATION_PROFILE_ID =
+        "8c7f71754e3daae1a0390d5e0287d51097d011e40df36bf15cad5c0f47efa05a";
       let anchor = null;
       if (MYCELIUM_SELF_CERTIFIED && screen_ref && screen_ref.action_ref && screen_ref.screen) {
         try {
@@ -601,13 +609,15 @@ function registerVGateCompose(app) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               packet_version: "1.0",
+              canonicalization_profile_id:
+                "8c7f71754e3daae1a0390d5e0287d51097d011e40df36bf15cad5c0f47efa05a",
               action_ref: screen_ref.action_ref,
               service: MYCELIUM_SERVICE_ID,
               preimage: {
                 agent_id: screen_ref.screen.agent_id,
                 action_type: screen_ref.screen.action_type,
                 scope: screen_ref.screen.scope,
-                ts: screen_ref.screen.timestamp,
+                timestamp: screen_ref.screen.timestamp,
               },
               payment_hash: payload.subject?.claim_hash || canonical_sha256,
               output_hash: canonical_sha256,
@@ -638,6 +648,7 @@ function registerVGateCompose(app) {
                         tx_hash: gj.tx_hash,
                         anchor_block_time: gj.timestamp,
                         precedence,
+                        canonicalization_profile_id: CANONICALIZATION_PROFILE_ID,
                         recompute_cmd: `curl -s ${MYCELIUM_PROVIDER_URL}/mycelium/trails/${trail_id}/verify_chain`,
                       };
                       break;
