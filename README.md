@@ -313,6 +313,11 @@ All four of us share standing instrumentation (ring buffers + CDP discovery-API 
 
 ## Links
 
+- White paper: [agentoracle.co/whitepaper](https://agentoracle.co/whitepaper) — Verifiable AI Action Records (standards-track EU AI Act Article 12)
+- Receipt spec: [TKCollective/agentoracle-receipt-spec](https://github.com/TKCollective/agentoracle-receipt-spec) — receipt profile, conformance vectors, reference verifiers (MIT)
+- PyPI: [langchain-agentoracle](https://pypi.org/project/langchain-agentoracle/) · reference verifier [agentoracle-receipt-verify](https://pypi.org/project/agentoracle-receipt-verify/)
+- IETF draft: [draft-krausz-verification-state](https://datatracker.ietf.org/doc/draft-krausz-verification-state/)
+- ERC-8210: [Agent Assurance / Receipt Profile Registry](https://ethereum-magicians.org/t/erc-8210-agent-assurance/28097)
 - Website: [agentoracle.co](https://agentoracle.co)
 - Trust docs: [agentoracle.co/trust](https://agentoracle.co/trust)
 - SDK: [packages/verify](./packages/verify)
@@ -331,18 +336,64 @@ MIT License
 
 ### LangChain
 
+`langchain-agentoracle` adds a verification step between what a LangChain agent retrieves
+and what it acts on. Each factual claim returns a cryptographically signed verification
+record — an `act` / `halt` / `abstain` recommendation with a per-claim confidence score,
+issued under the standards-track AgentOracle receipt profile (first entry in the ERC-8210
+Receipt Profile Registry) and byte-level verifiable offline against the reference verifier.
+
 ```bash
 pip install langchain-agentoracle
 ```
 
+Use it as a tool inside an agent flow:
+
 ```python
+from langchain.agents import initialize_agent, AgentType
+from langchain_openai import ChatOpenAI
 from langchain_agentoracle import AgentOracleVerifyTool
 
 verify = AgentOracleVerifyTool()
-result = verify.invoke("GPT-5 was released in March 2026")
+
+agent = initialize_agent(
+    tools=[verify],
+    llm=ChatOpenAI(model="gpt-4o", temperature=0),
+    agent=AgentType.OPENAI_FUNCTIONS,
+    verbose=True,
+)
+
+# The agent calls the verify tool before acting on any factual claim
+agent.invoke("Confirm whether GPT-5 was released in March 2026 before you cite it.")
 ```
 
-GitHub: [TKCollective/langchain-agentoracle-tools](https://github.com/TKCollective/langchain-agentoracle-tools)
+#### Verify the signed receipt
+
+Each verdict ships with a cryptographically signed verification record (JWS over a
+JCS-canonicalized payload, Ed25519/ES256). Records verify byte-for-byte offline against
+the reference verifier — no trust in the issuer required:
+
+```bash
+pip install agentoracle-receipt-verify
+```
+
+```python
+from agentoracle_receipt_verify import verify as verify_receipt
+
+# `receipt` is the signed envelope returned alongside each verdict;
+# `ao_jwks` is fetched from https://agentoracle.co/.well-known/jwks.json
+result = verify_receipt(receipt, jwks_by_issuer={
+    "https://agentoracle.co/.well-known/jwks.json": ao_jwks,
+})
+
+if result.valid:
+    print("verified — canonical:", result.canonical_sha256)
+```
+
+The verifier recomputes the canonical byte string, checks the signature against the
+published key set, and returns the canonical SHA-256 — identical output to the TypeScript
+sibling `@agentoracle/receipt-verify`.
+
+PyPI: [langchain-agentoracle](https://pypi.org/project/langchain-agentoracle/) · GitHub: [TKCollective/x402-research-skill](https://github.com/TKCollective/x402-research-skill)
 
 ### CrewAI
 
