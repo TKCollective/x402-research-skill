@@ -53,9 +53,15 @@ import cors from "cors";
 import axios from "axios";
 import { LANDING_PAGE_HTML } from "./landing-page.js";
 import { LANDING_PAGE_V5_HTML } from "./landing-page-v5-preview.js";
+import { LANDING_PAGE_V5_1_HTML } from "./landing-page-v5-1-kevin.js";
+import { LANDING_PAGE_V6_HTML } from "./landing-page-v6-preview.js";
 import { DEMO_PAGE_HTML, DEMO_VIDEO_HTML } from "./demo-pages.js";
 import { BUSINESS_PAGE_HTML } from "./business-page.js";
+import { BUSINESS_PAGE_V2_HTML } from "./business-page-v2.js";
+import { registerArticle12Checker } from "./article-12-checker.js";
+import { RECEIPT_REGISTRY_PAGE_HTML } from "./receipt-registry-page.js";
 import { BENCHMARKS_HTML } from "./benchmarks-page.js";
+import { WHITEPAPER_HTML } from "./whitepaper-page.js";
 import { FAVICON_ICO, FAVICON_SVG, FAVICON_16, FAVICON_32, APPLE_TOUCH, OG_IMAGE } from "./favicons.js";
 import { registerVGateCompose, COMPOSED_PUBLIC_JWK } from "./v_gate_compose.js";
 
@@ -3287,13 +3293,43 @@ app.get("/defi", (_req, res) => {
 // rollback safety in case anything surfaces post-deploy.
 app.get("/", (_req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.send(LANDING_PAGE_V5_HTML);
+  res.send(LANDING_PAGE_V6_HTML);
 });
 
 // /v5-preview kept as an alias for any existing links shared during review.
 app.get("/v5-preview", (_req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  res.send(LANDING_PAGE_V5_1_HTML);
+});
+
+// /v5-1-archive keeps the pre-Jul-2 v5.1 available for rollback (noindex).
+app.get("/v5-1-archive", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  res.send(LANDING_PAGE_V5_1_HTML);
+});
+
+// /v5-archive keeps the pre-Jul-2 v5 available for rollback (noindex).
+app.get("/v5-archive", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
   res.send(LANDING_PAGE_V5_HTML);
+});
+
+// /kevin-preview serves the v5.1 preview (language matrix + Jul 2 milestones)
+app.get("/kevin-preview", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  res.send(LANDING_PAGE_V5_1_HTML);
+});
+
+// /lp-v6-preview serves the v6 polish pass (pricing consistency, capability sharpening,
+// persona reorder to compliance-first, ticker trim, buyer CTA in banner)
+app.get("/lp-v6-preview", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  res.send(LANDING_PAGE_V6_HTML);
 });
 
 // /v4-archive serves the previous landing for rollback / comparison.
@@ -3306,13 +3342,52 @@ app.get("/v4-archive", (_req, res) => {
 // ── Demo Pages — interactive walkthrough + terminal animation ────
 app.get("/business", (_req, res) => {
   res.setHeader("Cache-Control", "public, max-age=300, s-maxage=600");
+  res.send(BUSINESS_PAGE_V2_HTML);
+});
+
+// /business-archive keeps the pre-Jul-2 pricing page available for rollback (noindex).
+app.get("/business-archive", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
   res.send(BUSINESS_PAGE_HTML);
+});
+
+// /business-preview alias for any existing review links.
+app.get("/business-preview", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  res.send(BUSINESS_PAGE_V2_HTML);
+});
+
+// /article-12 — free EU AI Act Article 12 Considerations tool.
+registerArticle12Checker(app);
+
+// /receipt-registry — canonical AO-side home for the ERC-8210 Post 46 follow-up substance.
+app.get("/receipt-registry", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Cache-Control", "public, max-age=300, s-maxage=600");
+  res.send(RECEIPT_REGISTRY_PAGE_HTML);
 });
 
 app.get("/benchmarks", (_req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("Cache-Control", "public, max-age=300");
   res.send(BENCHMARKS_HTML);
+});
+
+// /whitepaper — HTML rendering of the July 2026 white paper.
+app.get("/whitepaper", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Cache-Control", "public, max-age=600, s-maxage=1800");
+  res.send(WHITEPAPER_HTML);
+});
+
+// /whitepaper.pdf — downloadable PDF companion.
+app.get("/whitepaper.pdf", (_req, res) => {
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", 'inline; filename="Verifiable-AI-Action-Records-Krausz-2026.pdf"');
+  res.setHeader("Cache-Control", "public, max-age=600, s-maxage=1800");
+  res.sendFile("whitepaper.pdf", { root: process.cwd() });
 });
 
 app.get("/demo", (_req, res) => {

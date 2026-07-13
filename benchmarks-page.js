@@ -71,6 +71,7 @@ const BENCHMARKS_HTML = `<!doctype html>
     <a href="/business">Enterprise</a>
     <a href="/demo">Demo</a>
     <a href="/benchmarks">Benchmarks</a>
+    <a href="/whitepaper">White Paper</a>
   </nav>
 </header>
 

@@ -30,6 +30,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "whitepaper.pdf",
+      "use": "@vercel/static"
+    },
+    {
       "src": "index.js",
       "use": "@vercel/node",
       "config": { "maxDuration": 60 }
@@ -63,6 +67,10 @@
     {
       "src": "/ao-logo-v8.png",
       "dest": "/ao-logo-v8.png"
+    },
+    {
+      "src": "/whitepaper.pdf",
+      "dest": "/whitepaper.pdf"
     },
     {
       "src": "/(.*)",
