@@ -1558,7 +1558,7 @@ a.validation-card__date:hover { color: var(--gold); }
       </div>
       <div class="who-uses__card">
         <div class="who-uses__role">Compliance Officers</div>
-        <p>EU AI Act Article 12 record-keeping (high-risk AI systems, applies Aug 2, 2026), NIST AI RMF measurement — covered by cryptographic receipts that don’t require trusting us.</p>
+        <p>EU AI Act Article 12 record-keeping (Annex III high-risk systems, applies from Dec 2, 2027 under the Digital Omnibus deferral), NIST AI RMF measurement — covered by cryptographic receipts that don’t require trusting us.</p>
       </div>
       <div class="who-uses__card">
         <div class="who-uses__role">Developer Tooling Founders</div>

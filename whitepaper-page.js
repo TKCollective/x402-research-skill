@@ -136,7 +136,7 @@ export const WHITEPAPER_HTML = `<!doctype html>
   <div class="subtitle">A Standards-Track Approach to EU AI Act Compliance</div>
   <div class="meta">
     <strong>Joe Krausz</strong> — AgentOracle (TK Collective LLC)<br>
-    Version 1.2.1 · Revised 2026-07-22 · <a href="https://agentoracle.co">agentoracle.co</a> · <a href="mailto:joe@agentoracle.co">joe@agentoracle.co</a>
+    Version 1.3 · Revised 2026-07-23 · <a href="https://agentoracle.co">agentoracle.co</a> · <a href="mailto:joe@agentoracle.co">joe@agentoracle.co</a>
   </div>
   <div class="disclaimer">
     This paper is technical commentary intended for compliance, audit, and engineering audiences. It is not legal advice. Statements about Regulation (EU) 2024/1689 are drawn from the operative text of the Regulation; statements about implementations are drawn from public, independently checkable artifacts cited in the References.
@@ -149,7 +149,7 @@ export const WHITEPAPER_HTML = `<!doctype html>
 
 <h2>Executive Summary</h2>
 
-<p>On 2 August 2026, the record-keeping obligations of Article 12 of the EU Artificial Intelligence Act (Regulation (EU) 2024/1689) begin to apply to high-risk AI systems. Article 12 requires that such systems technically allow the automatic recording of events over their lifetime, and that those records support risk identification, post-market monitoring, and operational oversight. For systems in the Annex III categories — employment and worker management, credit, education, medical devices, and others — the obligations extend to recording the period of each use, the reference data consulted, the inputs that led to a match, and the identity of the natural persons involved in verifying results.</p>
+<p>The record-keeping obligations of Article 12 of the EU Artificial Intelligence Act (Regulation (EU) 2024/1689) apply to standalone Annex III high-risk AI systems from 2 December 2027, after the Digital Omnibus deferred the original date of 2 August 2026; systems embedded in Annex I regulated products follow from 2 August 2028. (The amending act received final Council approval in June 2026; formal publication was pending at this revision.) Article 12 requires that such systems technically allow the automatic recording of events over their lifetime, and that those records support risk identification, post-market monitoring, and operational oversight. For systems in the Annex III categories — employment and worker management, credit, education, medical devices, and others — the obligations extend to recording the period of each use, the reference data consulted, the inputs that led to a match, and the identity of the natural persons involved in verifying results.</p>
 
 <p>Most organizations plan to meet these obligations with conventional application logs. This paper argues that conventional logs have a structural weakness as compliance evidence: they are mutable, they are not independently verifiable, and they require the auditor to trust the operator that produced them. A log line can be edited, backdated, or deleted, and nothing in the log itself reveals that this happened. A record that cannot prove its own integrity is a weak foundation for a legal obligation whose purpose is proof.</p>
 
@@ -298,7 +298,7 @@ verify(envelope, jwks_by_issuer=...)   # offline; no issuer service required</co
 
 <p><strong>Storage and enumeration.</strong> Receipts are self-contained JSON documents, typically one to a few kilobytes. They can be retained in ordinary object storage, exported for an examiner as a directory of files, and verified in bulk with the reference tooling. No live service is required at verification time.</p>
 
-<p><strong>Auditor experience.</strong> An examiner's requirements are the published specification, the issuers' JWKS URLs, and the record set. Everything else is local computation. Organizations preparing for August 2026 can rehearse this: hand a colleague the records and the public materials, and confirm they can verify the set with no further assistance.</p>
+<p><strong>Auditor experience.</strong> An examiner's requirements are the published specification, the issuers' JWKS URLs, and the record set. Everything else is local computation. Organizations preparing for these obligations can rehearse this: hand a colleague the records and the public materials, and confirm they can verify the set with no further assistance.</p>
 
 <p><strong>For platforms and integrators.</strong> Because the format is openly specified with MIT-licensed reference implementations, platforms can issue conformant receipts under their own infrastructure and add independent co-signers where engagements warrant. Procurement and audit language can reference the profile rather than any vendor — for example: <em>"record-keeping implemented in conformance with the receipt profile registered as verification.v0.3 in the ERC-8210 Receipt Profile Registry, normatively specified in draft-krausz-verification-state."</em> Referencing the profile keeps the requirement vendor-neutral while remaining precise and testable.</p>
 
@@ -306,7 +306,7 @@ verify(envelope, jwks_by_issuer=...)   # offline; no issuer service required</co
 
 <p>Article 12 asks a question most logging infrastructure was never designed to answer: can your records prove themselves? Conventional logs assert; they cannot prove. The architecture described here — canonical bytes, published keys, small verdict vocabulary with <em>halt</em> as a first-class outcome, independent co-signers over identical bytes, optional external-clock anchoring, and accuracy claims that anyone can re-run — is assembled entirely from open standards so that adopting the record format never means trusting a vendor.</p>
 
-<p>The underlying principle is older than the Regulation and will outlast it: evidence is what survives examination by someone who does not trust you. Records built to that standard satisfy more than a compliance checkbox — they change the character of the conversation with any examiner from assurance to demonstration. For high-risk AI systems facing the August 2026 deadline, that is the difference worth engineering for.</p>
+<p>The underlying principle is older than the Regulation and will outlast it: evidence is what survives examination by someone who does not trust you. Records built to that standard satisfy more than a compliance checkbox — they change the character of the conversation with any examiner from assurance to demonstration. For high-risk AI systems building toward the December 2027 deadline — with records that must exist well before it — that is the difference worth engineering for.</p>
 
 <h2>Acknowledgments</h2>
 

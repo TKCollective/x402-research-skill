@@ -394,6 +394,7 @@ a:hover { color: var(--gold-bright); }
   <div class="contact-cta">
     <h2>Ready to talk?</h2>
     <p>Tell us your use case in 3 sentences. We\u2019ll come back same-day with a yes/no on fit, a sample receipt against your content, and a pilot scope.</p>
+    <p style="margin-top:-16px;margin-bottom:24px;font-size:14px;color:var(--text-muted);">Prefer to read before writing? <a href="/whitepaper" style="color:var(--gold);text-decoration:none;border-bottom:1px dashed rgba(201,169,110,0.3);">Read the white paper</a> \u2192 agentoracle.co/whitepaper</p>
     <a data-email="joe@agentoracle.co" href="mailto:joe@agentoracle.co?subject=AgentOracle%20pilot%20inquiry&body=About%20us:%20%5Bcompany%5D%0AUse%20case:%20%5Bbrief%20description%5D%0AVolume:%20%5Bestimated%20queries%2Fmonth%5D" class="btn btn--primary cta-mail">joe@agentoracle.co</a>
   </div>
 </div>

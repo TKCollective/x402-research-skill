@@ -4,16 +4,16 @@ export const LANDING_PAGE_V6_HTML = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AgentOracle — The Verification Layer for the Agent Economy | x402 Native</title>
-<meta name="description" content="Pay-per-query research API for AI agents. x402 protocol on Base mainnet + SKALE (gasless). Verify before you act — JWS-signed receipts, multi-source agreement-weighted confidence, USDC payments.">
+<title>AgentOracle — Verifiable Records for AI Agent Actions | EU AI Act Article 12</title>
+<meta name="description" content="Cryptographically signed, offline-verifiable records for every AI action. Built for EU AI Act Article 12 record-keeping (Annex III high-risk systems, applies from Dec 2, 2027 under the Digital Omnibus deferral). x402-native pay-per-query for developers; enterprise pilots invoice normally.">
 <link rel="canonical" href="https://agentoracle.co/">
 
 <!-- Open Graph (Facebook, LinkedIn, Discord, Slack) -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AgentOracle">
 <meta property="og:url" content="https://agentoracle.co/">
-<meta property="og:title" content="AgentOracle — The Verification Layer for the Agent Economy">
-<meta property="og:description" content="Pay-per-query research API for AI agents. x402 on Base + SKALE. Verify before you act.">
+<meta property="og:title" content="AgentOracle — Verifiable Records for AI Agent Actions | EU AI Act Article 12">
+<meta property="og:description" content="Cryptographically signed, offline-verifiable records for every AI action. Built for EU AI Act Article 12 record-keeping (Annex III high-risk systems, applies from Dec 2, 2027 under the Digital Omnibus deferral). x402-native pay-per-query for developers; enterprise pilots invoice normally.">
 <meta property="og:image" content="https://agentoracle.co/og-image.png?v=20260527">
 <meta property="og:image:secure_url" content="https://agentoracle.co/og-image.png?v=20260527">
 <meta property="og:image:type" content="image/png">
@@ -26,8 +26,8 @@ export const LANDING_PAGE_V6_HTML = `<!DOCTYPE html>
 <meta name="twitter:site" content="@AgentOracle_AI">
 <meta name="twitter:creator" content="@AgentOracle_AI">
 <meta name="twitter:url" content="https://agentoracle.co/">
-<meta name="twitter:title" content="AgentOracle — The Verification Layer for the Agent Economy">
-<meta name="twitter:description" content="Pay-per-query research API for AI agents. x402 on Base + SKALE. Verify before you act.">
+<meta name="twitter:title" content="AgentOracle — Verifiable Records for AI Agent Actions | EU AI Act Article 12">
+<meta name="twitter:description" content="Cryptographically signed, offline-verifiable records for every AI action. Built for EU AI Act Article 12 record-keeping (Annex III high-risk systems, applies from Dec 2, 2027 under the Digital Omnibus deferral). x402-native pay-per-query for developers; enterprise pilots invoice normally.">
 <meta name="twitter:image" content="https://agentoracle.co/og-image.png?v=20260527">
 <meta name="twitter:image:alt" content="AgentOracle — The verification layer for the agent economy">
 
@@ -1205,15 +1205,18 @@ a.validation-card__date:hover { color: var(--gold); }
       <span class="whats-new__pulse"></span>
       <span class="whats-new__label">New</span>
       <span class="whats-new__track" id="whatsNewTrack">
-        <span class="whats-new__item active" data-idx="0"><span class="whats-new__date">Jun 1</span><span class="whats-new__text">Open-source receipt verifier published — offline JWS verification, MIT licensed → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-receipt-verify" target="_blank" rel="noopener noreferrer">github</a></span></span>
-        <span class="whats-new__item" data-idx="1"><span class="whats-new__date">Jun 1</span><span class="whats-new__text">Cross-operator benchmark live — open methodology, open submissions → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-benchmark" target="_blank" rel="noopener noreferrer">github</a></span></span>
-        <span class="whats-new__item" data-idx="2"><span class="whats-new__date">Jun 6</span><span class="whats-new__text">IETF Internet-Draft FILED — draft-krausz-verification-state-01 → <a class="whats-new__link" href="https://datatracker.ietf.org/doc/draft-krausz-verification-state/" target="_blank" rel="noopener noreferrer">datatracker</a></span></span>
-        <span class="whats-new__item" data-idx="3"><span class="whats-new__date">May 30</span><span class="whats-new__text">Receipt spec v0.3 — binary-halt gate + canonical/derived/version-bound mapping → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-receipt-spec/tree/v0.3-binary-halt" target="_blank" rel="noopener noreferrer">spec</a></span></span>
-        <span class="whats-new__item" data-idx="4"><span class="whats-new__date">May 28</span><span class="whats-new__text">AVeriTeC 2024 dev published — 57.6% overall, held-out 57.7%, MIT licensed → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-eval-harness" target="_blank" rel="noopener noreferrer">repo</a></span></span>
-        <span class="whats-new__item" data-idx="5"><span class="whats-new__date">May 27</span><span class="whats-new__text">Pinned in x402trace v0.3.3 — first operator-contributed fixture in the harness → <a class="whats-new__link" href="https://github.com/fardinvahdat/x402trace/releases/tag/v0.3.3" target="_blank" rel="noopener noreferrer">release</a></span></span>
-        <span class="whats-new__item" data-idx="6"><span class="whats-new__date">May 26</span><span class="whats-new__text">Live on SKALE Base — first paid settlement gasless on SKALE → <a class="whats-new__link" href="https://skale-base-explorer.skalenodes.com/tx/0x809361edad3ea6aebfacea978c6d6acf8cb32f7f03e4b5d13ee070e00c9f8e42" target="_blank" rel="noopener noreferrer">explorer</a></span></span>
-        <span class="whats-new__item" data-idx="7"><span class="whats-new__date">May 11</span><span class="whats-new__text">Tutorial #4: claim verification in AI content approval workflows → <a class="whats-new__link" href="https://dev.to/agentoracle/how-to-add-claim-verification-to-your-ai-content-approval-workflow-3797" target="_blank" rel="noopener noreferrer">dev.to</a></span></span>
-        <span class="whats-new__item" data-idx="8"><span class="whats-new__date">May 8</span><span class="whats-new__text">Indexed in Coinbase Bazaar — 8 settlements verified → <a class="whats-new__link" href="https://api.cdp.coinbase.com/platform/v2/x402/discovery/merchant?payTo=0xdF90200B0031051BbF7a66BB9387d2Ecf599e109" target="_blank" rel="noopener noreferrer">discovery</a></span></span>
+        <span class="whats-new__item active" data-idx="0"><span class="whats-new__date">Jul 7</span><span class="whats-new__text">White paper v1.1 published — independent third-signer PRESIDIO EOOD acknowledged → <a class="whats-new__link" href="/whitepaper">whitepaper</a></span></span>
+        <span class="whats-new__item" data-idx="1"><span class="whats-new__date">Jul 5</span><span class="whats-new__text">ERC-8210 first registered profile in the Receipt Profile Registry → <a class="whats-new__link" href="https://ethereum-magicians.org/t/erc-8210-agent-assurance/28097/46" target="_blank" rel="noopener noreferrer">registry post</a></span></span>
+        <span class="whats-new__item" data-idx="2"><span class="whats-new__date">Jul 2</span><span class="whats-new__text">AgentTrust conformance suite merged into argentum-core — second independent implementer over the same envelope → <a class="whats-new__link" href="https://github.com/giskard09/argentum-core/tree/main/examples/conformance/agenttrust-v1" target="_blank" rel="noopener noreferrer">argentum-core</a></span></span>
+        <span class="whats-new__item" data-idx="3"><span class="whats-new__date">Jun 1</span><span class="whats-new__text">Open-source receipt verifier published — offline JWS verification, MIT licensed → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-receipt-verify" target="_blank" rel="noopener noreferrer">github</a></span></span>
+        <span class="whats-new__item" data-idx="4"><span class="whats-new__date">Jun 1</span><span class="whats-new__text">Cross-operator benchmark live — open methodology, open submissions → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-benchmark" target="_blank" rel="noopener noreferrer">github</a></span></span>
+        <span class="whats-new__item" data-idx="5"><span class="whats-new__date">Jun 6</span><span class="whats-new__text">IETF Internet-Draft filed — draft-krausz-verification-state-00 (revised to -01 on Jun 12) → <a class="whats-new__link" href="https://datatracker.ietf.org/doc/draft-krausz-verification-state/" target="_blank" rel="noopener noreferrer">datatracker</a></span></span>
+        <span class="whats-new__item" data-idx="6"><span class="whats-new__date">May 30</span><span class="whats-new__text">Receipt spec v0.3 — binary-halt gate + canonical/derived/version-bound mapping → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-receipt-spec/tree/v0.3-binary-halt" target="_blank" rel="noopener noreferrer">spec</a></span></span>
+        <span class="whats-new__item" data-idx="7"><span class="whats-new__date">May 28</span><span class="whats-new__text">AVeriTeC 2024 dev published — 57.6% overall, held-out 57.7%, MIT licensed → <a class="whats-new__link" href="https://github.com/TKCollective/agentoracle-eval-harness" target="_blank" rel="noopener noreferrer">repo</a></span></span>
+        <span class="whats-new__item" data-idx="8"><span class="whats-new__date">May 27</span><span class="whats-new__text">Pinned in x402trace v0.3.3 — first operator-contributed fixture in the harness → <a class="whats-new__link" href="https://github.com/fardinvahdat/x402trace/releases/tag/v0.3.3" target="_blank" rel="noopener noreferrer">release</a></span></span>
+        <span class="whats-new__item" data-idx="9"><span class="whats-new__date">May 26</span><span class="whats-new__text">Live on SKALE Base — first paid settlement gasless on SKALE → <a class="whats-new__link" href="https://skale-base-explorer.skalenodes.com/tx/0x809361edad3ea6aebfacea978c6d6acf8cb32f7f03e4b5d13ee070e00c9f8e42" target="_blank" rel="noopener noreferrer">explorer</a></span></span>
+        <span class="whats-new__item" data-idx="10"><span class="whats-new__date">May 11</span><span class="whats-new__text">Tutorial #4: claim verification in AI content approval workflows → <a class="whats-new__link" href="https://dev.to/agentoracle/how-to-add-claim-verification-to-your-ai-content-approval-workflow-3797" target="_blank" rel="noopener noreferrer">dev.to</a></span></span>
+        <span class="whats-new__item" data-idx="11"><span class="whats-new__date">May 8</span><span class="whats-new__text">Indexed in Coinbase Bazaar — 8 settlements verified → <a class="whats-new__link" href="https://api.cdp.coinbase.com/platform/v2/x402/discovery/merchant?payTo=0xdF90200B0031051BbF7a66BB9387d2Ecf599e109" target="_blank" rel="noopener noreferrer">discovery</a></span></span>
       </span>
     </div>
     <h1 class="hero__headline">
@@ -1468,7 +1471,7 @@ a.validation-card__date:hover { color: var(--gold); }
         <span class="proof-tier__label">Standards</span>
         <ul class="proof-tier__list">
           <li><a href="https://datatracker.ietf.org/doc/draft-krausz-verification-state/" target="_blank" rel="noopener noreferrer">IETF draft-krausz-verification-state-01</a> — filed June 6, 2026</li>
-          <li><a href="https://github.com/wangbin9953/erc8210-aap/pull/4" target="_blank" rel="noopener noreferrer">ERC-8210 receipt profile</a> — submitted as candidate entry</li>
+          <li><a href="https://github.com/wangbin9953/erc8210-aap/pull/4" target="_blank" rel="noopener noreferrer">ERC-8210 receipt profile</a> — first registered profile in the Receipt Profile Registry (<a href="https://ethereum-magicians.org/t/erc-8210-agent-assurance/28097/46" target="_blank" rel="noopener noreferrer">registry post</a>)</li>
           <li><a href="https://github.com/TKCollective/agentoracle-receipt-spec/tree/v0.3-binary-halt" target="_blank" rel="noopener noreferrer">verification.v0.3 spec</a> — MIT licensed</li>
         </ul>
       </div>
@@ -1510,24 +1513,24 @@ a.validation-card__date:hover { color: var(--gold); }
   <div class="reveal">
     <div class="section-eyebrow">live receipts</div>
     <h2 class="section-title">Every response, <span class="section-title-gold">cryptographically signed</span>.</h2>
-    <p class="section-subtitle">Sample receipts. Real signatures. Each one verifiable against the public JWKS at agentoracle.co/.well-known/jwks.json.</p>
+    <p class="section-subtitle">Sample receipts. Real signatures. Each one verifiable against the public JWKS at agentoracle.co/.well-known/jwks.json. <span style="color:var(--text-faint);font-size:12.5px;display:block;margin-top:6px;font-family:var(--font-mono);">claim.score = truth-score of the claim (0 = false, 1 = true) &middot; verdict.conf = system confidence in the recommendation</span></p>
     <div class="receipts-feed__grid">
       <div class="receipt-card">
         <div class="receipt-card__hd"><span class="receipt-card__time">11:47 AM</span><span class="receipt-card__verdict receipt-card__verdict--act">ACT</span></div>
-        <div class="receipt-card__claim">“Bitcoin is currently trading above $80,000.”</div>
-        <div class="receipt-card__meta"><span>confidence 0.98</span><span>4 sources</span><span>kid: ao-receipt-2026-04-ed25519-f2753b7c</span></div>
+        <div class="receipt-card__claim">“Bitcoin was created by Satoshi Nakamoto in 2008.”</div>
+        <div class="receipt-card__meta"><span>verdict.conf 0.98</span><span>claim.score 0.96</span><span>kid: ao-receipt-2026-04-ed25519-f2753b7c</span></div>
         <div class="receipt-card__sig">eyJhbGciOiJFZERTQSIsImtpZCI6ImFvLXJlY2VpcHQtMjAyNi0wNC0&hellip;</div>
       </div>
       <div class="receipt-card">
         <div class="receipt-card__hd"><span class="receipt-card__time">12:02 PM</span><span class="receipt-card__verdict receipt-card__verdict--reject">REJECT</span></div>
         <div class="receipt-card__claim">“Vaccines cause autism in 1 in 50 children.”</div>
-        <div class="receipt-card__meta"><span>confidence 0.99</span><span>CDC, NEJM, WHO</span><span>contradicted by all 4 sources</span></div>
+        <div class="receipt-card__meta"><span>verdict.conf 0.99</span><span>claim.score 0.02</span><span>contradicted by CDC, NEJM, WHO</span></div>
         <div class="receipt-card__sig">eyJhbGciOiJFZERTQSIsImtpZCI6ImFvLXJlY2VpcHQtMjAyNi0wNC0&hellip;</div>
       </div>
       <div class="receipt-card">
         <div class="receipt-card__hd"><span class="receipt-card__time">3:21 PM</span><span class="receipt-card__verdict receipt-card__verdict--abstain">ABSTAIN</span></div>
         <div class="receipt-card__claim">“Acme Corp’s Q3 2025 earnings exceeded guidance by 12%.”</div>
-        <div class="receipt-card__meta"><span>confidence 0.41</span><span>insufficient sources</span><span>agreement.provisional: true</span></div>
+        <div class="receipt-card__meta"><span>verdict.conf 0.41</span><span>claim.score n/a</span><span>agreement.provisional: true</span></div>
         <div class="receipt-card__sig">eyJhbGciOiJFZERTQSIsImtpZCI6ImFvLXJlY2VpcHQtMjAyNi0wNC0&hellip;</div>
       </div>
       <div class="receipt-card">
@@ -1932,7 +1935,7 @@ a.validation-card__date:hover { color: var(--gold); }
         <ul class="pricing-card__features">
           <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Full 4-source claim verification</li>
           <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Per-claim verdicts + evidence</li>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>act or halt output (binary gate, IETF -01)</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>act or halt output (binary gate, IETF -00)</li>
           <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Adversarial scanning included</li>
           <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>On-chain payment verification</li>
         </ul>
@@ -2148,7 +2151,7 @@ a.validation-card__date:hover { color: var(--gold); }
     </div>
     <div class="faq-grid reveal">
       <div class="faq-item is-open"><button class="faq-item__trigger" onclick="this.closest('.faq-item').classList.toggle('is-open')">What is the x402 protocol?<svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-item__body"><div class="faq-item__answer">x402 is an open protocol by Coinbase that enables HTTP-native payments. Instead of API keys, your agent includes a payment proof in the <code>X-PAYMENT</code> header of each request. The server verifies the on-chain payment and returns the response.</div></div></div>
-      <div class="faq-item"><button class="faq-item__trigger" onclick="this.closest('.faq-item').classList.toggle('is-open')">Do I need a crypto wallet?<svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-item__body"><div class="faq-item__answer">Yes, your agent needs a wallet with USDC on Base. The <code>/preview</code> endpoint is completely free and requires no wallet — use it to test first. Most agent frameworks support wallet integration through Coinbase CDP.</div></div></div>
+      <div class="faq-item"><button class="faq-item__trigger" onclick="this.closest('.faq-item').classList.toggle('is-open')">Do I need a crypto wallet?<svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-item__body"><div class="faq-item__answer">For pay-per-query API use with x402, yes — your agent uses a wallet with USDC on Base. <strong>Businesses and enterprise pilots invoice normally with a card or NET-30 — no wallet or crypto involved.</strong> See <a href="/business" style="color:var(--gold);text-decoration:none;">/business</a>. The <code>/preview</code> endpoint is completely free and requires no wallet — use it to test first.</div></div></div>
       <div class="faq-item"><button class="faq-item__trigger" onclick="this.closest('.faq-item').classList.toggle('is-open')">What chains and currencies are supported?<svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-item__body"><div class="faq-item__answer">USDC on Base (L2), USDC.e on SKALE Base (zero gas fees), and native USDC on Stellar. Same endpoint — agent picks the cheapest chain. EURC is also accepted on Base.</div></div></div>
       <div class="faq-item"><button class="faq-item__trigger" onclick="this.closest('.faq-item').classList.toggle('is-open')">What's the difference between /evaluate and /research?<svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-item__body"><div class="faq-item__answer"><code>/evaluate</code> (free during beta) verifies claims you already have — input any text, get per-claim ACT/VERIFY/REJECT verdicts. <code>/research</code> ($0.02) fetches new information from the web and returns structured results with confidence scoring.</div></div></div>
       <div class="faq-item"><button class="faq-item__trigger" onclick="this.closest('.faq-item').classList.toggle('is-open')">Is there a rate limit?<svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-item__body"><div class="faq-item__answer">100 requests per hour per IP for paid endpoints. 20 requests per hour for the free <code>/preview</code> endpoint. Rate limit headers are included on every response.</div></div></div>
@@ -2182,8 +2185,9 @@ a.validation-card__date:hover { color: var(--gold); }
           <a href="https://github.com/TKCollective/x402-research-skill" class="footer__social-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg></a>
         </div>
       </div>
-      <div><h4 class="footer__col-title">Product</h4><ul class="footer__col-links"><li><a href="#features">Features</a></li><li><a href="#pricing">Pricing</a></li><li><a href="https://agentoracle.co/.well-known/x402.json" target="_blank" rel="noopener noreferrer">Docs</a></li><li><a href="#playground">Demo</a></li></ul></div>
-      <div><h4 class="footer__col-title">Community</h4><ul class="footer__col-links"><li><a href="https://x.com/AgentOracle_AI" target="_blank" rel="noopener noreferrer">X / Twitter</a></li><li><a href="https://github.com/TKCollective/x402-research-skill" target="_blank" rel="noopener noreferrer">GitHub</a></li></ul></div>
+      <div><h4 class="footer__col-title">Product</h4><ul class="footer__col-links"><li><a href="#features">Features</a></li><li><a href="#pricing">Pricing</a></li><li><a href="/business">Business</a></li><li><a href="#playground">Demo</a></li><li><a href="https://agentoracle.co/.well-known/x402.json" target="_blank" rel="noopener noreferrer">Docs</a></li></ul></div>
+      <div><h4 class="footer__col-title">Resources</h4><ul class="footer__col-links"><li><a href="/whitepaper">White Paper</a></li><li><a href="/benchmarks">Benchmarks</a></li><li><a href="/article-12">Article 12 Tool</a></li><li><a href="/receipt-registry">Receipt Registry</a></li></ul></div>
+      <div><h4 class="footer__col-title">Community</h4><ul class="footer__col-links"><li><a href="https://x.com/AgentOracle_AI" target="_blank" rel="noopener noreferrer">X / Twitter</a></li><li><a href="https://github.com/TKCollective" target="_blank" rel="noopener noreferrer">GitHub</a></li></ul></div>
       <div><h4 class="footer__col-title">Built With</h4><ul class="footer__col-links"><li><a href="https://www.coinbase.com/developer-platform" target="_blank" rel="noopener noreferrer">x402 Protocol</a></li><li><a href="https://base.org" target="_blank" rel="noopener noreferrer">Base Network</a></li><li><a href="https://skale.space" target="_blank" rel="noopener noreferrer">SKALE</a></li><li><a href="https://stellar.org" target="_blank" rel="noopener noreferrer">Stellar</a></li></ul></div>
       <div><h4 class="footer__col-title">Trust</h4><ul class="footer__col-links"><li><a href="/trust">Trust Center</a></li><li><a href="/privacy">Privacy &amp; Data</a></li><li><a href="https://github.com/TKCollective/agentoracle-receipt-spec" target="_blank" rel="noopener noreferrer">Receipt Spec</a></li><li><a href="/.well-known/jwks.json" target="_blank" rel="noopener noreferrer">JWKS</a></li></ul></div>
     </div>

@@ -16,7 +16,10 @@
 // Standards citations (verified against real regulatory text and our shipped artifacts):
 //   - EU AI Act — Regulation (EU) 2024/1689, Article 12 (Record-keeping)
 //     https://eur-lex.europa.eu/eli/reg/2024/1689/oj
-//     Application date for high-risk AI system obligations: 2 August 2026
+//     Application date for standalone Annex III high-risk AI system obligations:
+//     2 December 2027 (Digital Omnibus deferral; Council final approval 29 June 2026;
+//     formal OJ publication pending at time of writing). Systems embedded in Annex I
+//     regulated products: 2 August 2028.
 //   - IETF draft-krausz-verification-state-01
 //     https://datatracker.ietf.org/doc/draft-krausz-verification-state/
 //   - ERC-8210 Receipt Profile Registry, Section D (verification.v0.3 as first entry)
@@ -70,7 +73,7 @@ const ARTICLE_12_PAGE_HTML = `<!DOCTYPE html>
   h1 em { font-style: normal; color: var(--gold); }
   .lede { font-size: 18px; color: var(--text-muted); max-width: 680px; margin: 0 0 12px; }
   .lede strong { color: var(--text); font-weight: 600; }
-  .deadline { display: inline-block; margin-top: 8px; padding: 8px 14px; background: rgba(255,107,107,0.08); border: 1px solid rgba(255,107,107,0.25); border-radius: 8px; color: #ffbcbc; font-family: var(--font-mono); font-size: 13px; }
+  .info-chip { display: block; max-width: 780px; margin-top: 12px; padding: 12px 16px; background: rgba(201,169,110,0.06); border: 1px solid rgba(201,169,110,0.22); border-radius: 8px; color: #e0d3b8; font-family: var(--font-mono); font-size: 13px; line-height: 1.55; }
 
   .form { margin-top: 48px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 32px; }
   .form__section { margin-bottom: 28px; }
@@ -185,7 +188,7 @@ const ARTICLE_12_PAGE_HTML = `<!DOCTYPE html>
     <h1>Article 12 <em>Considerations</em> for a specific AI initiative.</h1>
     <p class="lede">A free, personalized commentary on how <strong>EU AI Act Article 12 (record-keeping for high-risk AI systems)</strong> applies to a publicly announced AI initiative. Fill in the details below — you get a printable document you can share internally with your legal or compliance team.</p>
     <p class="lede">The document is educational commentary applied to information you provide, not an audit or assessment of any company.</p>
-    <div class="deadline">Article 12 obligations for high-risk AI systems apply on <strong>2 August 2026</strong>.</div>
+    <div class="info-chip">Article 12 obligations for standalone Annex III high-risk AI systems apply from <strong>2 December 2027</strong>, following the Digital Omnibus deferral (systems embedded in Annex I regulated products: <strong>2 August 2028</strong>). The extra time changes the calendar, not the work — records can't be backdated, and a 2028 examiner asking about earlier behavior can only be answered by records that existed then.</div>
 
     <form class="form" id="a12-form" autocomplete="off">
       <div class="form__section">
@@ -436,7 +439,7 @@ const ARTICLE_12_PAGE_HTML = `<!DOCTYPE html>
         claim_hash: 'sha256-DEMO-example-0000000000000000000000000000000000000000000000',
         initiative_ref: 'https://example.com/announcement'
       },
-      timestamp: '2026-08-02T09:00:00.000Z',
+      timestamp: '2027-12-02T09:00:00.000Z',
       v_gate:       { issuer: 'agentoracle.co',   verdict: 'act',  confidence: 0.87 },
       v_gate_skill: { issuer: 'agenttrust.uk',    verdict: 'act',  skill_results: [{status:'clean'}] },
       screen_ref:   { issuer: 'policy-issuer',    verdict: 'ALLOW', policy_version: 'sample-v1' },
@@ -449,7 +452,7 @@ const ARTICLE_12_PAGE_HTML = `<!DOCTYPE html>
       + '<div class="doc-header">'
       +   '<div class="doc-header__eyebrow">EU AI Act &middot; Article 12 &middot; Considerations Document</div>'
       +   '<h2>' + subject + '</h2>'
-      +   '<div class="doc-header__meta"><span>Prepared ' + dateStr + '</span><span>Article 12 applies 2 Aug 2026</span><span>Free · Educational</span></div>'
+      +   '<div class="doc-header__meta"><span>Prepared ' + dateStr + '</span><span>Article 12 applies 2 Dec 2027 (Annex III)</span><span>Free · Educational</span></div>'
       + '</div>'
       + preamble
       + '<h3>Scope</h3>'

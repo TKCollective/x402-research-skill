@@ -358,7 +358,7 @@ a:hover { color: var(--gold-bright); }
     <div class="compliance">
       <h3>Built for the regulations coming next</h3>
       <ul>
-        <li><strong>EU AI Act Article 12.</strong> Record-keeping for high-risk AI systems (applies Aug 2, 2026). Cryptographic receipts are tamper-evident and replayable.</li>
+        <li><strong>EU AI Act Article 12.</strong> Record-keeping for Annex III high-risk systems (applies from Dec 2, 2027 under the Digital Omnibus deferral). Cryptographic receipts are tamper-evident and replayable.</li>
         <li><strong>NIST AI RMF Measurement.</strong> Per-claim confidence + provenance + source attribution.</li>
         <li><strong>SOC 2 Type II.</strong> On roadmap, scoped with the Enterprise tier rollout.</li>
         <li><strong>Public JWKS.</strong> Any auditor can verify our receipts without trusting us. RFC 7515 / 7517 / 8037.</li>
