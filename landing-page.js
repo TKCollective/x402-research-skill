@@ -5,7 +5,7 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AgentOracle — The Verification Layer for the Agent Economy | x402 Native</title>
-<meta name="description" content="Pay-per-query research API for AI agents. x402 protocol on Base mainnet + SKALE (gasless). Verify before you act — JWS-signed receipts, multi-source agreement-weighted confidence, USDC payments.">
+<meta name="description" content="Cryptographically-signed pre-action verification records for AI agent actions. Standards-track (IETF draft-krausz-verification-state; first registered profile in the ERC-8210 Receipt Profile Registry). Built for EU AI Act Article 12 record-keeping (Annex III applies Dec 2, 2027).">
 <link rel="canonical" href="https://agentoracle.co/">
 
 <!-- Open Graph (Facebook, LinkedIn, Discord, Slack) -->
@@ -13,7 +13,7 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
 <meta property="og:site_name" content="AgentOracle">
 <meta property="og:url" content="https://agentoracle.co/">
 <meta property="og:title" content="AgentOracle — The Verification Layer for the Agent Economy">
-<meta property="og:description" content="Pay-per-query research API for AI agents. x402 on Base + SKALE. Verify before you act.">
+<meta property="og:description" content="Cryptographically-signed verification records for AI agent actions. Standards-track (IETF, ERC-8210). Built for EU AI Act Article 12.">
 <meta property="og:image" content="https://agentoracle.co/og-image.png?v=20260527">
 <meta property="og:image:secure_url" content="https://agentoracle.co/og-image.png?v=20260527">
 <meta property="og:image:type" content="image/png">
@@ -27,7 +27,7 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
 <meta name="twitter:creator" content="@AgentOracle_AI">
 <meta name="twitter:url" content="https://agentoracle.co/">
 <meta name="twitter:title" content="AgentOracle — The Verification Layer for the Agent Economy">
-<meta name="twitter:description" content="Pay-per-query research API for AI agents. x402 on Base + SKALE. Verify before you act.">
+<meta name="twitter:description" content="Cryptographically-signed verification records for AI agent actions. Standards-track (IETF, ERC-8210). Built for EU AI Act Article 12.">
 <meta name="twitter:image" content="https://agentoracle.co/og-image.png?v=20260527">
 <meta name="twitter:image:alt" content="AgentOracle — The verification layer for the agent economy">
 
@@ -1414,7 +1414,7 @@ a.validation-card__date:hover { color: var(--gold); }
         <span class="proof-tier__label">Standards</span>
         <ul class="proof-tier__list">
           <li><a href="https://datatracker.ietf.org/doc/draft-krausz-verification-state/" target="_blank" rel="noopener noreferrer">IETF draft-krausz-verification-state-01</a> — filed June 6, 2026</li>
-          <li><a href="https://github.com/wangbin9953/erc8210-aap/pull/4" target="_blank" rel="noopener noreferrer">ERC-8210 receipt profile</a> — submitted as candidate entry</li>
+          <li><a href="https://github.com/wangbin9953/erc8210-aap/pull/4" target="_blank" rel="noopener noreferrer">ERC-8210 Receipt Profile Registry</a> — first registered profile (<code style="font-family:var(--font-mono);font-size:11px;">verification.v0.3</code>)</li>
           <li><a href="https://github.com/TKCollective/agentoracle-receipt-spec/tree/v0.3-binary-halt" target="_blank" rel="noopener noreferrer">verification.v0.3 spec</a> — MIT licensed</li>
         </ul>
       </div>
@@ -1908,7 +1908,7 @@ a.validation-card__date:hover { color: var(--gold); }
           <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.12em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;">For agent orchestration platforms</div>
           <h3 style="font-size:20px;font-weight:600;margin:0 0 8px;color:var(--text);">Platform-tier pricing &mdash; integrating verification at scale</h3>
           <p style="font-size:14px;line-height:1.6;color:var(--text-muted);margin:0 0 12px;max-width:520px;">Building a platform that needs verification as a primitive? Volume pricing available for high-throughput integrations. Includes white-label receipt branding, custom mapping documents under your namespace, priority support, and a dedicated integration channel.</p>
-          <p style="font-size:13px;color:var(--text-muted);margin:0;">Open-source verifier client on npm: <a href="https://github.com/TKCollective/agentoracle-receipt-verify" target="_blank" rel="noopener noreferrer" style="color:var(--gold);text-decoration:none;border-bottom:1px dashed var(--gold-dim);"><code style="font-family:var(--font-mono);font-size:12px;">@agentoracle/receipt-verify</code></a> &mdash; your end users get the same offline cryptographic guarantees regardless of which platform issued the receipt.</p>
+          <p style="font-size:13px;color:var(--text-muted);margin:0;">Open-source verifier on PyPI: <a href="https://pypi.org/project/agentoracle-receipt-verify/" target="_blank" rel="noopener noreferrer" style="color:var(--gold);text-decoration:none;border-bottom:1px dashed var(--gold-dim);"><code style="font-family:var(--font-mono);font-size:12px;">pip install agentoracle-receipt-verify</code></a> &mdash; your end users get the same offline cryptographic guarantees regardless of which platform issued the receipt.</p>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px;min-width:200px;">
           <a href="mailto:Joe@agentoracle.co?subject=AgentOracle%20platform-tier%20pricing" class="pricing-card__cta" id="platformTierTalkBtn" style="background:var(--gold);color:#0A0A0A;border-color:var(--gold);text-align:center;cursor:pointer;" onclick="event.preventDefault();navigator.clipboard.writeText('Joe@agentoracle.co').then(()=>{var b=document.getElementById('platformTierTalkBtn');var orig=b.textContent;b.textContent='Copied — Joe@agentoracle.co';setTimeout(()=>{b.textContent=orig;},2500);});window.location.href='mailto:Joe@agentoracle.co?subject=AgentOracle%20platform-tier%20pricing';" title="Click to copy and open your mail client">Talk to us</a>

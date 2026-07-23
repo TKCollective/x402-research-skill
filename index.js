@@ -4270,7 +4270,7 @@ app.post("/verify-gate", express.json(), async (req, res) => {
       adversarial_pass: evalResult.adversarial_pass ?? true,
       latency_ms: latency,
       usage: "Embed trust verification into any API. POST content, get pass/fail with confidence score.",
-      sdk: "npm install agentoracle-verify — createVerificationGate() middleware for Express",
+      sdk: "pip install agentoracle-receipt-verify — createVerificationGate() middleware for Express",
     });
   } catch (err) {
     res.status(500).json({ error: "Verification failed", message: err.message });
@@ -4283,7 +4283,7 @@ app.get("/verify-gate", (_req, res) => {
     method: "POST",
     description: "Bi-directional verification gate. POST any content, get a pass/fail verdict with confidence scoring. Use this to embed trust verification into your own API.",
     price: "Free (public beta)",
-    sdk: "npm install agentoracle-verify",
+    sdk: "pip install agentoracle-receipt-verify",
     body: { content: "Text or JSON to verify", min_confidence: 0.5 },
     response: { pass: true, confidence: 0.87, recommendation: "act" },
   });
