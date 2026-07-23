@@ -1485,7 +1485,7 @@ a.validation-card__date:hover { color: var(--gold); }
         <ul class="proof-tier__list">
           <li><a href="https://github.com/babyblueviper1/preaction-governance-conformance" target="_blank" rel="noopener noreferrer">Public conformance board</a> — an outside party re-verified our entire system themselves and published the proof</li>
           <li><a href="https://github.com/giskard09/argentum-core/tree/main/examples/conformance/agentoracle-v1" target="_blank" rel="noopener noreferrer">argentum-core conformance suite</a> — merged June 17, 2026 · <a href="https://github.com/giskard09/argentum-core/blob/main/docs/mycelium-provider-protocol.md" target="_blank" rel="noopener noreferrer">Mycelium Provider</a></li>
-          <li><a href="https://github.com/giskard09/argentum-core/tree/main/examples/conformance/agenttrust-v1" target="_blank" rel="noopener noreferrer">AgentTrust conformance suite</a> — merged July 2, 2026 · independent second implementer over the same envelope</li>
+          <li><a href="https://github.com/giskard09/argentum-core/tree/main/examples/conformance/agenttrust-v1" target="_blank" rel="noopener noreferrer">AgentTrust conformance suite</a> — <a href="https://github.com/giskard09/argentum-core/pull/33" target="_blank" rel="noopener noreferrer">strict-canon re-sign merged July 16, 2026 (PR #33)</a> · byte-identical <code style="font-family:var(--font-mono);color:var(--gold);font-size:12.5px;">verification.v0.3+composed</code> under giskard's strict canon</li>
           <li><a href="https://github.com/TKCollective/agentoracle-eval-harness" target="_blank" rel="noopener noreferrer">AVeriTeC benchmark</a> — 57.6% overall, MIT licensed</li>
           <li><a href="https://api.cdp.coinbase.com/platform/v2/x402/discovery/merchant?payTo=0xdF90200B0031051BbF7a66BB9387d2Ecf599e109" target="_blank" rel="noopener noreferrer">Indexed in Coinbase Bazaar</a> — live on SKALE Base</li>
         </ul>
@@ -1495,7 +1495,7 @@ a.validation-card__date:hover { color: var(--gold); }
       <span class="shipped-timeline__label">What's shipped</span>
       <div class="shipped-timeline__items">
         <div class="shipped-timeline__item"><span class="shipped-timeline__date">Jul 2</span><span class="shipped-timeline__text">Python verifier live on PyPI</span></div>
-        <div class="shipped-timeline__item"><span class="shipped-timeline__date">Jul 2</span><span class="shipped-timeline__text">AgentTrust conformance merged (PR #28)</span></div>
+        <div class="shipped-timeline__item"><span class="shipped-timeline__date">Jul 16</span><span class="shipped-timeline__text">AgentTrust byte-identical (PR #33)</span></div>
         <div class="shipped-timeline__item"><span class="shipped-timeline__date">Jun 17</span><span class="shipped-timeline__text">argentum-core conformance merged (independent)</span></div>
         <div class="shipped-timeline__item"><span class="shipped-timeline__date">Jun 12</span><span class="shipped-timeline__text">IETF Internet-Draft -01 filed</span></div>
         <div class="shipped-timeline__item"><span class="shipped-timeline__date">May 26</span><span class="shipped-timeline__text">Live on SKALE Base</span></div>
