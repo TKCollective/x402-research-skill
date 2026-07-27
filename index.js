@@ -55,6 +55,14 @@ import { LANDING_PAGE_HTML } from "./landing-page.js";
 import { LANDING_PAGE_V5_HTML } from "./landing-page-v5-preview.js";
 import { LANDING_PAGE_V5_1_HTML } from "./landing-page-v5-1-kevin.js";
 import { LANDING_PAGE_V6_HTML } from "./landing-page-v6-preview.js";
+
+// Post-checkout key-delivery page. Static HTML lives at ./keys.html; loaded
+// once at boot rather than per-request. GATEWAY constant already inlined
+// at compile-time in the HTML (patched to production Zuplo URL).
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
+const __KEYS_HTML_PATH = fileURLToPath(new URL("./keys.html", import.meta.url));
+const KEYS_HTML = fs.readFileSync(__KEYS_HTML_PATH, "utf8");
 import { DEMO_PAGE_HTML, DEMO_VIDEO_HTML } from "./demo-pages.js";
 import { BUSINESS_PAGE_HTML } from "./business-page.js";
 import { BUSINESS_PAGE_V2_HTML } from "./business-page-v2.js";
@@ -751,6 +759,15 @@ app.get("/x402", (_req, res) => {
   res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300");
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.json(buildDiscoveryManifest());
+});
+
+// Post-checkout key-delivery page. Called by Stripe success_url redirect
+// with ?session_id=cs_test_.../cs_live_... Client-side JS in keys.html
+// fetches the minted key from the gateway and displays it once.
+app.get("/keys", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Cache-Control", "no-store");
+  res.send(KEYS_HTML);
 });
 
 // 5. UNIFIED PAYMENT MIDDLEWARE — Sawyer's accepts-array pattern

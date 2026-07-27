@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Your API Key — AgentOracle</title>
+<!--
+  Post-checkout key delivery page for agentoracle.co/keys
+
+  Standalone: no dependencies, no build step. Deploy this file to
+  https://agentoracle.co/keys — it is NOT served by the gateway.
+
+  Stripe Payment Link success_url must be:
+    https://agentoracle.co/keys?session_id={CHECKOUT_SESSION_ID}
+
+  CONFIG: set GATEWAY below to your deployed Zuplo URL.
+-->
+<style>
+  :root {
+    --bg: #0b0d10;
+    --panel: #14171c;
+    --border: #262b33;
+    --text: #e8eaed;
+    --muted: #9aa3af;
+    --accent: #7dd3a0;
+    --danger: #f2a08a;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  main {
+    width: 100%;
+    max-width: 560px;
+  }
+  .brand {
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+  p { margin: 0 0 16px; color: var(--muted); }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .keyrow {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+    margin: 4px 0 14px;
+  }
+  code#key {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--mono);
+    font-size: 13px;
+    background: #0e1114;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    color: var(--accent);
+    overflow-wrap: break-word;
+    word-break: break-all;
+    user-select: all;
+  }
+  button {
+    font: inherit;
+    font-size: 14px;
+    color: var(--text);
+    background: #1d2229;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 16px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.12s ease, border-color 0.12s ease;
+  }
+  button:hover { background: #252b34; border-color: #333a45; }
+  button:active { background: #1a1f26; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .notice {
+    font-size: 13px;
+    color: var(--muted);
+    border-left: 2px solid var(--border);
+    padding-left: 12px;
+    margin-top: 16px;
+  }
+  .notice strong { color: var(--text); font-weight: 600; }
+  .usage {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    background: #0e1114;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 16px;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .err { color: var(--danger); }
+  .spin {
+    display: inline-block;
+    width: 13px; height: 13px;
+    border: 2px solid var(--border);
+    border-top-color: var(--muted);
+    border-radius: 50%;
+    animation: r 0.7s linear infinite;
+    vertical-align: -2px;
+    margin-right: 8px;
+  }
+  @keyframes r { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <div class="brand">AgentOracle</div>
+
+  <!-- loading -->
+  <section id="loading" class="card">
+    <h1><span class="spin"></span>Retrieving your API key…</h1>
+    <p>One moment while we confirm your purchase.</p>
+  </section>
+
+  <!-- success -->
+  <section id="ok" class="card hidden">
+    <h1>Your API key</h1>
+    <p>Payment confirmed. Copy this key and store it somewhere safe.</p>
+    <div class="keyrow">
+      <code id="key"></code>
+      <button id="copy" type="button">Copy</button>
+    </div>
+    <div class="notice">
+      <strong>Available for 1 hour.</strong> You can reload this page during that
+      window. After it expires the key is still valid — but you'll need to contact
+      us to look it up, so save it now.
+    </div>
+    <div class="usage" id="usage"></div>
+  </section>
+
+  <!-- pending: webhook not landed yet -->
+  <section id="pending" class="card hidden">
+    <h1>Almost there…</h1>
+    <p>
+      Your payment went through, but the key is still being created. This
+      usually takes a few seconds.
+    </p>
+    <button id="retry" type="button">Check again</button>
+    <div class="notice">
+      Still nothing after a minute or two? Email
+      <strong>joe@agentoracle.co</strong> with your receipt and we'll send your
+      key directly.
+    </div>
+  </section>
+
+  <!-- error -->
+  <section id="fail" class="card hidden">
+    <h1 class="err">Couldn't retrieve your key</h1>
+    <p id="failmsg"></p>
+    <div class="notice">
+      Your payment is safe. Email <strong>joe@agentoracle.co</strong> with your
+      Stripe receipt and we'll get your key to you right away.
+    </div>
+  </section>
+</main>
+
+<script>
+  // ---- CONFIG -------------------------------------------------------------
+  // Replace <hash> with the deployed gateway host (Zuplo dashboard).
+  const GATEWAY = 'https://agentoracle-gateway-main-39fa17e.zuplo.app';
+  // -------------------------------------------------------------------------
+
+  const show = (id) => {
+    for (const s of ['loading', 'ok', 'pending', 'fail']) {
+      document.getElementById(s).classList.toggle('hidden', s !== id);
+    }
+  };
+
+  const failWith = (msg) => {
+    document.getElementById('failmsg').textContent = msg;
+    show('fail');
+  };
+
+  const sessionId = new URL(location.href).searchParams.get('session_id');
+
+  async function load() {
+    if (!sessionId) {
+      failWith(
+        'No checkout session was found in this link. If you just paid, use the ' +
+        'link in your Stripe receipt email.'
+      );
+      return;
+    }
+    if (!/^cs_(test|live)_[A-Za-z0-9]+$/.test(sessionId)) {
+      failWith('That checkout session ID is not valid.');
+      return;
+    }
+
+    show('loading');
+
+    let res;
+    try {
+      res = await fetch(
+        GATEWAY + '/v1/stripe/session/' + encodeURIComponent(sessionId) + '/key',
+        { headers: { accept: 'application/json' } }
+      );
+    } catch {
+      failWith('We could not reach the AgentOracle gateway. Check your connection and try again.');
+      return;
+    }
+
+    if (res.status === 404) { show('pending'); return; }
+
+    if (res.status === 429) {
+      failWith('Too many attempts from your network. Wait a minute, then reload this page.');
+      return;
+    }
+
+    if (!res.ok) {
+      failWith('The gateway returned an unexpected error (HTTP ' + res.status + ').');
+      return;
+    }
+
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      failWith('The gateway returned a response we could not read.');
+      return;
+    }
+
+    if (!data || !data.api_key) {
+      failWith('No API key was returned for this session.');
+      return;
+    }
+
+    // textContent (never innerHTML) — the key is data, not markup.
+    document.getElementById('key').textContent = data.api_key;
+    document.getElementById('usage').textContent =
+      'curl -X POST ' + GATEWAY + '/v1/compose \\\n' +
+      "  -H 'Authorization: Bearer " + data.api_key + "' \\\n" +
+      "  -H 'content-type: application/json' \\\n" +
+      "  -d '{ ... }'";
+    show('ok');
+  }
+
+  document.getElementById('copy').addEventListener('click', async () => {
+    const btn = document.getElementById('copy');
+    const value = document.getElementById('key').textContent;
+    try {
+      await navigator.clipboard.writeText(value);
+      btn.textContent = 'Copied';
+    } catch {
+      // Clipboard API needs a secure context; fall back to selecting the text.
+      const range = document.createRange();
+      range.selectNodeContents(document.getElementById('key'));
+      const sel = getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      btn.textContent = 'Press ⌘/Ctrl+C';
+    }
+    setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+  });
+
+  document.getElementById('retry').addEventListener('click', load);
+
+  load();
+</script>
+</body>
+</html>
