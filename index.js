@@ -2289,6 +2289,22 @@ app.get("/.well-known/x402-manifest.json", (_req, res) => {
 //  https://github.com/TKCollective/agentoracle-receipt-spec
 //  Verifiable offline under RFC 7517 / RFC 8037 / standard JOSE libraries.
 // ═══════════════════════════════════════════════════════════════════
+// Fresh production signer for the Zuplo gateway's POST /v1/compose endpoint,
+// rotated in 2026-07-27 to replace the fixture key (ao-fixture-v0.3-composed-
+// 2026-06) that shipped as a placeholder during MVP. Private half lives only in
+// Zuplo env AO_ED25519_PRIVATE_JWK; the site never sees it. Distinct from
+// COMPOSED_PUBLIC_JWK above, which the site's in-process /v1/v_gate signer
+// uses — the two signers are architecturally independent (Zuplo gateway vs.
+// this Node app) and each holds its own kid.
+const GATEWAY_COMPOSED_PUBLIC_JWK = {
+  crv: "Ed25519",
+  x: "bvi-Q2xWoKIZ_dWdJ5v1BdSzgCYALJKLrXa9Oz7Toio",
+  kty: "OKP",
+  kid: "ao-composed-2026-07-ed25519-3d44ba27",
+  alg: "EdDSA",
+  use: "sig"
+};
+
 const AGENT_ORACLE_JWKS = {
   keys: [
     {
@@ -2301,7 +2317,9 @@ const AGENT_ORACLE_JWKS = {
     },
     // v0.3+composed envelope signer — sibling endpoint /v1/v_gate.
     // Wired into AgentTrust's /v1/compose orchestrator. Public key only.
-    COMPOSED_PUBLIC_JWK
+    COMPOSED_PUBLIC_JWK,
+    // Zuplo gateway /v1/compose signer (self-serve API path).
+    GATEWAY_COMPOSED_PUBLIC_JWK
   ]
 };
 app.get("/.well-known/jwks.json", (_req, res) => {
