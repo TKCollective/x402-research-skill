@@ -2342,6 +2342,22 @@ const GATEWAY_COMPOSED_PUBLIC_JWK = {
   use: "sig"
 };
 
+// Fixture-suite signer for the detached RFC 7797 (b64=false + crit) sample
+// receipt in the spec repo (github.com/TKCollective/agentoracle-receipt-spec,
+// examples/sample_receipt_detached_jws.json). Published so a stranger fetching
+// the JWKS can verify the detached fixture end-to-end. Clearly labeled fixture
+// — the matching private half is committed IN THE SPEC REPO at
+// examples/jwks-fixture-detached.json because reproducibility of the fixture
+// bytes IS its purpose. Never used to sign any production receipt.
+const DETACHED_FIXTURE_PUBLIC_JWK = {
+  crv: "Ed25519",
+  x: "14OeViTfxu44QsPGfsGxKjClXj4mxuait-ZZwqpTqpw",
+  kty: "OKP",
+  kid: "ao-fixture-detached-rfc7797-2026-07-ed25519-0f8bf2a5",
+  alg: "EdDSA",
+  use: "sig"
+};
+
 const AGENT_ORACLE_JWKS = {
   keys: [
     {
