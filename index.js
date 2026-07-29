@@ -2356,7 +2356,10 @@ const AGENT_ORACLE_JWKS = {
     // Wired into AgentTrust's /v1/compose orchestrator. Public key only.
     COMPOSED_PUBLIC_JWK,
     // Zuplo gateway /v1/compose signer (self-serve API path).
-    GATEWAY_COMPOSED_PUBLIC_JWK
+    GATEWAY_COMPOSED_PUBLIC_JWK,
+    // Fixture-suite key for the detached RFC 7797 sample in the spec repo
+    // (kid clearly labeled `ao-fixture-detached-*`; never signs production).
+    DETACHED_FIXTURE_PUBLIC_JWK
   ]
 };
 app.get("/.well-known/jwks.json", (_req, res) => {
