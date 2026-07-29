@@ -63,6 +63,16 @@ import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 const __KEYS_HTML_PATH = fileURLToPath(new URL("./keys.html", import.meta.url));
 const KEYS_HTML = fs.readFileSync(__KEYS_HTML_PATH, "utf8");
+
+// v_gate mapping documents (content-addressed per verification.v0.3 §4.6).
+// Loaded byte-exact from disk at boot; the SHA-256 of these bytes IS the
+// content address in every receipt's v_gate.v_gate_mapping_hash field, so
+// verifiers can (a) fetch by sha256, (b) hash the response, (c) confirm the
+// bytes match the hash they received in the receipt. Rotated 2026-07-28 to
+// retire the fixture placeholder discovered by Msebenzi.
+const __MAPPING_AO_V03_PATH = fileURLToPath(new URL("./mapping-agentoracle-v0.3-2026-05-30.json", import.meta.url));
+const MAPPING_AO_V03_BYTES = fs.readFileSync(__MAPPING_AO_V03_PATH);
+const MAPPING_AO_V03_SHA256 = "0a78263976790df6e76cd9f3f441bf5a3b5c3a82e346b5aca43e49626881d7b0";
 import { DEMO_PAGE_HTML, DEMO_VIDEO_HTML } from "./demo-pages.js";
 import { BUSINESS_PAGE_HTML } from "./business-page.js";
 import { BUSINESS_PAGE_V2_HTML } from "./business-page-v2.js";
@@ -769,6 +779,33 @@ app.get("/keys", (_req, res) => {
   res.setHeader("Cache-Control", "no-store");
   res.send(KEYS_HTML);
 });
+
+// GET /mappings/<sha256>.json — canonical content-addressed retrieval path.
+// Bytes are immutable (any change would change the hash and therefore the
+// URL), so we serve with a maximal immutable cache. Verifier flow:
+//   receipt.v_gate.v_gate_mapping_hash = 'sha256-<hex>'
+//   -> GET /mappings/<hex>.json
+//   -> sha256(body) must equal <hex>
+const MAPPING_ROUTES = {
+  [`/mappings/${MAPPING_AO_V03_SHA256}.json`]: {
+    bytes: MAPPING_AO_V03_BYTES,
+    cache: "public, max-age=31536000, immutable",
+  },
+  // Convenience id-addressed alias: same bytes, less aggressive cache since
+  // an id-addressed path could in principle be redirected in the future.
+  "/mappings/agentoracle-v0.3-2026-05-30.json": {
+    bytes: MAPPING_AO_V03_BYTES,
+    cache: "public, max-age=3600",
+  },
+};
+for (const [route, { bytes, cache }] of Object.entries(MAPPING_ROUTES)) {
+  app.get(route, (_req, res) => {
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Cache-Control", cache);
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.send(bytes);
+  });
+}
 
 // 5. UNIFIED PAYMENT MIDDLEWARE — Sawyer's accepts-array pattern
 //    Both Base and SKALE accepts in the same array. The x402 SDK
