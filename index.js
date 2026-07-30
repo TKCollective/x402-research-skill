@@ -55,6 +55,8 @@ import { LANDING_PAGE_HTML } from "./landing-page.js";
 import { LANDING_PAGE_V5_HTML } from "./landing-page-v5-preview.js";
 import { LANDING_PAGE_V5_1_HTML } from "./landing-page-v5-1-kevin.js";
 import { LANDING_PAGE_V6_HTML } from "./landing-page-v6-preview.js";
+import { LANDING_PAGE_V7_HTML } from "./landing-page-v7.js";
+import { CHANGELOG_HTML } from "./changelog-page.js";
 
 // Post-checkout key-delivery page. Static HTML lives at ./keys.html; loaded
 // once at boot rather than per-request. GATEWAY constant already inlined
@@ -3379,12 +3381,51 @@ app.get("/defi", (_req, res) => {
 //  Landing Page — served inline (no static files needed)
 // ═══════════════════════════════════════════════════════════════════
 
-// Production landing — v5 promoted 2026-06-30 after Joe approved on mobile +
-// desktop review. Keeping LANDING_PAGE_HTML import + /v4-archive route for
-// rollback safety in case anything surfaces post-deploy.
+// Production landing — v7 promoted 2026-07-30 (storefront rebuild: seven
+// screens, dual-path hero, honest-negative do_not_act receipt, self-serve
+// pricing first, x402 second, Platform third; extended framing rule
+// respected; #playground / #pricing / #features / #how-it-works preserved).
+// Keeping LANDING_PAGE_V6_HTML + /lp-v6-preview for rollback safety.
 app.get("/", (_req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(LANDING_PAGE_V7_HTML);
+});
+
+// /lp-v7-preview — alias for the current live landing (parity with the
+// per-version preview convention used for v5 and v6).
+app.get("/lp-v7-preview", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  res.send(LANDING_PAGE_V7_HTML);
+});
+
+// /v6-archive keeps v6 available for rollback (was live until 2026-07-30).
+app.get("/v6-archive", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
   res.send(LANDING_PAGE_V6_HTML);
+});
+
+// /changelog — the 9 dated items previously in the v6 whatsNewTrack, now
+// on their own page. v7's proof/standards row links here.
+app.get("/changelog", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Cache-Control", "public, max-age=300, s-maxage=600");
+  res.send(CHANGELOG_HTML);
+});
+
+// /register — self-serve $99 tier button target. Redirects to the Stripe
+// Payment Link (STRIPE_PAYMENT_LINK env var, set at live-mode swap Saturday).
+// Until then, returns a temporary placeholder page. The button href stays
+// stable so no HTML change is needed when the env var flips on.
+app.get("/register", (_req, res) => {
+  const paymentLink = process.env.STRIPE_PAYMENT_LINK;
+  if (paymentLink) {
+    return res.redirect(302, paymentLink);
+  }
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  res.status(200).send(`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Self-serve — opening Saturday</title><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><style>body{font-family:'Space Grotesk',sans-serif;background:#14110a;color:#f4eee0;margin:0;min-height:100vh;display:grid;place-items:center;padding:24px}main{max-width:520px;text-align:center}h1{font-size:1.7rem;margin:0 0 14px}p{color:#c7b995;line-height:1.6;margin:10px 0}code{font-family:'JetBrains Mono',monospace;color:#d4a94a;font-size:.85rem}a{color:#d4a94a}.pl{font-family:'JetBrains Mono',monospace;font-size:.75rem;letter-spacing:.12em;color:#9c8f74;margin-top:32px}</style></head><body><main><h1>Self-serve — opening Saturday</h1><p>The $99/month self-serve checkout goes live at Saturday's Stripe live-mode swap. Until then, drop <a href="mailto:Joe@agentoracle.co">Joe@agentoracle.co</a> a line and we’ll get you set up manually.</p><p class="pl">Or head <a href="/">back home</a>.</p></main></body></html>`);
 });
 
 // /v5-preview kept as an alias for any existing links shared during review.
