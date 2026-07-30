@@ -52,14 +52,49 @@ li p{font-size:.93rem;color:var(--mut);max-width:620px}
     <!-- PERPLEXITY: replace the two placeholder items below with the 9 dated ticker items
          from landing-page-v6-preview.js (whatsNewTrack), VERBATIM, newest first. -->
     <li>
-      <time>2026-07-XX</time>
-      <h2>[TRANSPLANT ITEM — headline from v6 ticker]</h2>
-      <p>[TRANSPLANT ITEM — body/link from v6 ticker]</p>
+      <time>2026-06-06</time>
+      <h2>IETF Internet-Draft FILED — draft-krausz-verification-state-01</h2>
+      <p><a href="https://datatracker.ietf.org/doc/draft-krausz-verification-state/" target="_blank" rel="noopener noreferrer">datatracker ↗</a></p>
     </li>
     <li>
-      <time>2026-07-XX</time>
-      <h2>[TRANSPLANT ITEM — headline from v6 ticker]</h2>
-      <p>[TRANSPLANT ITEM — body/link from v6 ticker]</p>
+      <time>2026-06-01</time>
+      <h2>Open-source receipt verifier published — offline JWS verification, MIT licensed</h2>
+      <p><a href="https://github.com/TKCollective/agentoracle-receipt-verify" target="_blank" rel="noopener noreferrer">github ↗</a></p>
+    </li>
+    <li>
+      <time>2026-06-01</time>
+      <h2>Cross-operator benchmark live — open methodology, open submissions</h2>
+      <p><a href="https://github.com/TKCollective/agentoracle-benchmark" target="_blank" rel="noopener noreferrer">github ↗</a></p>
+    </li>
+    <li>
+      <time>2026-05-30</time>
+      <h2>Receipt spec v0.3 — binary-halt gate + canonical/derived/version-bound mapping</h2>
+      <p><a href="https://github.com/TKCollective/agentoracle-receipt-spec/tree/v0.3-binary-halt" target="_blank" rel="noopener noreferrer">spec ↗</a></p>
+    </li>
+    <li>
+      <time>2026-05-28</time>
+      <h2>AVeriTeC 2024 dev published — 57.6% overall, held-out 57.7%, MIT licensed</h2>
+      <p><a href="https://github.com/TKCollective/agentoracle-eval-harness" target="_blank" rel="noopener noreferrer">repo ↗</a></p>
+    </li>
+    <li>
+      <time>2026-05-27</time>
+      <h2>Pinned in x402trace v0.3.3 — first operator-contributed fixture in the harness</h2>
+      <p><a href="https://github.com/fardinvahdat/x402trace/releases/tag/v0.3.3" target="_blank" rel="noopener noreferrer">release ↗</a></p>
+    </li>
+    <li>
+      <time>2026-05-26</time>
+      <h2>Live on SKALE Base — first paid settlement gasless on SKALE</h2>
+      <p><a href="https://skale-base-explorer.skalenodes.com/tx/0x809361edad3ea6aebfacea978c6d6acf8cb32f7f03e4b5d13ee070e00c9f8e42" target="_blank" rel="noopener noreferrer">explorer ↗</a></p>
+    </li>
+    <li>
+      <time>2026-05-11</time>
+      <h2>Tutorial #4 — claim verification in AI content approval workflows</h2>
+      <p><a href="https://dev.to/agentoracle/how-to-add-claim-verification-to-your-ai-content-approval-workflow-3797" target="_blank" rel="noopener noreferrer">dev.to ↗</a></p>
+    </li>
+    <li>
+      <time>2026-05-08</time>
+      <h2>Indexed in Coinbase Bazaar — 8 settlements verified</h2>
+      <p><a href="https://api.cdp.coinbase.com/platform/v2/x402/discovery/merchant?payTo=0xdF90200B0031051BbF7a66BB9387d2Ecf599e109" target="_blank" rel="noopener noreferrer">discovery ↗</a></p>
     </li>
   </ol>
 </main>
