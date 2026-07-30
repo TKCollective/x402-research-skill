@@ -429,6 +429,12 @@ app.get("/apple-touch-icon.png", (_req, res) => {
   res.setHeader("Cache-Control", "public, max-age=604800, immutable");
   res.send(APPLE_TOUCH);
 });
+// v7.1 favicon — brand-mark logo (gold-on-black), same file across the site.
+app.get("/assets/ao-logo-v8.png", (_req, res) => {
+  res.setHeader("Content-Type", "image/png");
+  res.setHeader("Cache-Control", "public, max-age=604800, immutable");
+  res.sendFile("ao-logo-v8.png", { root: process.cwd() });
+});
 app.get("/og-image.png", (_req, res) => {
   res.setHeader("Content-Type", "image/png");
   res.setHeader("Cache-Control", "public, max-age=3600");

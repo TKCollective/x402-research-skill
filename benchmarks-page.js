@@ -11,7 +11,8 @@ const BENCHMARKS_HTML = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Benchmarks — AgentOracle</title>
 <meta name="description" content="AgentOracle benchmarks: public AVeriTeC 2024 accuracy by claim category and reproducible /v1 endpoint latency. Methodology, dataset, and harness all MIT-licensed." />
-<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="icon" type="image/png" href="/assets/ao-logo-v8.png" />
+<link rel="apple-touch-icon" href="/assets/ao-logo-v8.png" />
 <style>
   :root {
     --bg: #0b0b0c;
@@ -67,11 +68,11 @@ const BENCHMARKS_HTML = `<!doctype html>
 <header>
   <div class="brand"><a href="/">AgentOracle</a></div>
   <nav>
-    <a href="/">Home</a>
-    <a href="/business">Enterprise</a>
-    <a href="/demo">Demo</a>
-    <a href="/benchmarks">Benchmarks</a>
-    <a href="/whitepaper">White Paper</a>
+    <a href="/#how-it-works">The loop</a>
+    <a href="/#proof">Proof</a>
+    <a href="/#pricing">Pricing</a>
+    <a href="/whitepaper">Whitepaper</a>
+    <a href="/changelog">Changelog</a>
   </nav>
 </header>
 

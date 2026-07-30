@@ -12,40 +12,53 @@ export const LANDING_PAGE_V7_HTML = `<!DOCTYPE html>
 <meta name="description" content="Pre-action verification for AI agents. Every checked claim gets a cryptographically signed receipt anyone can verify — offline, against published keys, forever.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/assets/ao-logo-v8.png">
 <style>
 :root{
-  --ink:#14110a; --ink-2:#1e1910; --ink-3:#2a2517;
+  --ink:#0a0a08; --ink-2:#141310; --ink-3:#1c1a15;
   --paper:#f4eee0; --paper-2:#fbf7ec;
   --gold:#d4a94a; --gold-2:#e8c476;
+  --gline:rgba(212,169,74,.16); --gline-hi:rgba(212,169,74,.45);
   --ok:#4ade80; --ok-deep:#3f9e5f;
-  --line-l:#ddd3bc; --line-d:#332c1b;
-  --mut-l:#6b5f47; --mut-d:#a1957a;
+  --line-l:#ddd3bc; --line-d:#26231b;
+  --mut-l:#6b5f47; --mut-d:#a49a82;
   --rad:14px; --max:1120px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{font-family:'Space Grotesk',sans-serif;background:var(--ink);color:var(--paper);line-height:1.6;-webkit-font-smoothing:antialiased}
+body{font-family:'Satoshi',sans-serif;background:var(--ink);color:var(--paper);line-height:1.6;-webkit-font-smoothing:antialiased}
 .mono{font-family:'JetBrains Mono',monospace}
 a{color:inherit;text-decoration:none}
 .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
-section{padding:96px 0}
+section{padding:104px 0;position:relative}
 .eyebrow{font-family:'JetBrains Mono',monospace;font-size:.78rem;letter-spacing:.22em;color:var(--gold);margin-bottom:18px;display:block}
 h2{font-size:clamp(1.7rem,3.4vw,2.5rem);font-weight:700;line-height:1.15;letter-spacing:-.01em;margin-bottom:14px}
 .sub{color:var(--mut-d);max-width:640px;font-size:1.06rem}
-.band-light{background:var(--paper);color:var(--ink)}
-.band-light .sub{color:var(--mut-l)}
-.band-light .eyebrow{color:#a37e28}
-.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
+.band-light{background:#0d0c0a;color:var(--paper)}
+.band-light .sub{color:var(--mut-d)}
+.band-light .eyebrow{color:var(--gold)}
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .65s cubic-bezier(.22,.7,.3,1),transform .65s cubic-bezier(.22,.7,.3,1)}
 .reveal.in{opacity:1;transform:none}
+.grid6 .pcard,.plans .plan,.who .wcard,.loop .loop-step{opacity:0;transform:translateY(20px);transition:opacity .6s cubic-bezier(.22,.7,.3,1),transform .6s cubic-bezier(.22,.7,.3,1)}
+.grid6.in .pcard,.plans.in .plan,.who.in .wcard,.loop.in .loop-step{opacity:1;transform:none}
+.grid6.in .pcard:nth-child(2),.plans.in .plan:nth-child(2),.who.in .wcard:nth-child(2){transition-delay:.1s}
+.grid6.in .pcard:nth-child(3),.plans.in .plan:nth-child(3),.who.in .wcard:nth-child(3){transition-delay:.2s}
+.grid6.in .pcard:nth-child(4){transition-delay:.3s}
+.grid6.in .pcard:nth-child(5){transition-delay:.4s}
+.grid6.in .pcard:nth-child(6){transition-delay:.5s}
+.loop.in .loop-step:nth-of-type(3){transition-delay:.12s}
+.loop.in .loop-step:nth-of-type(5){transition-delay:.24s}
+.loop.in .loop-step:nth-of-type(7){transition-delay:.36s}
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto}
   .reveal{opacity:1;transform:none;transition:none}
-  .type-caret{display:none}
+  .receipt{transition:none}
 }
 
 /* ---------- nav ---------- */
-nav{position:sticky;top:0;z-index:50;background:rgba(20,17,10,.86);backdrop-filter:blur(12px);border-bottom:1px solid var(--line-d)}
+nav{position:sticky;top:0;z-index:50;background:rgba(10,10,8,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line-d)}
 .nav-in{display:flex;align-items:center;justify-content:space-between;height:64px}
 .logo{font-weight:700;font-size:1.06rem;letter-spacing:.01em}
 .logo .dot{color:var(--gold)}
@@ -55,17 +68,17 @@ nav{position:sticky;top:0;z-index:50;background:rgba(20,17,10,.86);backdrop-filt
 .btn{display:inline-block;padding:12px 22px;border-radius:10px;font-weight:500;font-size:.95rem;transition:transform .18s ease,box-shadow .18s ease;cursor:pointer;border:0}
 .btn:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 .btn-gold{background:linear-gradient(120deg,var(--gold),var(--gold-2));color:var(--ink)}
-.btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(212,169,74,.28)}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 0 24px rgba(212,169,74,.35),0 8px 26px rgba(212,169,74,.25)}
 .btn-ghost{border:1px solid var(--line-d);color:var(--paper)}
-.btn-ghost:hover{border-color:var(--gold);color:var(--gold-2)}
-.band-light .btn-ghost{border-color:#c9bda0;color:var(--ink)}
-.band-light .btn-ghost:hover{border-color:#a37e28;color:#7a5d1c}
+.btn-ghost:hover{border-color:var(--gline-hi);color:var(--gold-2);box-shadow:0 0 18px rgba(212,169,74,.12)}
+.band-light .btn-ghost{border-color:var(--gline);color:var(--paper)}
+.band-light .btn-ghost:hover{border-color:var(--gline-hi);color:var(--gold-2)}
 .nav-cta{padding:9px 16px;font-size:.88rem}
 @media(max-width:820px){.nav-links a:not(.btn){display:none}}
 
 /* ---------- hero ---------- */
 .hero{padding:110px 0 100px;position:relative;overflow:hidden}
-.hero::before{content:"";position:absolute;inset:-40% -20% auto;height:120%;background:radial-gradient(ellipse at 70% 20%,rgba(212,169,74,.10),transparent 55%);pointer-events:none}
+.hero::before{content:"";position:absolute;inset:-40% -20% auto;height:130%;background:radial-gradient(ellipse at 72% 18%,rgba(212,169,74,.13),transparent 52%),radial-gradient(ellipse at 15% 90%,rgba(212,169,74,.05),transparent 45%);pointer-events:none}
 .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:64px;align-items:center;position:relative}
 h1{font-size:clamp(2.1rem,4.6vw,3.4rem);font-weight:700;line-height:1.08;letter-spacing:-.02em}
 h1 .g{background:linear-gradient(110deg,var(--gold),var(--gold-2));-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -75,7 +88,7 @@ h1 .g{background:linear-gradient(110deg,var(--gold),var(--gold-2));-webkit-backg
 .proof-strip .sep{color:var(--gold);opacity:.8}
 
 /* the signature: a receipt that types itself */
-.receipt{background:var(--paper-2);color:var(--ink);border-radius:4px;padding:30px 28px 26px;position:relative;box-shadow:0 24px 70px rgba(0,0,0,.45);max-width:430px;justify-self:end;width:100%}
+.receipt{background:var(--paper-2);color:#14110a;border-radius:4px;padding:30px 28px 26px;position:relative;box-shadow:0 0 80px rgba(212,169,74,.12),0 30px 80px rgba(0,0,0,.6);max-width:430px;justify-self:end;width:100%}
 .receipt::before,.receipt::after{content:"";position:absolute;left:0;right:0;height:12px;background-image:radial-gradient(circle at 12px 6px,var(--ink) 5px,transparent 5.5px);background-size:26px 12px;background-position:6px 0}
 .receipt::before{top:-6px}
 .receipt::after{bottom:-6px;transform:scaleY(-1)}
@@ -84,8 +97,10 @@ h1 .g{background:linear-gradient(110deg,var(--gold),var(--gold-2));-webkit-backg
 .r-body .k{color:#8a7c5e}
 .r-body .ok{color:var(--ok-deep);font-weight:700}
 .r-body .sig{color:#a3731f}
-.type-caret{display:inline-block;width:8px;height:14px;background:var(--gold);vertical-align:-2px;animation:blink 1s steps(1) infinite}
-@keyframes blink{50%{opacity:0}}
+.chk{color:#a3731f;opacity:.75;font-style:italic}
+.receipt{transition:box-shadow .9s ease}
+.receipt.sealed{box-shadow:0 0 110px rgba(212,169,74,.28),0 30px 80px rgba(0,0,0,.6)}
+.receipt.sealed .r-foot{color:#a3731f}
 .r-foot{border-top:1px dashed var(--line-l);margin-top:14px;padding-top:12px;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:#8a7c5e;display:flex;justify-content:space-between}
 @media(max-width:900px){.hero-grid{grid-template-columns:1fr}.receipt{justify-self:start;max-width:460px}}
 </style>
@@ -198,7 +213,7 @@ h1 .g{background:linear-gradient(110deg,var(--gold),var(--gold-2));-webkit-backg
   <div class="wrap">
     <span class="eyebrow reveal">[03] WHY RECEIPTS BEAT LOGS</span>
     <h2 class="reveal">Records that prove beat records that assert.</h2>
-    <div class="grid6">
+    <div class="grid6 reveal">
       <div class="pcard reveal"><h3>Logs assert.<br><span class="gld">Receipts prove.</span></h3><p>A log is the operator's story. A receipt carries its own evidence — verdict, sources, rules, signature.</p></div>
       <div class="pcard reveal"><h3>Logs trust the operator.<br><span class="gld">Receipts trust no one.</span></h3><p>Letting the operator keep the record is letting the suspect write the police report.</p></div>
       <div class="pcard reveal"><h3>Logs can be edited.<br><span class="gld">Receipts are sealed.</span></h3><p>Change one byte and the signature fails. Backdating fails the same way — timestamps are bound in.</p></div>
@@ -234,7 +249,7 @@ h1 .g{background:linear-gradient(110deg,var(--gold),var(--gold-2));-webkit-backg
   <div class="wrap">
     <span class="eyebrow reveal">[05] PRICING</span>
     <h2 class="reveal">Card in. Key out. Receipts in minutes.</h2>
-    <div class="plans">
+    <div class="plans reveal">
       <div class="plan plan-lead reveal">
         <div class="pl-tag mono">SELF-SERVE</div>
         <div class="pl-price">$99<span>/mo</span></div>
@@ -320,29 +335,30 @@ h1 .g{background:linear-gradient(110deg,var(--gold),var(--gold-2));-webkit-backg
 <style>
 /* ---------- loop ---------- */
 .loop{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;gap:14px;align-items:stretch}
-.loop-step{background:var(--paper-2);border:1px solid var(--line-l);border-radius:var(--rad);padding:24px 22px}
+.loop-step{background:var(--ink-2);border:1px solid var(--gline);border-radius:var(--rad);padding:24px 22px;box-shadow:0 10px 30px rgba(0,0,0,.35);transition:border-color .25s,transform .25s}
+.loop-step:hover{border-color:var(--gline-hi);transform:translateY(-3px)}
 .loop-step h3{font-size:1.02rem;margin:10px 0 8px}
-.loop-step p{font-size:.9rem;color:var(--mut-l)}
-.ln{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--gold-2);display:flex;align-items:center;justify-content:center;font-size:.85rem}
-.loop-arrow{align-self:center;color:#a37e28;font-size:1.3rem}
+.loop-step p{font-size:.9rem;color:var(--mut-d)}
+.ln{width:30px;height:30px;border-radius:50%;background:rgba(212,169,74,.12);border:1px solid var(--gline-hi);color:var(--gold-2);display:flex;align-items:center;justify-content:center;font-size:.85rem}
+.loop-arrow{align-self:center;color:var(--gold);font-size:1.3rem;opacity:.7}
 @media(max-width:980px){.loop{grid-template-columns:1fr}.loop-arrow{transform:rotate(90deg);justify-self:center}}
 
 /* ---------- playground ---------- */
-.pg{margin-top:56px;background:var(--ink);color:var(--paper);border-radius:var(--rad);padding:26px;box-shadow:0 18px 50px rgba(20,17,10,.18)}
+.pg{margin-top:56px;background:var(--ink-2);color:var(--paper);border:1px solid var(--gline);border-radius:var(--rad);padding:26px;box-shadow:0 0 60px rgba(212,169,74,.07),0 18px 50px rgba(0,0,0,.5);position:relative}
 .pg-head{display:flex;justify-content:space-between;margin-bottom:16px}
 .pg-title{font-size:.75rem;letter-spacing:.2em;color:var(--gold)}
 .pg-hint{font-size:.72rem;color:var(--mut-d)}
 .pg-row{display:flex;gap:12px;flex-wrap:wrap}
-#pg-input{flex:1;min-width:240px;background:var(--ink-2);border:1px solid var(--line-d);border-radius:10px;color:var(--paper);padding:13px 16px;font-size:.9rem}
+#pg-input{flex:1;min-width:240px;background:var(--ink);border:1px solid var(--line-d);border-radius:10px;color:var(--paper);padding:13px 16px;font-size:.9rem}
 #pg-input:focus{outline:2px solid var(--gold);outline-offset:2px}
 .pg-spin{margin-top:14px;color:var(--gold-2);font-size:.82rem}
-.pg-out{margin-top:16px;background:var(--ink-2);border:1px solid var(--line-d);border-radius:10px;padding:16px;font-size:.8rem;line-height:1.7;white-space:pre-wrap;min-height:20px;color:#cfc4a6}
+.pg-out{margin-top:16px;background:var(--ink);border:1px solid var(--line-d);border-radius:10px;padding:16px;font-size:.8rem;line-height:1.7;white-space:pre-wrap;min-height:20px;color:#cfc4a6}
 .pg-out:empty{display:none}
 .pg-out .ok{color:var(--ok)}
 
 /* ---------- receipts wall (trimmed) ---------- */
 .rwall{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:26px}
-.rcard{background:var(--paper-2);border:1px solid var(--line-l);border-radius:6px;padding:18px 20px;font-size:.78rem;line-height:1.8;color:#4a4130}
+.rcard{background:var(--paper-2);border-radius:6px;padding:18px 20px;font-size:.78rem;line-height:1.8;color:#4a4130;box-shadow:0 14px 44px rgba(0,0,0,.5)}
 .rc-top,.rc-bot{display:flex;justify-content:space-between}
 .rc-mid{color:var(--mut-l);margin:8px 0;border-top:1px dashed var(--line-l);border-bottom:1px dashed var(--line-l);padding:8px 0}
 .okc{color:var(--ok-deep);font-weight:700}
@@ -361,36 +377,38 @@ h1 .g{background:linear-gradient(110deg,var(--gold),var(--gold-2));-webkit-backg
 
 /* ---------- proof grid ---------- */
 .grid6{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:48px}
-.pcard{background:var(--paper-2);border:1px solid var(--line-l);border-radius:var(--rad);padding:26px 24px;transition:transform .22s ease,box-shadow .22s ease}
-.pcard:hover{transform:translateY(-6px);box-shadow:0 16px 40px rgba(20,17,10,.14)}
+.pcard{background:var(--ink-2);border:1px solid var(--gline);border-radius:var(--rad);padding:26px 24px;transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}
+.pcard:hover{transform:translateY(-6px);border-color:var(--gline-hi);box-shadow:0 0 40px rgba(212,169,74,.10),0 18px 44px rgba(0,0,0,.5)}
 .pcard h3{font-size:1.05rem;line-height:1.35;margin-bottom:10px}
-.pcard p{font-size:.88rem;color:var(--mut-l)}
-.gld{color:#a37e28}
-.stdrow{margin-top:40px;display:flex;gap:26px;flex-wrap:wrap;font-size:.8rem;letter-spacing:.04em;color:var(--mut-l);border-top:1px solid var(--line-l);padding-top:22px}
-.stdrow a:hover{color:#a37e28}
+.pcard p{font-size:.88rem;color:var(--mut-d)}
+.gld{color:var(--gold-2)}
+.stdrow{margin-top:40px;display:flex;gap:26px;flex-wrap:wrap;font-size:.8rem;letter-spacing:.04em;color:var(--mut-d);border-top:1px solid var(--gline);padding-top:22px}
+.stdrow a:hover{color:var(--gold-2)}
 @media(max-width:900px){.grid6{grid-template-columns:1fr 1fr}}
 @media(max-width:620px){.grid6{grid-template-columns:1fr}}
 
 /* ---------- who ---------- */
 .who{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px}
-.wcard{border:1px solid var(--line-d);border-radius:var(--rad);padding:26px 24px;background:var(--ink-2)}
+.wcard{border:1px solid var(--gline);border-radius:var(--rad);padding:26px 24px;background:var(--ink-2);transition:border-color .25s,transform .25s}
+.wcard:hover{border-color:var(--gline-hi);transform:translateY(-3px)}
 .wcard h3{font-size:1.04rem;margin-bottom:10px;color:var(--gold-2)}
 .wcard p{font-size:.9rem;color:var(--mut-d)}
 @media(max-width:900px){.who{grid-template-columns:1fr}}
 
 /* ---------- pricing ---------- */
 .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px;align-items:stretch}
-.plan{background:var(--paper-2);border:1px solid var(--line-l);border-radius:var(--rad);padding:30px 26px;display:flex;flex-direction:column}
-.plan-lead{border:2px solid var(--gold);box-shadow:0 20px 55px rgba(212,169,74,.18);position:relative}
-.pl-tag{font-size:.7rem;letter-spacing:.2em;color:#a37e28;margin-bottom:14px}
+.plan{background:var(--ink-2);border:1px solid var(--gline);border-radius:var(--rad);padding:30px 26px;display:flex;flex-direction:column;transition:border-color .25s,transform .25s}
+.plan:hover{border-color:var(--gline-hi);transform:translateY(-4px)}
+.plan-lead{border:1px solid var(--gold);box-shadow:0 0 70px rgba(212,169,74,.14),0 24px 60px rgba(0,0,0,.5);position:relative}
+.pl-tag{font-size:.7rem;letter-spacing:.2em;color:var(--gold);margin-bottom:14px}
 .pl-price{font-size:2.3rem;font-weight:700}
-.pl-price span{font-size:1rem;font-weight:400;color:var(--mut-l)}
-.pl-desc{font-size:.92rem;color:var(--mut-l);margin:12px 0 16px}
+.pl-price span{font-size:1rem;font-weight:400;color:var(--mut-d)}
+.pl-desc{font-size:.92rem;color:var(--mut-d);margin:12px 0 16px}
 .pl-list{list-style:none;margin-bottom:22px;flex:1}
-.pl-list li{font-size:.87rem;padding:6px 0 6px 24px;position:relative;color:#4a4130}
+.pl-list li{font-size:.87rem;padding:6px 0 6px 24px;position:relative;color:#d8d0bd}
 .pl-list li::before{content:"✓";position:absolute;left:0;color:var(--ok-deep);font-weight:700}
 .pl-btn{text-align:center}
-.pl-note{margin-top:12px;font-size:.72rem;color:var(--mut-l);text-align:center;letter-spacing:.04em}
+.pl-note{margin-top:12px;font-size:.72rem;color:var(--mut-d);text-align:center;letter-spacing:.04em}
 @media(max-width:900px){.plans{grid-template-columns:1fr}}
 
 /* ---------- faq ---------- */
@@ -402,7 +420,7 @@ h1 .g{background:linear-gradient(110deg,var(--gold),var(--gold-2));-webkit-backg
 .faq p{margin-top:12px;color:var(--mut-d);font-size:.93rem;max-width:640px}
 
 /* ---------- footer ---------- */
-footer{border-top:1px solid var(--line-d);padding:64px 0 48px;background:var(--ink)}
+footer{border-top:1px solid var(--gline);padding:64px 0 48px;background:var(--ink)}
 .f-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px}
 .f-tag{margin:16px 0;color:var(--mut-d);font-size:.92rem;line-height:1.7}
 .f-co{font-size:.75rem;color:var(--mut-d)}
@@ -422,30 +440,57 @@ footer{border-top:1px solid var(--line-d);padding:64px 0 48px;background:var(--i
   document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
 })();
 
-// ---------- hero receipt self-typing ----------
+// ---------- hero receipt: live pipeline ----------
 (function(){
   var el = document.getElementById('heroType');
   if(!el) return;
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var lines = [
-    '<span class="k">claim:</span> "Invoice #4417 is unpaid"',
-    '<span class="k">checked:</span> 3 sources · adversarial pass',
-    '<span class="k">verdict:</span> <span class="ok">act</span> · confidence 0.91',
-    '<span class="k">rules:</span> mapping v0.3 (published)',
-    '<span class="k">issued:</span> 2026-08-02T09:14:02Z',
-    '<span class="sig">signed — verify me yourself.</span>'
+  function esc(s){return s}
+  var finalHTML =
+    '<span class="k">claim:</span> "Invoice #4417 is unpaid"<br>' +
+    '<span class="k">source:</span> ledger.acme.co <span class="ok">\u2713</span><br>' +
+    '<span class="k">source:</span> stripe.com/invoices <span class="ok">\u2713</span><br>' +
+    '<span class="k">adversarial:</span> resilient <span class="ok">\u2713</span><br>' +
+    '<span class="k">confidence:</span> 0.91 \u00b7 <span class="k">verdict:</span> <span class="ok">act</span><br>' +
+    '<span class="sig">signed \u2014 verify me yourself.</span>';
+  if(reduce){ el.innerHTML = finalHTML; el.classList.add('sealed'); return; }
+  var steps = [
+    {h:'<span class="k">claim:</span> "Invoice #4417 is unpaid"', d:600},
+    {h:'<span class="k">source:</span> ledger.acme.co <span class="chk">checking\u2026</span>', d:700},
+    {r:'<span class="chk">checking\u2026</span>', w:'<span class="ok">\u2713</span>', d:250},
+    {h:'<span class="k">source:</span> stripe.com/invoices <span class="chk">checking\u2026</span>', d:700},
+    {r:'<span class="chk">checking\u2026</span>', w:'<span class="ok">\u2713</span>', d:250},
+    {h:'<span class="k">adversarial:</span> re-checking under pressure\u2026', d:800},
+    {r:'re-checking under pressure\u2026', w:'resilient <span class="ok">\u2713</span>', d:300},
+    {conf:true, d:900},
+    {h:'<span class="sig">signed \u2014 verify me yourself.</span>', seal:true, d:0}
   ];
-  if(reduce){ el.innerHTML = lines.join('<br>'); return; }
-  var li=0, shown=[];
-  function next(){
-    if(li>=lines.length){ el.innerHTML = shown.join('<br>'); return; }
-    shown.push(lines[li]); li++;
-    el.innerHTML = shown.join('<br>') + '<span class="type-caret"></span>';
-    setTimeout(next, li===lines.length?300:520);
+  var html=[], i=0;
+  function run(){
+    if(i>=steps.length) return;
+    var s=steps[i]; i++;
+    if(s.h){ html.push(s.h); el.innerHTML = html.join('<br>'); }
+    else if(s.r){ html[html.length-1] = html[html.length-1].replace(s.r, s.w); el.innerHTML = html.join('<br>'); }
+    else if(s.conf){
+      html.push('<span class="k">confidence:</span> <span id="confN">0.00</span> \u00b7 <span class="k">verdict:</span> <span id="verd"></span>');
+      el.innerHTML = html.join('<br>');
+      var n=0, t=setInterval(function(){
+        n+=0.07; if(n>=0.91){n=0.91; clearInterval(t);
+          var v=document.getElementById('verd'); if(v) v.innerHTML='<span class="ok">act</span>';
+          html[html.length-1]='<span class="k">confidence:</span> 0.91 \u00b7 <span class="k">verdict:</span> <span class="ok">act</span>';
+        }
+        var c=document.getElementById('confN'); if(c) c.textContent=n.toFixed(2);
+      }, 55);
+    }
+    if(s.seal){ el.closest('.receipt').classList.add('sealed'); }
+    setTimeout(run, s.d);
   }
-  setTimeout(next, 500);
+  setTimeout(run, 500);
 })();
 
+// ---------- playground ----------
+// PERPLEXITY: transplant the working fetch handler from landing-page-v6-preview.js here VERBATIM
+// (element IDs are unchanged: pg-input, pg-btn, pg-spinner, pg-result — the v6 handler ports 1:1).
 // ---------- playground ----------
 // v6 handler transplanted verbatim (per Claude 2026-07-30 deploy notes).
 // Sets window.__AO_PG_WIRED__ = true so the fallback IIFE below stands down.
@@ -549,7 +594,7 @@ async function runEvaluation() {
 // v7 button has no inline onclick — wire the click listener explicitly
 document.getElementById('pg-btn') && document.getElementById('pg-btn').addEventListener('click', runEvaluation);
 
-// Fallback IIFE (stands down because __AO_PG_WIRED__ is set above)
+// The block below is a safe fallback so the page never renders broken if the transplant is missed.
 (function(){
   var btn=document.getElementById('pg-btn'), inp=document.getElementById('pg-input'),
       out=document.getElementById('pg-result'), spin=document.getElementById('pg-spinner');

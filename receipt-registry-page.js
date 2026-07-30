@@ -11,7 +11,8 @@ export const RECEIPT_REGISTRY_PAGE_HTML = `<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>verification.v0.3 in the ERC-8210 Receipt Profile Registry — AgentOracle</title>
 <meta name="description" content="Issuer-side implementation details for verification.v0.3, the first entry in the ERC-8210 Receipt Profile Registry.">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" href="/assets/ao-logo-v8.png">
+<link rel="apple-touch-icon" href="/assets/ao-logo-v8.png">
 <style>
   :root {
     --bg: #08090a; --surface: #0f1114; --surface-alt: #14171b;
@@ -63,8 +64,14 @@ export const RECEIPT_REGISTRY_PAGE_HTML = `<!DOCTYPE html>
 </head>
 <body>
   <nav class="nav">
-    <div class="nav__brand"><span class="nav__brand-mark">AO</span><span>AgentOracle</span></div>
-    <a class="nav__back" href="/">&larr; agentoracle.co</a>
+    <a href="/" class="nav__brand" style="text-decoration:none;"><span class="nav__brand-mark">AO</span><span>AgentOracle</span></a>
+    <div class="nav__links" style="display:flex;gap:22px;align-items:center;font-size:14px;">
+      <a href="/#how-it-works" style="color:#a49a82;text-decoration:none;">The loop</a>
+      <a href="/#proof" style="color:#a49a82;text-decoration:none;">Proof</a>
+      <a href="/#pricing" style="color:#a49a82;text-decoration:none;">Pricing</a>
+      <a href="/whitepaper" style="color:#a49a82;text-decoration:none;">Whitepaper</a>
+      <a href="/changelog" style="color:#a49a82;text-decoration:none;">Changelog</a>
+    </div>
   </nav>
 
   <main class="container">

@@ -21,24 +21,29 @@ export const BUSINESS_PAGE_V2_HTML = `<!DOCTYPE html>
 <meta name="twitter:site" content="@AgentOracle_AI">
 <meta name="twitter:creator" content="@AgentOracle_AI">
 
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/assets/ao-logo-v8.png">
+<link rel="apple-touch-icon" href="/assets/ao-logo-v8.png">
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="canonical" href="https://agentoracle.co/business">
 
 <style>
 :root {
-  --bg: #050504;
-  --surface: #0E0D0B;
-  --border: #1E1B16;
-  --text: #F4F1EA;
-  --text-muted: #A8A496;
-  --text-faint: #6E6A60;
-  --gold: #D4A437;
+  --bg: #0a0a08;
+  --surface: #141310;
+  --surface-alt: #17150f;
+  --border: rgba(212,169,74,.16);
+  --border-hover: rgba(212,169,74,.45);
+  --text: #f4eee0;
+  --text-muted: #a49a82;
+  --text-faint: #6e6558;
+  --gold: #D4A94A;
   --gold-bright: #E6BC55;
   --gold-dim: #B89230;
   --green: #22c55e;
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', system-ui, sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-sans: 'Satoshi', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
@@ -103,7 +108,8 @@ a:hover { color: var(--gold-bright); }
 .use-cases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 32px; }
 @media (max-width: 920px) { .use-cases { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 600px) { .use-cases { grid-template-columns: 1fr; } }
-.use-card { padding: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; transition: border-color .2s, transform .2s; }
+.use-card { padding: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; transition: border-color .2s, transform .2s, box-shadow .2s; }
+.use-card:hover { border-color: var(--border-hover); transform: translateY(-3px); box-shadow: 0 8px 32px -12px rgba(212,169,74,.18); }
 .use-card:hover { border-color: rgba(201,169,110,0.3); transform: translateY(-2px); }
 .use-card__role { font-size: 16px; font-weight: 700; color: var(--gold); margin-bottom: 10px; letter-spacing: -0.01em; }
 .use-card__pain { font-size: 12.5px; color: var(--text-faint); font-family: var(--font-mono); margin-bottom: 14px; letter-spacing: 0.02em; }
@@ -115,7 +121,8 @@ a:hover { color: var(--gold-bright); }
 @media (max-width: 720px)  { .tiers { grid-template-columns: 1fr; } }
 .tier { padding: 22px; }
 .tier__price { font-size: 24px; }
-.tier { padding: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; gap: 16px; }
+.tier { padding: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; gap: 16px; transition: border-color .2s, transform .2s, box-shadow .2s; }
+.tier:hover { border-color: var(--border-hover); transform: translateY(-3px); box-shadow: 0 8px 32px -12px rgba(212,169,74,.18); }
 .tier--featured { border-color: rgba(201,169,110,0.4); background: linear-gradient(180deg, rgba(201,169,110,0.04), rgba(201,169,110,0.01)); }
 .tier__name { font-size: 13px; font-weight: 700; color: var(--gold); letter-spacing: 0.12em; text-transform: uppercase; }
 .tier__price { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
@@ -130,7 +137,8 @@ a:hover { color: var(--gold-bright); }
 .steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-top: 32px; }
 @media (max-width: 920px) { .steps { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 600px) { .steps { grid-template-columns: 1fr; } }
-.step { padding: 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+.step { padding: 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; transition: border-color .2s, transform .2s; }
+.step:hover { border-color: var(--border-hover); transform: translateY(-2px); }
 .step__num { font-family: var(--font-mono); font-size: 11px; color: var(--gold); font-weight: 700; letter-spacing: 0.1em; margin-bottom: 8px; }
 .step__title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 8px; letter-spacing: -0.005em; }
 .step p { font-size: 13.5px; color: var(--text-muted); line-height: 1.6; }
@@ -139,7 +147,8 @@ a:hover { color: var(--gold-bright); }
 .proof { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 32px; }
 @media (max-width: 960px) { .proof { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 600px) { .proof { grid-template-columns: 1fr; } }
-.proof-card { padding: 22px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: inherit; transition: border-color 0.2s, transform 0.2s; }
+.proof-card { padding: 22px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: inherit; transition: border-color 0.2s, transform 0.2s, box-shadow .2s; }
+.proof-card:hover { border-color: var(--border-hover); transform: translateY(-3px); box-shadow: 0 8px 32px -12px rgba(212,169,74,.18); }
 .proof-card:hover { border-color: rgba(201,169,110,0.5); transform: translateY(-2px); }
 .proof-card__label { font-size: 10.5px; color: var(--gold); font-family: var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; }
 .proof-card__title { font-size: 15px; color: var(--text); font-weight: 700; letter-spacing: -0.01em; line-height: 1.35; margin-top: 2px; }
@@ -177,7 +186,13 @@ a:hover { color: var(--gold-bright); }
       <span class="header__brand-mark">AO</span>
       AgentOracle
     </a>
-    <a href="/" class="header__back">\u2190 Back to main site</a>
+    <nav class="header__nav" style="display:flex;gap:22px;align-items:center;font-size:14px;">
+      <a href="/#how-it-works" style="color:var(--text-muted);text-decoration:none;">The loop</a>
+      <a href="/#proof" style="color:var(--text-muted);text-decoration:none;">Proof</a>
+      <a href="/#pricing" style="color:var(--text-muted);text-decoration:none;">Pricing</a>
+      <a href="/whitepaper" style="color:var(--text-muted);text-decoration:none;">Whitepaper</a>
+      <a href="/changelog" style="color:var(--text-muted);text-decoration:none;">Changelog</a>
+    </nav>
   </div>
 </header>
 
@@ -261,19 +276,19 @@ a:hover { color: var(--gold-bright); }
       <div class="tier">
         <span class="tier__name">Developer</span>
         <div>
-          <span class="tier__price">from $0.02</span>
-          <span class="tier__price-unit">/ query</span>
+          <span class="tier__price">$99</span>
+          <span class="tier__price-unit">/ month</span>
         </div>
-        <p class="tier__desc">Pay-per-call x402 API. No signup, no API key, no monthly minimum. Settle in USDC on Base.</p>
+        <p class="tier__desc">Self-serve API key at checkout. 2,000 verifications a month, signed receipts, cancel anytime. Priced for individual builders and small teams.</p>
         <ul class="tier__features">
-          <li>POST /research ($0.02), /deep-research ($0.10), /research/batch ($0.10)</li>
+          <li>2,000 verifications / month included</li>
+          <li>API key issued at checkout \u2014 live in minutes</li>
+          <li>Same signed receipts as enterprise tiers</li>
           <li>Verify offline: <code style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--gold);font-size:12.5px;">pip install agentoracle-receipt-verify</code></li>
-          <li>Same JWS receipt as enterprise tier</li>
           <li>Public JWKS, public spec, public benchmark</li>
-          <li>MCP-native (npm + langchain-agentoracle)</li>
         </ul>
         <div class="tier__cta">
-          <a href="/" class="btn btn--secondary" style="font-size:14px;">View dev docs \u2192</a>
+          <a href="/#pricing" class="btn btn--secondary" style="font-size:14px;">See self-serve \u2192</a>
         </div>
       </div>
       <div class="tier">
