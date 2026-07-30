@@ -17,7 +17,7 @@ export const LANDING_PAGE_V7_HTML = `<!DOCTYPE html>
 <link rel="icon" type="image/png" href="/assets/ao-logo-v8.png">
 <style>
 :root{
-  --ink:#0a0a08; --ink-2:#141310; --ink-3:#1c1a15;
+  --ink:#070706; --ink-2:#121110; --ink-3:#1a1813;
   --paper:#f4eee0; --paper-2:#fbf7ec;
   --gold:#d4a94a; --gold-2:#e8c476;
   --gline:rgba(212,169,74,.16); --gline-hi:rgba(212,169,74,.45);
@@ -29,6 +29,7 @@ export const LANDING_PAGE_V7_HTML = `<!DOCTYPE html>
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{font-family:'Satoshi',sans-serif;background:var(--ink);color:var(--paper);line-height:1.6;-webkit-font-smoothing:antialiased}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.035;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E")}
 .mono{font-family:'JetBrains Mono',monospace}
 a{color:inherit;text-decoration:none}
 .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
@@ -36,7 +37,7 @@ section{padding:104px 0;position:relative}
 .eyebrow{font-family:'JetBrains Mono',monospace;font-size:.78rem;letter-spacing:.22em;color:var(--gold);margin-bottom:18px;display:block}
 h2{font-size:clamp(1.7rem,3.4vw,2.5rem);font-weight:700;line-height:1.15;letter-spacing:-.01em;margin-bottom:14px}
 .sub{color:var(--mut-d);max-width:640px;font-size:1.06rem}
-.band-light{background:#0d0c0a;color:var(--paper)}
+.band-light{background:#0b0a09;color:var(--paper)}
 .band-light .sub{color:var(--mut-d)}
 .band-light .eyebrow{color:var(--gold)}
 .reveal{opacity:0;transform:translateY(22px);transition:opacity .65s cubic-bezier(.22,.7,.3,1),transform .65s cubic-bezier(.22,.7,.3,1)}
@@ -58,7 +59,7 @@ h2{font-size:clamp(1.7rem,3.4vw,2.5rem);font-weight:700;line-height:1.15;letter-
 }
 
 /* ---------- nav ---------- */
-nav{position:sticky;top:0;z-index:50;background:rgba(10,10,8,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line-d)}
+nav{position:sticky;top:0;z-index:50;background:rgba(7,7,6,.8);backdrop-filter:blur(12px);border-bottom:1px solid var(--line-d)}
 .nav-in{display:flex;align-items:center;justify-content:space-between;height:64px}
 .logo{font-weight:700;font-size:1.06rem;letter-spacing:.01em}
 .logo .dot{color:var(--gold)}
@@ -151,7 +152,9 @@ h1 .g{background:linear-gradient(110deg,var(--gold),var(--gold-2));-webkit-backg
     <h2 class="reveal">Claim in. Checked. Receipt out.<br>Anyone verifies.</h2>
     <p class="sub reveal">One API call sits between your agent and its consequential actions. Here is the whole product:</p>
 
-    <div class="loop reveal" id="features" style="margin-top:48px">
+    <div class="loop-wrap" style="position:relative;margin-top:48px">
+    <svg class="loop-line" viewBox="0 0 1080 4" preserveAspectRatio="none" aria-hidden="true"><path id="loopPath" d="M0 2 H1080" stroke="url(#lg)" stroke-width="2" fill="none"/><defs><linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="rgba(212,169,74,.0)"/><stop offset=".15" stop-color="rgba(212,169,74,.55)"/><stop offset=".85" stop-color="rgba(212,169,74,.55)"/><stop offset="1" stop-color="rgba(212,169,74,.0)"/></linearGradient></defs></svg>
+    <div class="loop reveal" id="features">
       <div class="loop-step"><div class="ln mono">1</div><h3>Your agent makes a claim</h3><p>"This invoice is unpaid." "This drug interaction is safe." "This customer is eligible." The claim that justifies the action.</p></div>
       <div class="loop-arrow mono" aria-hidden="true">→</div>
       <div class="loop-step"><div class="ln mono">2</div><h3>We check it first</h3><p>Independent sources, adversarial re-checks, a published rule table — before the action runs, not after it goes wrong.</p></div>
@@ -159,6 +162,7 @@ h1 .g{background:linear-gradient(110deg,var(--gold),var(--gold-2));-webkit-backg
       <div class="loop-step"><div class="ln mono">3</div><h3>A signed receipt is issued</h3><p>Canonical bytes (RFC 8785), Ed25519 signature, the verdict, the sources, and the exact rules used — sealed at issue.</p></div>
       <div class="loop-arrow mono" aria-hidden="true">→</div>
       <div class="loop-step"><div class="ln mono">4</div><h3>Anyone verifies. Forever.</h3><p>Offline, against published keys. Auditors, counterparties, courts — no account needed, no trust in us required.</p></div>
+    </div>
     </div>
 
     <!-- live demo (single demo surface for the whole page) -->
@@ -341,7 +345,12 @@ h1 .g{background:linear-gradient(110deg,var(--gold),var(--gold-2));-webkit-backg
 .loop-step p{font-size:.9rem;color:var(--mut-d)}
 .ln{width:30px;height:30px;border-radius:50%;background:rgba(212,169,74,.12);border:1px solid var(--gline-hi);color:var(--gold-2);display:flex;align-items:center;justify-content:center;font-size:.85rem}
 .loop-arrow{align-self:center;color:var(--gold);font-size:1.3rem;opacity:.7}
-@media(max-width:980px){.loop{grid-template-columns:1fr}.loop-arrow{transform:rotate(90deg);justify-self:center}}
+.loop-line{position:absolute;left:0;right:0;top:50%;width:100%;height:4px;z-index:0;pointer-events:none}
+.loop-line path{stroke-dasharray:1080;stroke-dashoffset:1080;transition:stroke-dashoffset 1.6s cubic-bezier(.22,.7,.3,1) .2s}
+.loop-wrap.drawn .loop-line path{stroke-dashoffset:0}
+.loop{position:relative;z-index:1}
+@media(max-width:980px){.loop{grid-template-columns:1fr}.loop-arrow{transform:rotate(90deg);justify-self:center}.loop-line{display:none}}
+@media (prefers-reduced-motion: reduce){.loop-line path{stroke-dashoffset:0;transition:none}}
 
 /* ---------- playground ---------- */
 .pg{margin-top:56px;background:var(--ink-2);color:var(--paper);border:1px solid var(--gline);border-radius:var(--rad);padding:26px;box-shadow:0 0 60px rgba(212,169,74,.07),0 18px 50px rgba(0,0,0,.5);position:relative}
@@ -363,6 +372,11 @@ h1 .g{background:linear-gradient(110deg,var(--gold),var(--gold-2));-webkit-backg
 .rc-mid{color:var(--mut-l);margin:8px 0;border-top:1px dashed var(--line-l);border-bottom:1px dashed var(--line-l);padding:8px 0}
 .okc{color:var(--ok-deep);font-weight:700}
 .noc{color:#b1502e;font-weight:700}
+@keyframes vpulse{0%{text-shadow:0 0 0 rgba(74,222,128,0)}45%{text-shadow:0 0 14px rgba(74,222,128,.65)}100%{text-shadow:0 0 0 rgba(74,222,128,0)}}
+@keyframes vpulseR{0%{text-shadow:0 0 0 rgba(177,80,46,0)}45%{text-shadow:0 0 14px rgba(177,80,46,.6)}100%{text-shadow:0 0 0 rgba(177,80,46,0)}}
+.rwall.in .okc{animation:vpulse 1.1s ease .5s 1}
+.rwall.in .noc{animation:vpulseR 1.1s ease .7s 1}
+@media (prefers-reduced-motion: reduce){.rwall.in .okc,.rwall.in .noc{animation:none}}
 @media(max-width:760px){.rwall{grid-template-columns:1fr}}
 
 /* ---------- terminal ---------- */
@@ -435,9 +449,12 @@ footer{border-top:1px solid var(--gline);padding:64px 0 48px;background:var(--in
 // ---------- scroll reveals ----------
 (function(){
   var io = new IntersectionObserver(function(es){
-    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in');
+      var w=e.target.closest('.loop-wrap'); if(w) w.classList.add('drawn');
+      io.unobserve(e.target);} });
   },{threshold:.12});
   document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+  var rw=document.querySelector('.rwall'); if(rw) io.observe(rw);
 })();
 
 // ---------- hero receipt: live pipeline ----------
@@ -476,7 +493,7 @@ footer{border-top:1px solid var(--gline);padding:64px 0 48px;background:var(--in
       el.innerHTML = html.join('<br>');
       var n=0, t=setInterval(function(){
         n+=0.07; if(n>=0.91){n=0.91; clearInterval(t);
-          var v=document.getElementById('verd'); if(v) v.innerHTML='<span class="ok">act</span>';
+          var v=document.getElementById('verd'); if(v) v.innerHTML='<span class="ok" style="animation:vpulse 1.1s ease 1">act</span>';
           html[html.length-1]='<span class="k">confidence:</span> 0.91 \u00b7 <span class="k">verdict:</span> <span class="ok">act</span>';
         }
         var c=document.getElementById('confN'); if(c) c.textContent=n.toFixed(2);

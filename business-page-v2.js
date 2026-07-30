@@ -30,7 +30,7 @@ export const BUSINESS_PAGE_V2_HTML = `<!DOCTYPE html>
 
 <style>
 :root {
-  --bg: #0a0a08;
+  --bg: #070706;
   --surface: #141310;
   --surface-alt: #17150f;
   --border: rgba(212,169,74,.16);
@@ -65,7 +65,7 @@ a:hover { color: var(--gold-bright); }
 .header__inner { display: flex; align-items: center; justify-content: space-between; }
 .header__brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; color: var(--text); }
 .header__brand-logo { width: 28px; height: 28px; }
-.header__brand-mark { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--gold); color: #0A0A08; font-weight: 800; font-size: 11px; border-radius: 6px; letter-spacing: 0.04em; }
+.header__brand-mark { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--gold); color: #070706; font-weight: 800; font-size: 11px; border-radius: 6px; letter-spacing: 0.04em; }
 .header__back { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); }
 .header__back:hover { color: var(--gold); }
 
@@ -92,8 +92,8 @@ a:hover { color: var(--gold-bright); }
   text-decoration: none; transition: all 0.2s;
   border: 1px solid transparent;
 }
-.btn--primary { background: var(--gold); color: #0A0A08; }
-.btn--primary:hover { background: var(--gold-bright); transform: translateY(-1px); color: #0A0A08; }
+.btn--primary { background: var(--gold); color: #070706; }
+.btn--primary:hover { background: var(--gold-bright); transform: translateY(-1px); color: #070706; }
 .btn--secondary { color: var(--text); border-color: var(--border); background: transparent; }
 .btn--secondary:hover { border-color: var(--gold); color: var(--gold); }
 

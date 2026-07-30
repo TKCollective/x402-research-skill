@@ -21,59 +21,53 @@ export const WHITEPAPER_HTML = `<!doctype html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  /* Whitepaper \u2014 Option C: dark reading room. Instrument Serif preserved, tokens inverted. */
   :root{
-    --bg:#0a0a08;
-    --surface:#141310;
-    --surface-alt:#17150f;
-    --border:rgba(212,169,74,0.16);
-    --border-strong:rgba(212,169,74,0.32);
-    --text:#f4eee0;
-    --muted:#a49a82;
-    --faint:#6e6558;
-    --primary:#D4A94A;
-    --primary-hover:#E6BC55;
+    --bg:#F7F6F2;
+    --surface:#FBFBF9;
+    --border:#D4D1CA;
+    --text:#28251D;
+    --muted:#7A7974;
+    --faint:#BAB9B4;
+    --primary:#01696F;
+    --primary-hover:#0C4E54;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;line-height:1.7;-webkit-font-smoothing:antialiased;font-weight:400}
-  /* Serif on dark reads thinner \u2014 bump size and open leading a touch to preserve authority. */
-  a{color:var(--primary);text-decoration:none;border-bottom:1px solid rgba(212,169,74,0.28);transition:border-color .15s,color .15s}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:var(--primary);text-decoration:none;border-bottom:1px solid rgba(1,105,111,0.25);transition:border-color .15s}
   a:hover{color:var(--primary-hover);border-bottom-color:var(--primary-hover)}
   .container{max-width:720px;margin:0 auto;padding:0 24px}
   header.top{padding:24px 0;border-bottom:1px solid var(--border);margin-bottom:48px}
   header.top .nav{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
   header.top a.brand{font-weight:700;color:var(--text);border:none;font-size:15px;letter-spacing:-0.01em}
-  header.top .links{display:flex;gap:22px;flex-wrap:wrap}
+  header.top .links{display:flex;gap:20px;flex-wrap:wrap}
   header.top .links a{font-size:14px;color:var(--muted);border:none}
-  header.top .links a:hover{color:var(--primary)}
+  header.top .links a:hover{color:var(--text)}
 
   .paper-header{margin-bottom:40px}
   .kicker{font-size:12px;text-transform:uppercase;letter-spacing:0.14em;color:var(--muted);font-weight:600;margin-bottom:16px}
-  /* Serif inverted \u2014 nudged up in size (48 \u2192 52) and given a subtle color for authority on dark. */
-  h1{font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:52px;line-height:1.1;letter-spacing:-0.02em;margin:0 0 12px;color:var(--text)}
-  .subtitle{font-family:'Instrument Serif',Georgia,serif;font-style:italic;font-size:26px;line-height:1.35;color:var(--muted);font-weight:400;margin:0 0 32px}
+  h1{font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:48px;line-height:1.1;letter-spacing:-0.02em;margin:0 0 12px}
+  .subtitle{font-family:'Instrument Serif',Georgia,serif;font-style:italic;font-size:24px;line-height:1.3;color:var(--muted);font-weight:400;margin:0 0 32px}
   .meta{font-size:14px;color:var(--muted);margin-bottom:32px;line-height:1.6}
   .meta strong{color:var(--text);font-weight:600}
   .disclaimer{font-size:13px;color:var(--muted);font-style:italic;padding:16px 20px;border-left:2px solid var(--border);background:var(--surface);margin-bottom:40px;line-height:1.55}
 
   .actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:56px}
-  .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:600;transition:all .15s;border:none;cursor:pointer;text-decoration:none}
-  .btn-primary{background:var(--primary);color:#0a0a08;border:1px solid var(--primary)}
-  .btn-primary:hover{background:var(--primary-hover);color:#0a0a08;border-color:var(--primary-hover)}
-  .btn-secondary{background:transparent;color:var(--text);border:1px solid var(--border-strong)}
-  .btn-secondary:hover{border-color:var(--primary);color:var(--primary)}
-  .btn-note{font-size:12px;color:var(--faint);font-family:'JetBrains Mono',monospace;letter-spacing:0.02em;margin-top:8px;display:block}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:600;transition:all .15s;border:none;cursor:pointer}
+  .btn-primary{background:var(--text);color:var(--bg)}
+  .btn-primary:hover{background:var(--primary);color:#fff}
+  .btn-secondary{background:transparent;color:var(--text);border:1px solid var(--border)}
+  .btn-secondary:hover{border-color:var(--text)}
 
-  h2{font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:34px;line-height:1.2;letter-spacing:-0.01em;margin:56px 0 16px;color:var(--text)}
-  h3{font-size:19px;font-weight:600;margin:32px 0 12px;color:var(--text);letter-spacing:-0.005em}
-  p{margin:0 0 18px;font-size:16.5px;color:var(--text)}
+  h2{font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:32px;line-height:1.2;letter-spacing:-0.01em;margin:56px 0 16px;color:var(--text)}
+  h3{font-size:18px;font-weight:600;margin:32px 0 12px;color:var(--text);letter-spacing:-0.005em}
+  p{margin:0 0 18px;font-size:16px}
 
-  code{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:14px;background:var(--surface);padding:1px 6px;border-radius:4px;border:1px solid var(--border);color:var(--primary)}
-  pre{font-family:'JetBrains Mono',ui-monospace,monospace;background:var(--surface);color:var(--text);padding:20px 24px;border-radius:8px;border:1px solid var(--border);overflow-x:auto;font-size:13px;line-height:1.6;margin:20px 0}
+  code{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:14px;background:var(--surface);padding:1px 6px;border-radius:4px;border:1px solid var(--border)}
+  pre{font-family:'JetBrains Mono',ui-monospace,monospace;background:#1c1b19;color:#e8e7e4;padding:20px 24px;border-radius:8px;overflow-x:auto;font-size:13px;line-height:1.6;margin:20px 0}
   pre code{background:transparent;border:none;padding:0;color:inherit}
 
   table{width:100%;border-collapse:collapse;margin:24px 0;font-size:14px}
-  th,td{text-align:left;padding:14px 12px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text)}
+  th,td{text-align:left;padding:14px 12px;border-bottom:1px solid var(--border);vertical-align:top}
   th{font-weight:600;background:var(--surface);font-size:13px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted)}
 
   .refs{list-style:none;padding:0;margin:24px 0;font-size:14px;line-height:1.7}
@@ -151,10 +145,7 @@ export const WHITEPAPER_HTML = `<!doctype html>
     This paper is technical commentary intended for compliance, audit, and engineering audiences. It is not legal advice. Statements about Regulation (EU) 2024/1689 are drawn from the operative text of the Regulation; statements about implementations are drawn from public, independently checkable artifacts cited in the References.
   </div>
   <div class="actions">
-    <div style="display:flex;flex-direction:column;gap:6px;">
-      <a class="btn btn-primary" href="/whitepaper.pdf">Download PDF</a>
-      <span class="btn-note">Print edition \u2014 formatted for paper.</span>
-    </div>
+    <a class="btn btn-primary" href="/whitepaper.pdf">Download PDF</a>
     <a class="btn btn-secondary" href="/article-12">Try the Article 12 Considerations tool</a>
   </div>
 </div>

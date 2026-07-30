@@ -15,7 +15,7 @@ const BENCHMARKS_HTML = `<!doctype html>
 <link rel="apple-touch-icon" href="/assets/ao-logo-v8.png" />
 <style>
   :root {
-    --bg: #0b0b0c;
+    --bg: #070706;
     --surface: #141416;
     --surface-2: #1c1c1f;
     --border: #2a2a2f;

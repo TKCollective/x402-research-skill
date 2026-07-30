@@ -18,12 +18,12 @@ export const CHANGELOG_HTML = `<!DOCTYPE html>
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="/assets/ao-logo-v8.png">
 <style>
-:root{--ink:#0a0a08;--ink2:#141310;--paper:#f4eee0;--gold:#d4a94a;--gline:rgba(212,169,74,.16);--mut:#a49a82}
+:root{--ink:#070706;--ink2:#121110;--paper:#f4eee0;--gold:#d4a94a;--gline:rgba(212,169,74,.16);--mut:#a49a82}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Satoshi',sans-serif;background:var(--ink);color:var(--paper);line-height:1.65}
 .mono{font-family:'JetBrains Mono',monospace}
 a{color:inherit}
-nav{border-bottom:1px solid var(--gline);background:rgba(10,10,8,.85)}
+nav{border-bottom:1px solid var(--gline);background:rgba(7,7,6,.85)}
 .nav-in{max-width:820px;margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between}
 .logo{font-weight:700;text-decoration:none}
 .logo span{color:var(--gold)}

@@ -15,7 +15,7 @@ export const RECEIPT_REGISTRY_PAGE_HTML = `<!DOCTYPE html>
 <link rel="apple-touch-icon" href="/assets/ao-logo-v8.png">
 <style>
   :root {
-    --bg: #08090a; --surface: #0f1114; --surface-alt: #14171b;
+    --bg: #070706; --surface: #0f1114; --surface-alt: #14171b;
     --border: rgba(255,255,255,0.08); --border-strong: rgba(255,255,255,0.16);
     --text: #eef1f4; --text-muted: #9ba3ab; --gold: #c9a96e; --gold-hover: #d8bb85;
     --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
@@ -29,7 +29,7 @@ export const RECEIPT_REGISTRY_PAGE_HTML = `<!DOCTYPE html>
   pre { background: var(--surface-alt); border: 1px solid var(--border); padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; line-height: 1.55; }
   pre code { background: transparent; padding: 0; }
 
-  .nav { position: sticky; top: 0; z-index: 20; background: rgba(8,9,10,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .nav { position: sticky; top: 0; z-index: 20; background: rgba(7,7,6,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; }
   .nav__brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 14px; letter-spacing: 0.02em; }
   .nav__brand-mark { width: 24px; height: 24px; border-radius: 4px; background: var(--gold); color: #000; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 800; font-size: 12px; }
   .nav__back { font-size: 13px; color: var(--text-muted); }
