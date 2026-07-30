@@ -33,7 +33,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;opac
 .mono{font-family:'JetBrains Mono',monospace}
 a{color:inherit;text-decoration:none}
 .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
-section{padding:104px 0;position:relative}
+section{padding:128px 0;position:relative}
 .eyebrow{font-family:'JetBrains Mono',monospace;font-size:.78rem;letter-spacing:.22em;color:var(--gold);margin-bottom:18px;display:block}
 h2{font-size:clamp(1.7rem,3.4vw,2.5rem);font-weight:700;line-height:1.15;letter-spacing:-.01em;margin-bottom:14px}
 .sub{color:var(--mut-d);max-width:640px;font-size:1.06rem}
@@ -79,10 +79,18 @@ nav{position:sticky;top:0;z-index:50;background:rgba(7,7,6,.8);backdrop-filter:b
 
 /* ---------- hero ---------- */
 .hero{padding:110px 0 100px;position:relative;overflow:hidden}
-.hero::before{content:"";position:absolute;inset:-40% -20% auto;height:130%;background:radial-gradient(ellipse at 72% 18%,rgba(212,169,74,.13),transparent 52%),radial-gradient(ellipse at 15% 90%,rgba(212,169,74,.05),transparent 45%);pointer-events:none}
+.hero::before{content:"";position:absolute;inset:-40% -20% auto;height:130%;background:radial-gradient(ellipse at 72% 18%,rgba(212,169,74,.13),transparent 52%),radial-gradient(ellipse at 15% 90%,rgba(212,169,74,.05),transparent 45%);pointer-events:none;animation:glowdrift 14s ease-in-out infinite alternate}
+@keyframes glowdrift{from{transform:translate(0,0) scale(1)}to{transform:translate(-3%,2%) scale(1.06)}}
+@media (prefers-reduced-motion: reduce){.hero::before{animation:none}}
 .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:64px;align-items:center;position:relative}
 h1{font-size:clamp(2.1rem,4.6vw,3.4rem);font-weight:700;line-height:1.08;letter-spacing:-.02em}
 h1 .g{background:linear-gradient(110deg,var(--gold),var(--gold-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hl{display:block;opacity:0;transform:translateY(18px);animation:lineup .8s cubic-bezier(.22,.7,.3,1) forwards}
+h1 .hl:nth-child(3){animation-delay:.15s}
+.hero-sub,.hero-ctas,.proof-strip{opacity:0;transform:translateY(14px);animation:lineup .8s cubic-bezier(.22,.7,.3,1) forwards}
+.hero-sub{animation-delay:.3s}.hero-ctas{animation-delay:.45s}.proof-strip{animation-delay:.6s}
+@keyframes lineup{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){.hl,.hero-sub,.hero-ctas,.proof-strip{opacity:1;transform:none;animation:none}}
 .hero-sub{margin:22px 0 34px;font-size:1.15rem;color:var(--mut-d);max-width:520px}
 .hero-ctas{display:flex;gap:14px;flex-wrap:wrap}
 .proof-strip{margin-top:44px;font-family:'JetBrains Mono',monospace;font-size:.8rem;letter-spacing:.06em;color:var(--mut-d);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
@@ -101,6 +109,11 @@ h1 .g{background:linear-gradient(110deg,var(--gold),var(--gold-2));-webkit-backg
 .chk{color:#a3731f;opacity:.75;font-style:italic}
 .receipt{transition:box-shadow .9s ease}
 .receipt.sealed{box-shadow:0 0 110px rgba(212,169,74,.28),0 30px 80px rgba(0,0,0,.6)}
+.receipt.sealed::before{animation:none}
+.receipt .sheen{position:absolute;inset:0;background:linear-gradient(115deg,transparent 42%,rgba(212,169,74,.14) 50%,transparent 58%);transform:translateX(-120%);pointer-events:none}
+.receipt.sealed .sheen{animation:sheen 5.5s ease-in-out 1.2s infinite}
+@keyframes sheen{0%,72%{transform:translateX(-120%)}86%{transform:translateX(120%)}100%{transform:translateX(120%)}}
+@media (prefers-reduced-motion: reduce){.receipt.sealed .sheen{animation:none}}
 .receipt.sealed .r-foot{color:#a3731f}
 .r-foot{border-top:1px dashed var(--line-l);margin-top:14px;padding-top:12px;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:#8a7c5e;display:flex;justify-content:space-between}
 @media(max-width:900px){.hero-grid{grid-template-columns:1fr}.receipt{justify-self:start;max-width:460px}}
@@ -125,7 +138,7 @@ h1 .g{background:linear-gradient(110deg,var(--gold),var(--gold-2));-webkit-backg
 <header class="hero">
   <div class="wrap hero-grid">
     <div>
-      <h1>AI agents act on claims.<br>We make the claims <span class="g">prove themselves.</span></h1>
+      <h1><span class="hl">AI agents act on claims.</span><br><span class="hl">We make the claims <span class="g">prove themselves.</span></span></h1>
       <p class="hero-sub">Before your agent acts, AgentOracle checks the claim and issues a signed receipt — evidence anyone can verify offline, against published keys, without trusting us or you.</p>
       <div class="hero-ctas">
         <a class="btn btn-gold" href="#pricing">Get a key</a>
@@ -140,7 +153,7 @@ h1 .g{background:linear-gradient(110deg,var(--gold),var(--gold-2));-webkit-backg
     <div class="receipt" aria-label="Sample AgentOracle receipt">
       <div class="r-head"><span>RECEIPT · PRE-ACTION</span><span>AGENTORACLE</span></div>
       <div class="r-body" id="heroType"></div>
-      <div class="r-foot"><span>ed25519 · rfc 8785</span><span>verifies offline</span></div>
+      <div class="r-foot"><span>ed25519 · rfc 8785</span><span>verifies offline</span></div><span class="sheen"></span>
     </div>
   </div>
 </header>
@@ -153,7 +166,7 @@ h1 .g{background:linear-gradient(110deg,var(--gold),var(--gold-2));-webkit-backg
     <p class="sub reveal">One API call sits between your agent and its consequential actions. Here is the whole product:</p>
 
     <div class="loop-wrap" style="position:relative;margin-top:48px">
-    <svg class="loop-line" viewBox="0 0 1080 4" preserveAspectRatio="none" aria-hidden="true"><path id="loopPath" d="M0 2 H1080" stroke="url(#lg)" stroke-width="2" fill="none"/><defs><linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="rgba(212,169,74,.0)"/><stop offset=".15" stop-color="rgba(212,169,74,.55)"/><stop offset=".85" stop-color="rgba(212,169,74,.55)"/><stop offset="1" stop-color="rgba(212,169,74,.0)"/></linearGradient></defs></svg>
+    <div class="loop-line" aria-hidden="true"><i></i></div>
     <div class="loop reveal" id="features">
       <div class="loop-step"><div class="ln mono">1</div><h3>Your agent makes a claim</h3><p>"This invoice is unpaid." "This drug interaction is safe." "This customer is eligible." The claim that justifies the action.</p></div>
       <div class="loop-arrow mono" aria-hidden="true">→</div>
@@ -170,6 +183,11 @@ h1 .g{background:linear-gradient(110deg,var(--gold),var(--gold-2));-webkit-backg
       <div class="pg-head">
         <span class="mono pg-title">TRY IT · LIVE</span>
         <span class="mono pg-hint">runs against the real engine</span>
+      </div>
+      <div class="pg-chips mono">
+        <button class="chip" data-claim="The Eiffel Tower is 330 metres tall">Eiffel Tower height</button>
+        <button class="chip" data-claim="Aspirin and ibuprofen are safe to take together">Drug interaction</button>
+        <button class="chip" data-claim="The EU AI Act applies to US companies">EU AI Act scope</button>
       </div>
       <div class="pg-row">
         <input id="pg-input" class="mono" type="text" value="The Eiffel Tower is 330 metres tall" aria-label="Claim to verify">
@@ -345,18 +363,29 @@ h1 .g{background:linear-gradient(110deg,var(--gold),var(--gold-2));-webkit-backg
 .loop-step p{font-size:.9rem;color:var(--mut-d)}
 .ln{width:30px;height:30px;border-radius:50%;background:rgba(212,169,74,.12);border:1px solid var(--gline-hi);color:var(--gold-2);display:flex;align-items:center;justify-content:center;font-size:.85rem}
 .loop-arrow{align-self:center;color:var(--gold);font-size:1.3rem;opacity:.7}
-.loop-line{position:absolute;left:0;right:0;top:50%;width:100%;height:4px;z-index:0;pointer-events:none}
-.loop-line path{stroke-dasharray:1080;stroke-dashoffset:1080;transition:stroke-dashoffset 1.6s cubic-bezier(.22,.7,.3,1) .2s}
-.loop-wrap.drawn .loop-line path{stroke-dashoffset:0}
+.loop-line{position:absolute;left:0;right:0;top:50%;height:2px;z-index:0;pointer-events:none;overflow:hidden}
+.loop-line i{display:block;height:100%;width:0;background:linear-gradient(90deg,transparent,rgba(212,169,74,.55) 15%,rgba(212,169,74,.55) 85%,transparent);transition:width 1.6s cubic-bezier(.22,.7,.3,1) .2s}
+.loop-wrap.drawn .loop-line i{width:100%}
 .loop{position:relative;z-index:1}
-@media(max-width:980px){.loop{grid-template-columns:1fr}.loop-arrow{transform:rotate(90deg);justify-self:center}.loop-line{display:none}}
-@media (prefers-reduced-motion: reduce){.loop-line path{stroke-dashoffset:0;transition:none}}
+@media(max-width:980px){.loop{grid-template-columns:1fr}.loop-arrow{transform:rotate(90deg);justify-self:center}
+.loop-line{left:14px;right:auto;top:0;bottom:0;height:100%;width:2px}
+.loop-line i{width:100%;height:0;background:linear-gradient(180deg,transparent,rgba(212,169,74,.55) 12%,rgba(212,169,74,.55) 88%,transparent);transition:height 1.8s cubic-bezier(.22,.7,.3,1) .2s}
+.loop-wrap.drawn .loop-line i{height:100%;width:100%}
+.loop-step{margin-left:34px}
+}
+@media (prefers-reduced-motion: reduce){.loop-line i{width:100%;height:100%;transition:none}}
 
 /* ---------- playground ---------- */
-.pg{margin-top:56px;background:var(--ink-2);color:var(--paper);border:1px solid var(--gline);border-radius:var(--rad);padding:26px;box-shadow:0 0 60px rgba(212,169,74,.07),0 18px 50px rgba(0,0,0,.5);position:relative}
+.pg{margin-top:56px;background:var(--ink-2);color:var(--paper);border:1px solid transparent;border-radius:var(--rad);padding:26px;box-shadow:0 0 60px rgba(212,169,74,.07),0 18px 50px rgba(0,0,0,.5);position:relative;background-clip:padding-box}
+.pg::before{content:"";position:absolute;inset:-1px;border-radius:var(--rad);padding:1px;background:linear-gradient(120deg,rgba(212,169,74,.12),rgba(212,169,74,.5),rgba(212,169,74,.12));background-size:250% 250%;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:borderflow 7s ease-in-out infinite;pointer-events:none}
+@keyframes borderflow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@media (prefers-reduced-motion: reduce){.pg::before{animation:none}}
 .pg-head{display:flex;justify-content:space-between;margin-bottom:16px}
 .pg-title{font-size:.75rem;letter-spacing:.2em;color:var(--gold)}
 .pg-hint{font-size:.72rem;color:var(--mut-d)}
+.pg-chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.chip{font-family:'JetBrains Mono',monospace;font-size:.72rem;letter-spacing:.03em;color:var(--mut-d);background:transparent;border:1px solid var(--gline);border-radius:999px;padding:7px 14px;cursor:pointer;transition:border-color .2s,color .2s,box-shadow .2s}
+.chip:hover{border-color:var(--gline-hi);color:var(--gold-2);box-shadow:0 0 14px rgba(212,169,74,.12)}
 .pg-row{display:flex;gap:12px;flex-wrap:wrap}
 #pg-input{flex:1;min-width:240px;background:var(--ink);border:1px solid var(--line-d);border-radius:10px;color:var(--paper);padding:13px 16px;font-size:.9rem}
 #pg-input:focus{outline:2px solid var(--gold);outline-offset:2px}
@@ -503,6 +532,16 @@ footer{border-top:1px solid var(--gline);padding:64px 0 48px;background:var(--in
     setTimeout(run, s.d);
   }
   setTimeout(run, 500);
+  // replay when receipt re-enters view after completion
+  var rec=document.querySelector('.receipt');
+  if(rec && 'IntersectionObserver' in window){
+    var seen=false;
+    new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if(e.isIntersecting){ if(seen && i>=steps.length){ html=[];i=0;el.innerHTML='';rec.classList.remove('sealed');setTimeout(run,300);} seen=true; }
+      });
+    },{threshold:.4}).observe(rec);
+  }
 })();
 
 // ---------- playground ----------
@@ -612,6 +651,14 @@ async function runEvaluation() {
 document.getElementById('pg-btn') && document.getElementById('pg-btn').addEventListener('click', runEvaluation);
 
 // The block below is a safe fallback so the page never renders broken if the transplant is missed.
+(function(){
+  document.querySelectorAll('.chip').forEach(function(c){
+    c.addEventListener('click', function(){
+      var i=document.getElementById('pg-input'); if(i){ i.value=c.getAttribute('data-claim'); }
+      var b=document.getElementById('pg-btn'); if(b){ b.click(); }
+    });
+  });
+})();
 (function(){
   var btn=document.getElementById('pg-btn'), inp=document.getElementById('pg-input'),
       out=document.getElementById('pg-result'), spin=document.getElementById('pg-spinner');
