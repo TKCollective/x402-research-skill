@@ -69,6 +69,10 @@
       "dest": "/ao-logo-v8.png"
     },
     {
+      "src": "/assets/ao-logo-v8.png",
+      "dest": "/ao-logo-v8.png"
+    },
+    {
       "src": "/whitepaper.pdf",
       "dest": "/whitepaper.pdf"
     },
