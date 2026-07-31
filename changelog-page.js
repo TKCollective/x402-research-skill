@@ -49,8 +49,49 @@ li p{font-size:.93rem;color:var(--mut);max-width:620px}
   <h1>Changelog</h1>
   <p class="sub">What shipped, dated. Each entry corresponds to a public, verifiable artifact — that's the house style.</p>
   <ol>
-    <!-- PERPLEXITY: replace the two placeholder items below with the 9 dated ticker items
-         from landing-page-v6-preview.js (whatsNewTrack), VERBATIM, newest first. -->
+    <!--
+      LAUNCH-DAY DRAFT — do not publish before 2026-08-02:
+      <li>
+        <time>2026-08-02</time>
+        <h2>Self-serve open — card → API key → signed receipts, live</h2>
+        <p><a href="https://agentoracle.co/#pricing" target="_blank" rel="noopener noreferrer">get a key ↗</a></p>
+      </li>
+    -->
+    <li>
+      <time>2026-07-30</time>
+      <h2>First v0.4 conformance vector shipped — v04-accept-001, two-party signed (AgentOracle + AgentTrust legs), byte-identical across three independent canonicalizations</h2>
+      <p><a href="https://github.com/TKCollective/agentoracle-receipt-spec/blob/v0.4-rfc-sealed-evidence-multi-clock/examples/v0.4/v04-accept-001.json" target="_blank" rel="noopener noreferrer">vector ↗</a></p>
+    </li>
+    <li>
+      <time>2026-07-30</time>
+      <h2>Sequence-integrity example merged into the community pre-action governance conformance suite — N artifacts over time, Merkle inclusion + tamper demos</h2>
+      <p><a href="https://github.com/babyblueviper1/preaction-governance-conformance/commit/2e069ae" target="_blank" rel="noopener noreferrer">merge ↗</a></p>
+    </li>
+    <li>
+      <time>2026-07-29</time>
+      <h2>Canonical verdict→gate mapping published, content-addressed — sha256-addressed immutable doc</h2>
+      <p><a href="https://agentoracle.co/mappings/agentoracle-v0.3-2026-05-30.json" target="_blank" rel="noopener noreferrer">mapping ↗</a></p>
+    </li>
+    <li>
+      <time>2026-07-28</time>
+      <h2>Third cross-citing draft filed in the receipt family — draft-msebenzi-evidence-action-00 cites draft-krausz-verification-state</h2>
+      <p><a href="https://datatracker.ietf.org/doc/draft-msebenzi-evidence-action/" target="_blank" rel="noopener noreferrer">datatracker ↗</a></p>
+    </li>
+    <li>
+      <time>2026-07-25</time>
+      <h2>Composed multi-issuer envelope example merged into the community conformance suite — N signers, one artifact</h2>
+      <p><a href="https://github.com/babyblueviper1/preaction-governance-conformance/pull/4" target="_blank" rel="noopener noreferrer">PR #4 ↗</a></p>
+    </li>
+    <li>
+      <time>2026-07-16</time>
+      <h2>Independent byte-identical second implementation merged — AgentTrust rebuilt the format from spec text alone</h2>
+      <p><a href="https://github.com/giskard09/argentum-core/pull/33" target="_blank" rel="noopener noreferrer">PR #33 ↗</a></p>
+    </li>
+    <li>
+      <time>2026-06-23</time>
+      <h2>First registered profile in the receipt-format registry — verification.v0.3 entered as the first profile in the ERC-8210 Receipt Profile Registry</h2>
+      <p><a href="https://github.com/wangbin9953/erc8210-aap/pull/4" target="_blank" rel="noopener noreferrer">registry ↗</a></p>
+    </li>
     <li>
       <time>2026-06-06</time>
       <h2>IETF Internet-Draft FILED — draft-krausz-verification-state-01</h2>
