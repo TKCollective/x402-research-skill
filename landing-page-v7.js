@@ -81,9 +81,7 @@ nav{position:sticky;top:0;z-index:50;background:rgba(7,7,6,.8);backdrop-filter:b
 .hero{padding:110px 0 100px;position:relative;overflow:hidden}
 #claimfield{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:.55}
 .hero-grid{position:relative;z-index:2}
-.hero::before{content:"";position:absolute;inset:-40% -20% auto;height:130%;background:radial-gradient(ellipse at 72% 18%,rgba(212,169,74,.13),transparent 52%),radial-gradient(ellipse at 15% 90%,rgba(212,169,74,.05),transparent 45%);pointer-events:none;animation:glowdrift 14s ease-in-out infinite alternate}
-@keyframes glowdrift{from{transform:translate(0,0) scale(1)}to{transform:translate(-3%,2%) scale(1.06)}}
-@media (prefers-reduced-motion: reduce){.hero::before{animation:none}}
+
 .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:64px;align-items:center;position:relative}
 h1{font-size:clamp(2.1rem,4.6vw,3.4rem);font-weight:700;line-height:1.08;letter-spacing:-.02em}
 h1 .g{background:linear-gradient(110deg,var(--gold),var(--gold-2));-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -101,9 +99,6 @@ h1 .g{transition:none}
 
 /* the signature: a receipt that types itself */
 .receipt{background:linear-gradient(180deg,#161512,#111009);color:var(--paper);border:1px solid var(--gline-hi);border-radius:4px;padding:30px 28px 26px;position:relative;box-shadow:0 0 90px rgba(212,169,74,.14),0 30px 80px rgba(0,0,0,.65);max-width:430px;justify-self:end;width:100%}
-.receipt::before,.receipt::after{content:"";position:absolute;left:0;right:0;height:12px;background-image:radial-gradient(circle at 12px 6px,var(--ink) 5px,rgba(212,169,74,.28) 5.5px,transparent 6px);background-size:26px 12px;background-position:6px 0}
-.receipt::before{top:-6px}
-.receipt::after{bottom:-6px;transform:scaleY(-1)}
 .r-head{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.14em;color:var(--gold);border-bottom:1px dashed var(--gline-hi);padding-bottom:12px;margin-bottom:14px}
 .r-body{font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.85;min-height:216px;color:#e6ddc6}
 .r-body .k{color:#9a8b66}
@@ -112,11 +107,7 @@ h1 .g{transition:none}
 .chk{color:#a3731f;opacity:.75;font-style:italic}
 .receipt{transition:box-shadow .9s ease}
 .receipt.sealed{box-shadow:0 0 110px rgba(212,169,74,.28),0 30px 80px rgba(0,0,0,.6)}
-.receipt.sealed::before{animation:none}
-.receipt .sheen{position:absolute;inset:0;background:linear-gradient(115deg,transparent 42%,rgba(212,169,74,.20) 50%,transparent 58%);transform:translateX(-120%);pointer-events:none}
-.receipt.sealed .sheen{animation:sheen 5.5s ease-in-out 1.2s infinite}
-@keyframes sheen{0%,72%{transform:translateX(-120%)}86%{transform:translateX(120%)}100%{transform:translateX(120%)}}
-@media (prefers-reduced-motion: reduce){.receipt.sealed .sheen{animation:none}}
+
 .receipt.sealed .r-foot{color:var(--gold-2)}
 .r-foot{border-top:1px dashed var(--gline-hi);margin-top:14px;padding-top:12px;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:#9a8b66;display:flex;justify-content:space-between}
 @media(max-width:900px){.hero-grid{grid-template-columns:1fr}.receipt{justify-self:start;max-width:460px}}
@@ -157,7 +148,7 @@ h1 .g{transition:none}
     <div class="receipt" aria-label="Sample AgentOracle receipt">
       <div class="r-head"><span>RECEIPT · PRE-ACTION</span><span>AGENTORACLE</span></div>
       <div class="r-body" id="heroType"></div>
-      <div class="r-foot"><span>ed25519 · rfc 8785</span><span>verifies offline</span></div><span class="sheen"></span>
+      <div class="r-foot"><span>ed25519 · rfc 8785</span><span>verifies offline</span></div>
     </div>
   </div>
 </header>
@@ -530,30 +521,6 @@ footer{border-top:1px solid var(--gline);padding:64px 0 48px;background:var(--in
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
-})();
-
-// ---------- decrypt effect on hero lines ----------
-(function(){
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  var CH='ABCDEF0123456789#$%&';
-  document.querySelectorAll('h1 .hl').forEach(function(line, li){
-    var nodes=[]; 
-    (function walk(n){ n.childNodes.forEach(function(c){ if(c.nodeType===3) nodes.push(c); else walk(c); }); })(line);
-    nodes.forEach(function(node){
-      var final=node.textContent, frame=0, total=Math.round(final.length*1.6);
-      function step(){
-        frame++;
-        var reveal=Math.floor(final.length*(frame/total)), out='';
-        for(var i=0;i<final.length;i++){
-          out += i<reveal||final[i]===' ' ? final[i] : CH[Math.floor(Math.random()*CH.length)];
-        }
-        node.textContent=out;
-        if(reveal<final.length) requestAnimationFrame(step);
-        else node.textContent=final;
-      }
-      setTimeout(function(){ requestAnimationFrame(step); }, 250+li*180);
-    });
-  });
 })();
 
 // ---------- cursor glow + receipt tilt (desktop) ----------
