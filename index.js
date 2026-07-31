@@ -392,16 +392,234 @@ app.get("/googlea59d56c6359397c8.html", (_req, res) => {
   res.send("google-site-verification: googlea59d56c6359397c8.html");
 });
 
+// llms.txt — agent-legibility surface. Static text. Served at both root and
+// /.well-known/ per the emerging convention.
+const LLMS_TXT = `# AgentOracle
+AgentOracle is a pre-action verification API for AI agents: before an agent acts on a factual claim, AgentOracle checks it against independent sources and issues a cryptographically signed receipt (RFC 8785 canonical bytes, Ed25519 JWS) that anyone can verify offline against published keys.
+
+- Product:
+  - POST /evaluate — claim in, verdict + evidence out (x402 pay-per-call, $0.09/verification, USDC, gasless via SKALE)
+  - POST /v1/compose — decision in, signed receipt out (API key, $99/mo self-serve at /register)
+- Payment manifest at /.well-known/x402.json
+- Verify any receipt offline: pip install agentoracle-receipt-verify ; keys at /.well-known/jwks.json
+- Spec (IETF): https://datatracker.ietf.org/doc/draft-krausz-verification-state
+- Conformance vectors + reference verifiers: https://github.com/TKCollective/agentoracle-receipt-spec
+- Whitepaper: /whitepaper · Changelog: /changelog
+Receipts prove what was claimed, what was checked, by what rules, and who stands behind it — verifiable without trusting AgentOracle.
+`;
+
+app.get(["/llms.txt", "/.well-known/llms.txt"], (_req, res) => {
+  res.setHeader("Content-Type", "text/plain; charset=utf-8");
+  res.setHeader("Cache-Control", "public, max-age=3600");
+  res.send(LLMS_TXT);
+});
+
+// skill.md — agent-facing usage doc, machine-readable Markdown.
+const SKILL_MD = `# Verify a factual claim before acting
+
+## When to use
+
+Call this before your agent takes an action whose consequences depend on a
+factual claim being true. Payments, medical or legal recommendations, contract
+terms, compliance-relevant reports, moves that are hard to reverse. The
+verification is pre-action: it produces a signed record of what was known and
+checked at the moment of the decision, not an after-the-fact reconstruction.
+
+Two endpoints, two use cases:
+
+- \`POST /evaluate\` — claim in, verdict + evidence out. Use when your agent has
+  a raw claim string and needs AgentOracle to run the multi-source check.
+  Payment: x402 pay-per-call, $0.09 per verification, USDC on Base or gasless
+  via SKALE. Manifest at https://agentoracle.co/.well-known/x402.json.
+- \`POST /v1/compose\` — decision in, signed receipt out. Use when your pipeline
+  already produces a \`v_gate\` verdict and you need the JWS-signed envelope so
+  AgentTrust / Presidio / downstream aggregators can co-sign. Payment: API key
+  only (\`Authorization: Bearer <key>\`), $99/month self-serve at
+  https://agentoracle.co/register, 100 requests/hour/key.
+
+## How to pay
+
+**Per-call (\`/evaluate\`):** Include the x402 payment payload per the manifest
+at \`/.well-known/x402.json\`. Settle in USDC on Base or gasless via SKALE. No
+account, no API key header. Cached results within 24h at 50% off.
+
+**Subscription (\`/v1/compose\`):** Buy the $99/month tier at
+https://agentoracle.co/register (Stripe). Key issued at checkout; send as
+\`Authorization: Bearer <key>\`. Rate limit: 100 requests/hour/key. Enterprise
+volume via joe@agentoracle.co.
+
+## Call shape — POST /v1/compose
+
+The signing endpoint accepts a pre-computed \`v_gate\` result plus subject
+hashes and returns a JWS-signed one-leg composed envelope. From the live
+gateway OpenAPI spec:
+
+\`\`\`json
+{
+  "subject": {
+    "claim_hash": "sha256-<64-hex>",
+    "skill_hash": "sha256-<64-hex>"
+  },
+  "v_gate": {
+    "verdict": "act",
+    "v_confidence": 0.91,
+    "v_gate_threshold": 0.7,
+    "v_adversarial_result": "resilient",
+    "v_recommendation": "confident_supported"
+  }
+}
+\`\`\`
+
+- \`subject.claim_hash\` — sha256 of the exact claim string being asserted
+- \`subject.skill_hash\` — sha256 of the ruleset / skill used to evaluate it
+- \`v_gate.verdict\` — one of \`"act"\` or \`"halt"\`
+- \`v_gate.v_confidence\` — decimal, 0–1
+- \`v_gate.v_gate_threshold\` — decision threshold used
+- \`v_gate.v_adversarial_result\` — \`"resilient"\` or \`"vulnerable"\`
+- \`v_gate.v_recommendation\` — \`"confident_supported"\` or \`"refuted"\`
+
+Optional field:
+- \`mycelium_trail_id\` — string identifier if the caller is tracking a trail.
+  Must be absent or a string. Never null.
+
+Response: JWS General Serialization with the AgentOracle signature, \`typ\` =
+\`application/vnd.verification.v0.3+composed+jws\`, per
+draft-krausz-verification-state-01.
+
+## Call shape — POST /evaluate
+
+Send the claim text. Discovery manifest at \`/.well-known/x402.json\` documents
+the current payment terms. Request body:
+
+\`\`\`json
+{
+  "content": "<claim text, up to 8000 characters>",
+  "min_confidence": 0.7
+}
+\`\`\`
+
+Response body includes \`evaluation_id\` and \`evaluation\` (per-claim verdicts,
+evidence, confidence, plain-English recommendation). The paid-path response
+includes a signed receipt suitable for retention as evidence.
+
+## What you get back
+
+A signed envelope containing:
+
+- The \`subject\` (claim hash, skill hash) tied to the specific claim
+- The \`v_gate\` verdict, confidence, threshold, adversarial result, and
+  recommendation
+- Envelope kind and version (\`verification.v0.3+composed\`)
+- Signature line with \`kid\` matching AgentOracle's published JWKS
+
+The receipt IS the artifact. Retain it as evidence of what was decided and
+why, at the time.
+
+## How to verify the receipt (offline)
+
+The signed receipt verifies without any AgentOracle service call:
+
+\`\`\`bash
+pip install agentoracle-receipt-verify
+agentoracle-verify receipt.json --jwks https://agentoracle.co/.well-known/jwks.json
+\`\`\`
+
+The JWKS is publicly cacheable. Once cached, verification runs against
+canonical bytes (RFC 8785) and Ed25519 signature (RFC 8037) with no network
+dependency. Same result on every machine, forever.
+
+## Hard rule
+
+**Treat \`verdict: "halt"\` as a stop signal.** Do not act on the claim, even
+if some other axis reads well. Halt is the model saying the claim did not
+meet the ruleset's threshold under adversarial checking. (Some AgentOracle
+customer-facing surfaces label this outcome \`do_not_act\` for readability;
+the machine-facing API enum is \`halt\`.)
+
+**Retain the receipt.** Whether the verdict was \`"act"\` or \`"halt"\`, keep
+the signed receipt in your evidence store. It is your durable, cryptographic
+proof of what was known at decision time. A 2028 audit asking about earlier
+behavior can only be answered by records that existed then.
+
+## References
+
+- Spec (IETF Internet-Draft): https://datatracker.ietf.org/doc/draft-krausz-verification-state
+- Conformance vectors + reference verifiers: https://github.com/TKCollective/agentoracle-receipt-spec
+- Payment manifest: https://agentoracle.co/.well-known/x402.json
+- JWKS: https://agentoracle.co/.well-known/jwks.json
+- Whitepaper: https://agentoracle.co/whitepaper
+- Changelog: https://agentoracle.co/changelog
+`;
+
+app.get(["/skill.md", "/.well-known/skill.md"], (_req, res) => {
+  res.setHeader("Content-Type", "text/markdown; charset=utf-8");
+  res.setHeader("Cache-Control", "public, max-age=3600");
+  res.send(SKILL_MD);
+});
+
+// A2A v1.0 agent card — payment info as extensions since A2A v1.0 has no
+// payment field. Provider as top-level object (extension).
+const AGENT_CARD = {
+  name: "AgentOracle",
+  description: "Pre-action verification API for AI agents. Before an agent acts on a factual claim, AgentOracle checks it against independent sources and issues a cryptographically signed receipt (RFC 8785 canonical bytes, Ed25519 JWS) that anyone can verify offline against published keys.",
+  version: "0.3.0",
+  supportedInterfaces: [
+    { url: "https://agentoracle-gateway.zuplo.app/v1/compose", protocolBinding: "HTTP+JSON", protocolVersion: "1.0.0" }
+  ],
+  capabilities: { streaming: false, pushNotifications: false, extendedAgentCard: false },
+  defaultInputModes: ["application/json"],
+  defaultOutputModes: ["application/json", "application/vnd.verification.v0.3+composed+jws"],
+  skills: [
+    {
+      id: "compose-receipt",
+      name: "Compose signed verification receipt",
+      description: "Given a pre-computed v_gate verdict (act|halt), subject claim hash, and subject skill hash, produce a JWS General Serialization envelope with the AgentOracle signature per verification.v0.3+composed (draft-krausz-verification-state). The receipt is offline-verifiable against the published JWKS at https://agentoracle.co/.well-known/jwks.json using the reference verifier `agentoracle-receipt-verify` (PyPI).",
+      tags: ["verification", "signed-receipts", "pre-action", "claim-verification", "jws", "ed25519", "rfc-8785", "rfc-8037", "ietf-draft", "agent-safety"],
+      examples: [
+        "Sign a receipt for a payment-triggering claim before releasing funds",
+        "Produce an audit-trail receipt after a compliance-relevant recommendation",
+        "Compose a multi-issuer envelope by appending AgentTrust and Presidio signatures to the AO leg"
+      ]
+    }
+  ],
+  extensions: [
+    {
+      name: "x402-payment",
+      description: "x402 pay-per-call for pipelines that don't hold a subscription API key. Manifest published at https://agentoracle.co/.well-known/x402.json.",
+      specUrl: "https://x402.org/",
+      manifestUrl: "https://agentoracle.co/.well-known/x402.json"
+    },
+    {
+      name: "agentoracle-receipt-spec",
+      description: "IETF Internet-Draft specifying the receipt format, conformance vectors, and reference verifiers. Second byte-identical implementer (AgentTrust) live.",
+      specUrl: "https://datatracker.ietf.org/doc/draft-krausz-verification-state",
+      repositoryUrl: "https://github.com/TKCollective/agentoracle-receipt-spec"
+    }
+  ],
+  provider: {
+    name: "TK Collective LLC",
+    url: "https://agentoracle.co",
+    contact: "joe@agentoracle.co"
+  }
+};
+
+app.get("/.well-known/agent-card.json", (_req, res) => {
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.setHeader("Cache-Control", "public, max-age=3600");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.json(AGENT_CARD);
+});
+
 // SEO: robots.txt
 app.get("/robots.txt", (_req, res) => {
   res.setHeader("Content-Type", "text/plain");
-  res.send(`User-agent: *\nAllow: /\nDisallow: /health\nDisallow: /cache/stats\n\nSitemap: https://agentoracle.co/sitemap.xml`);
+  res.send(`User-agent: *\nAllow: /\nDisallow: /health\nDisallow: /cache/stats\n\n# AI-crawler allow-list (agent legibility — we WANT model visibility)\nUser-agent: GPTBot\nAllow: /\n\nUser-agent: ClaudeBot\nAllow: /\n\nUser-agent: PerplexityBot\nAllow: /\n\nUser-agent: Google-Extended\nAllow: /\n\nSitemap: https://agentoracle.co/sitemap.xml`);
 });
 
 // SEO: sitemap.xml
 app.get("/sitemap.xml", (_req, res) => {
   res.setHeader("Content-Type", "application/xml");
-  res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://agentoracle.co/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/x402.json</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/x402-manifest.json</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://agentoracle.co/demo</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>\n</urlset>`);
+  res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://agentoracle.co/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/x402.json</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/x402-manifest.json</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://agentoracle.co/demo</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>\n  <url><loc>https://agentoracle.co/llms.txt</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n  <url><loc>https://agentoracle.co/skill.md</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/agent-card.json</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n</urlset>`);
 });
 
 app.get("/favicon.ico", (_req, res) => {
