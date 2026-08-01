@@ -58,6 +58,11 @@ li p{font-size:.93rem;color:var(--mut);max-width:620px}
       </li>
     -->
     <li>
+      <time>2026-08-01</time>
+      <h2>v0.4 conformance suite complete — 1 accept, 3 reject, 3 status vectors; two independent implementations; every envelope and wrapper hash recomputed byte-identical on both sides</h2>
+      <p><a href="https://github.com/TKCollective/agentoracle-receipt-spec/tree/v0.4-rfc-sealed-evidence-multi-clock/examples/v0.4" target="_blank" rel="noopener noreferrer">suite ↗</a></p>
+    </li>
+    <li>
       <time>2026-07-30</time>
       <h2>First v0.4 conformance vector shipped — v04-accept-001, two-party signed (AgentOracle + AgentTrust legs), byte-identical across three independent canonicalizations</h2>
       <p><a href="https://github.com/TKCollective/agentoracle-receipt-spec/blob/v0.4-rfc-sealed-evidence-multi-clock/examples/v0.4/v04-accept-001.json" target="_blank" rel="noopener noreferrer">vector ↗</a></p>
