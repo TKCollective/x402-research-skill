@@ -895,4 +895,178 @@ function registerVGateCompose(app) {
   });
 }
 
-export { registerVGateCompose, COMPOSED_KID, COMPOSED_PUBLIC_JWK };
+// ═══════════════════════════════════════════════════════════════════
+// /evaluate signed receipt (single AO issuer).
+// Called by the /evaluate handler after aggregation completes, to attach
+// a JWS-signed composed envelope to the response under `receipt`. Same
+// signing key + JCS + typ as /v1/compose, but a single-signature line
+// (no AT co-signature; /evaluate is a single-issuer receipt). Payload
+// carries the v_gate block derived from real /evaluate aggregation,
+// subject hashes tying the receipt to the specific claim text and the
+// mapping ruleset, and v_gate.mapping_hash pinning the exact bytes of
+// the mapping document that governed the verdict resolution per the
+// recommendation_rules table.
+//
+// Threshold and gate_map both come from the mapping (0.7, gate_map
+// authoritative) so callers cannot smuggle a permissive threshold into
+// the receipt via the request. mapping_id equals AO_MAPPING_ID; the
+// caller passes the sha256 of the mapping bytes served from disk.
+// ═══════════════════════════════════════════════════════════════════
+
+function signEvaluateReceipt({
+  claim_text,
+  mapping_hash_hex,
+  v_confidence,
+  v_verdict,
+  v_adversarial_result,
+  timestamp_ms,
+}) {
+  // ── Guardrails: fail closed on any malformed input rather than sign a
+  // ── broken receipt. Matches the mapping's fail_closed clause.
+  if (typeof claim_text !== "string" || claim_text.length === 0) {
+    throw new Error("signEvaluateReceipt: claim_text must be non-empty string");
+  }
+  if (typeof mapping_hash_hex !== "string" || !/^[0-9a-f]{64}$/.test(mapping_hash_hex)) {
+    throw new Error("signEvaluateReceipt: mapping_hash_hex must be 64-hex sha256");
+  }
+  const VALID_VERDICTS = new Set(["supported", "refuted", "unverifiable", "unknown"]);
+  const VALID_ADV = new Set(["resilient", "vulnerable", "not_checked"]);
+  if (!VALID_VERDICTS.has(v_verdict)) {
+    throw new Error(`signEvaluateReceipt: invalid v_verdict "${v_verdict}"`);
+  }
+  if (!VALID_ADV.has(v_adversarial_result)) {
+    throw new Error(`signEvaluateReceipt: invalid v_adversarial_result "${v_adversarial_result}"`);
+  }
+  if (typeof v_confidence !== "number" || !Number.isFinite(v_confidence) || v_confidence < 0 || v_confidence > 1) {
+    throw new Error("signEvaluateReceipt: v_confidence must be finite 0..1");
+  }
+
+  // ── Threshold is a property of the mapping, NOT the caller. Requests
+  // ── that pass min_confidence tune display behaviour in the evaluation
+  // ── block; the receipt's v_gate.v_gate_threshold is authoritative and
+  // ── comes from mapping-agentoracle-v0.3-2026-05-30.json (0.7).
+  const V_GATE_THRESHOLD = 0.7;
+
+  // ── Apply mapping.recommendation_rules in order to derive v_recommendation.
+  let v_recommendation;
+  if (v_verdict === "refuted") {
+    v_recommendation = "refuted";                                  // rule 5
+  } else if (v_verdict === "unverifiable" || v_verdict === "unknown") {
+    v_recommendation = "unverifiable";                             // rule 6
+  } else {
+    // v_verdict === "supported"
+    if (v_adversarial_result === "resilient" && v_confidence >= V_GATE_THRESHOLD) {
+      v_recommendation = "confident_supported";                    // rule 1
+    } else if (v_adversarial_result === "not_checked" && v_confidence >= V_GATE_THRESHOLD) {
+      v_recommendation = "un_probed_not_cleared";                  // rule 2
+    } else if (v_adversarial_result === "vulnerable") {
+      v_recommendation = "vulnerable_supported";                   // rule 3
+    } else if (
+      (v_adversarial_result === "resilient" || v_adversarial_result === "not_checked") &&
+      v_confidence < V_GATE_THRESHOLD
+    ) {
+      v_recommendation = "weak_supported";                         // rule 4
+    } else {
+      v_recommendation = "error";                                  // rule 7 fallback
+    }
+  }
+
+  // ── gate_map: only confident_supported → act; all else → halt.
+  const verdict = v_recommendation === "confident_supported" ? "act" : "halt";
+
+  // ── Deterministic ISO timestamp derived from timestamp_ms so the same
+  // ── inputs produce byte-identical canonical bytes (required for cache
+  // ── hits and for external verifier reproducibility from raw inputs).
+  const tsMs = typeof timestamp_ms === "number" ? timestamp_ms : Date.now();
+  const tsDate = new Date(tsMs);
+  const tsMsStr = String(tsDate.getUTCMilliseconds()).padStart(3, "0");
+  const tsIso = tsDate.toISOString().replace(/\.\d{3}Z$/, `.${tsMsStr}Z`);
+
+  // ── Subject: content-addressed hashes for the claim + the ruleset that
+  // ── evaluated it. skill_hash IS the mapping document hash because for
+  // ── /evaluate the "skill" that reduced multi-source signals to a
+  // ── verdict is precisely the mapping's recommendation_rules table.
+  const claim_hash =
+    "sha256-" + crypto.createHash("sha256").update(claim_text, "utf-8").digest("hex");
+  const skill_hash = "sha256-" + mapping_hash_hex;
+
+  // ── v_gate block. All fields drawn from real aggregation inputs.
+  // ── mapping_hash pins the ruleset bytes; verifiers can (a) fetch by
+  // ── sha256, (b) hash the bytes, (c) confirm the bytes match the hash
+  // ── embedded here — that is the content-addressing property.
+  const v_gate = {
+    confidence: v_confidence,
+    issuer: "agentoracle.co",
+    mapping_hash: "sha256-" + mapping_hash_hex,
+    mapping_id: AO_MAPPING_ID,
+    signed_at: tsIso,
+    v_adversarial_result,
+    v_confidence,
+    v_gate_threshold: V_GATE_THRESHOLD,
+    v_recommendation,
+    v_verdict,
+    verdict,
+  };
+
+  // ── Composed envelope payload (single-issuer form). No v_gate_skill or
+  // ── screen_ref sibling blocks because /evaluate is a single AO issuer;
+  // ── downstream aggregators can still append their own signatures by
+  // ── re-serialising the same canonical_bytes and adding entries to
+  // ── signatures[]. composed_decision equals v_gate.verdict here because
+  // ── AND_PRESENT over a single present sibling is that sibling's verdict.
+  const payload = {
+    composed_decision: verdict,
+    composed_decision_rule: "AND_PRESENT",
+    envelope_kind: "verification.v0.3+composed",
+    receipt_version: "0.3.0-composed",
+    signature_meta: {
+      agentoracle_jwks_url: "https://agentoracle.co/.well-known/jwks.json",
+    },
+    subject: { claim_hash, skill_hash },
+    timestamp: tsIso,
+    timestamp_ms: tsMs,
+    v_gate,
+  };
+
+  // ── JCS canonicalize → utf-8 bytes → base64url payload.
+  const canonical_bytes = Buffer.from(jcs(payload), "utf-8");
+  const canonical_bytes_b64u = b64uEncode(canonical_bytes);
+  const canonical_sha256 =
+    "sha256-" + crypto.createHash("sha256").update(canonical_bytes).digest("hex");
+
+  // ── Sign the JWS signing-input per RFC 7515 §5.1.
+  const aoProtected = {
+    alg: "EdDSA",
+    kid: COMPOSED_KID,
+    typ: "application/vnd.verification.v0.3+composed+jws",
+  };
+  const aoProtectedB64u = b64uEncode(JSON.stringify(aoProtected));
+  const aoSigningInput = Buffer.from(
+    aoProtectedB64u + "." + canonical_bytes_b64u,
+    "ascii"
+  );
+  const aoSigBytes = crypto.sign(null, aoSigningInput, getPrivateKey());
+
+  // ── JWS General Serialization (RFC 7515 §7.2.1) with one signature.
+  const jws = {
+    payload: canonical_bytes_b64u,
+    signatures: [
+      {
+        protected: aoProtectedB64u,
+        signature: b64uEncode(aoSigBytes),
+      },
+    ],
+  };
+
+  return {
+    jws,
+    canonical_sha256,
+    canonical_bytes_length: canonical_bytes.length,
+    kid: COMPOSED_KID,
+    envelope_kind: "verification.v0.3+composed",
+    verdict,
+    v_recommendation,
+  };
+}
+
+export { registerVGateCompose, COMPOSED_KID, COMPOSED_PUBLIC_JWK, signEvaluateReceipt };

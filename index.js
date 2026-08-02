@@ -83,7 +83,7 @@ import { RECEIPT_REGISTRY_PAGE_HTML } from "./receipt-registry-page.js";
 import { BENCHMARKS_HTML } from "./benchmarks-page.js";
 import { WHITEPAPER_HTML } from "./whitepaper-page.js";
 import { FAVICON_ICO, FAVICON_SVG, FAVICON_16, FAVICON_32, APPLE_TOUCH, OG_IMAGE } from "./favicons.js";
-import { registerVGateCompose, COMPOSED_PUBLIC_JWK } from "./v_gate_compose.js";
+import { registerVGateCompose, COMPOSED_PUBLIC_JWK, signEvaluateReceipt } from "./v_gate_compose.js";
 
 // ── x402 v2 SDK imports ──────────────────────────────────────────
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
@@ -4503,6 +4503,70 @@ app.post("/evaluate", async (req, res) => {
         feedback_url: "POST /feedback with this evaluation_id",
       },
     };
+
+    // ── SIGNED RECEIPT ──
+    // Attach a JWS-signed v0.3+composed envelope as the response's evidence
+    // artifact so the caller can retain it as offline-verifiable proof of
+    // what was decided at this instant. Aggregate per-claim signals to a
+    // single v_gate input triple (v_verdict / v_adversarial_result /
+    // v_confidence) using fail_closed semantics per the mapping's
+    // fail_closed clause: any refuted claim collapses v_verdict to refuted,
+    // any vulnerable/contradicted adversarial pass collapses v_adversarial_result
+    // to vulnerable. v_confidence is the aggregated `overall`. The signer
+    // then applies the mapping's recommendation_rules + gate_map to derive
+    // verdict act|halt.
+    //
+    // Signing failure is non-fatal-but-never-silent: the response still
+    // returns without the `receipt` key, but meta.receipt_status is set to
+    // "unavailable" (never absent) so a caller can never charge for evidence
+    // and receive none invisibly, and an [ALARM] log line fires so we know
+    // within minutes rather than via a refund request.
+    try {
+      let agg_v_verdict;
+      if (mergedClaims.some(c => c.verdict === "refuted")) {
+        agg_v_verdict = "refuted";
+      } else if (mergedClaims.some(c => c.verdict === "unverifiable")) {
+        agg_v_verdict = "unverifiable";
+      } else if (mergedClaims.every(c => c.verdict === "supported")) {
+        agg_v_verdict = "supported";
+      } else {
+        agg_v_verdict = "unknown";
+      }
+
+      let agg_v_adv;
+      if (mergedClaims.some(c =>
+        c.adversarial_result === "vulnerable" ||
+        c.adversarial_result === "contradicted"
+      )) {
+        agg_v_adv = "vulnerable";
+      } else if (mergedClaims.length > 0 && mergedClaims.every(c => c.adversarial_result === "resilient")) {
+        agg_v_adv = "resilient";
+      } else {
+        agg_v_adv = "not_checked";
+      }
+
+      const receipt = signEvaluateReceipt({
+        claim_text: text,
+        mapping_hash_hex: MAPPING_AO_V03_SHA256,
+        v_confidence: overall,
+        v_verdict: agg_v_verdict,
+        v_adversarial_result: agg_v_adv,
+        timestamp_ms: Date.now(),
+      });
+      response.receipt = receipt;
+      response.meta.receipt_status = "signed";
+    } catch (e) {
+      response.meta.receipt_status = "unavailable";
+      response.meta.receipt_error = e.message || "unknown_signing_error";
+      // ALARM: distinctive prefix so log-scraping tools (Hermes,
+      // Vercel log alarms) can page us within minutes. Includes evaluation
+      // id so we can trace which specific call degraded.
+      console.error(
+        `[ALARM][/evaluate][receipt_signing_failed] evaluation_id=${evalId} ` +
+        `error="${(e.message || "unknown").slice(0, 200)}" ` +
+        `stack="${(e.stack || "").split("\n").slice(0, 3).join(" | ").slice(0, 400)}"`
+      );
+    }
 
     // ── STORE IN CLAIM CACHE ──
     // Parallelize all Redis writes (was 1 + 2N sequential round-trips, now 1 batch)
