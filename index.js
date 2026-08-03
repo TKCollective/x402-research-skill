@@ -4534,12 +4534,14 @@ app.post("/evaluate", async (req, res) => {
       }
 
       let agg_v_adv;
-      if (mergedClaims.some(c =>
-        c.adversarial_result === "vulnerable" ||
-        c.adversarial_result === "contradicted"
-      )) {
+      // Normalize the site's per-claim adversarial vocabulary ("resistant") to
+      // the mapping's canonical enum ("resilient"). Also treat "contradicted"
+      // as "vulnerable" per the fail_closed clause. Anything else → not_checked.
+      const _advResilient = (v) => v === "resilient" || v === "resistant";
+      const _advVulnerable = (v) => v === "vulnerable" || v === "contradicted";
+      if (mergedClaims.some(c => _advVulnerable(c.adversarial_result))) {
         agg_v_adv = "vulnerable";
-      } else if (mergedClaims.length > 0 && mergedClaims.every(c => c.adversarial_result === "resilient")) {
+      } else if (mergedClaims.length > 0 && mergedClaims.every(c => _advResilient(c.adversarial_result))) {
         agg_v_adv = "resilient";
       } else {
         agg_v_adv = "not_checked";
