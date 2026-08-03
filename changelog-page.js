@@ -49,14 +49,11 @@ li p{font-size:.93rem;color:var(--mut);max-width:620px}
   <h1>Changelog</h1>
   <p class="sub">What shipped, dated. Each entry corresponds to a public, verifiable artifact — that's the house style.</p>
   <ol>
-    <!--
-      LAUNCH-DAY DRAFT — do not publish before 2026-08-02:
-      <li>
-        <time>2026-08-02</time>
-        <h2>Self-serve open — card → API key → signed receipts, live</h2>
-        <p><a href="https://agentoracle.co/#pricing" target="_blank" rel="noopener noreferrer">get a key ↗</a></p>
-      </li>
-    -->
+    <li>
+      <time>2026-08-02</time>
+      <h2>Self-serve open — card → API key → signed receipts, live</h2>
+      <p><a href="https://agentoracle.co/#pricing" target="_blank" rel="noopener noreferrer">get a key ↗</a></p>
+    </li>
     <li>
       <time>2026-08-01</time>
       <h2>v0.4 conformance suite complete — 1 accept, 3 reject, 3 status vectors; two independent implementations; every envelope and wrapper hash recomputed byte-identical on both sides</h2>
