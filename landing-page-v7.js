@@ -229,6 +229,25 @@ h1 .g{transition:none}
   </div>
 </section>
 
+<!-- ========== 03B · MCP (verify from your editor) ========== -->
+<section id="mcp" class="band-light">
+  <div class="wrap">
+    <span class="eyebrow reveal">[03B] MCP</span>
+    <h2 class="reveal">Verify any receipt from your MCP client.</h2>
+    <p class="sub reveal"><code class="mono">agentoracle-mcp</code> is a Model Context Protocol server for Cursor, Claude Desktop, Codex, and any MCP-compatible client. Verify signed receipts, check confidence scores, and pull the current JWKS — from inside your editor.</p>
+    <div class="term reveal mono" aria-label="MCP install command">
+      <div class="t-dots"><i></i><i></i><i></i></div>
+      <div class="t-line"><span class="t-p">$</span> npx agentoracle-mcp</div>
+    </div>
+    <div class="grid6 reveal" style="margin-top:32px">
+      <div class="pcard reveal"><h3>Verify inline.</h3><p>Point at a receipt file or URL, get <code class="mono">valid: True</code> — or the exact reason it isn't — without leaving the editor.</p></div>
+      <div class="pcard reveal"><h3>No account required.</h3><p>The MCP server runs locally, verifies against the public JWKS, and never phones home.</p></div>
+      <div class="pcard reveal"><h3>Same envelope, everywhere.</h3><p>Receipts the MCP verifier checks are byte-identical to the ones the reference verifiers produce.</p></div>
+    </div>
+    <p class="sub reveal" style="margin-top:22px">Published on npm as <a href="https://www.npmjs.com/package/agentoracle-mcp" target="_blank" rel="noopener" class="mono">agentoracle-mcp</a>.</p>
+  </div>
+</section>
+
 <!-- ========== 04 · PROOF (six contrasts + quiet standards row) ========== -->
 <section id="proof" class="band-light">
   <div class="wrap">
@@ -247,6 +266,7 @@ h1 .g{transition:none}
       <a href="https://github.com/TKCollective/agentoracle-receipt-spec" target="_blank" rel="noopener">Spec + vectors ↗</a>
       <a href="https://pypi.org/project/agentoracle-receipt-verify" target="_blank" rel="noopener">PyPI verifier ↗</a>
       <a href="/whitepaper">Whitepaper</a>
+      <a href="/pricing">Pricing</a>
       <a href="/changelog">Changelog</a>
     </div>
   </div>
@@ -346,7 +366,7 @@ h1 .g{transition:none}
       <b>Product</b>
       <a href="#how-it-works">The loop</a>
       <a href="#playground">Live demo</a>
-      <a href="#pricing">Pricing</a>
+      <a href="/pricing">Pricing</a>
       <a href="/changelog">Changelog</a>
       <a href="/business">For business</a>
     </div>

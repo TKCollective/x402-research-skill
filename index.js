@@ -82,6 +82,7 @@ import { registerArticle12Checker } from "./article-12-checker.js";
 import { RECEIPT_REGISTRY_PAGE_HTML } from "./receipt-registry-page.js";
 import { BENCHMARKS_HTML } from "./benchmarks-page.js";
 import { WHITEPAPER_HTML } from "./whitepaper-page.js";
+import { PRICING_PAGE_HTML } from "./pricing-page.js";
 import { FAVICON_ICO, FAVICON_SVG, FAVICON_16, FAVICON_32, APPLE_TOUCH, OG_IMAGE } from "./favicons.js";
 import { registerVGateCompose, COMPOSED_PUBLIC_JWK, signEvaluateReceipt } from "./v_gate_compose.js";
 
@@ -619,7 +620,7 @@ app.get("/robots.txt", (_req, res) => {
 // SEO: sitemap.xml
 app.get("/sitemap.xml", (_req, res) => {
   res.setHeader("Content-Type", "application/xml");
-  res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://agentoracle.co/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/x402.json</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/x402-manifest.json</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://agentoracle.co/demo</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>\n  <url><loc>https://agentoracle.co/llms.txt</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n  <url><loc>https://agentoracle.co/skill.md</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/agent-card.json</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n</urlset>`);
+  res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://agentoracle.co/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n  <url><loc>https://agentoracle.co/pricing</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/x402.json</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/x402-manifest.json</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://agentoracle.co/demo</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>\n  <url><loc>https://agentoracle.co/llms.txt</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n  <url><loc>https://agentoracle.co/skill.md</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/agent-card.json</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n</urlset>`);
 });
 
 app.get("/favicon.ico", (_req, res) => {
@@ -3632,6 +3633,14 @@ app.get("/changelog", (_req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("Cache-Control", "public, max-age=300, s-maxage=600");
   res.send(CHANGELOG_HTML);
+});
+
+// /pricing — canonical 4-tier detailed pricing page. Linked from landing v7
+// standards-row + footer + subpage nav.
+app.get("/pricing", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Cache-Control", "public, max-age=300, s-maxage=600");
+  res.send(PRICING_PAGE_HTML);
 });
 
 // /register — self-serve $99 tier button target. Redirects to the Stripe
