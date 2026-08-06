@@ -50,6 +50,21 @@ li p{font-size:.93rem;color:var(--mut);max-width:620px}
   <p class="sub">What shipped, dated. Each entry corresponds to a public, verifiable artifact — that's the house style.</p>
   <ol>
     <li>
+      <time>2026-08-06</time>
+      <h2>v0.4 draft rev-2 — per-layer provenance design (layer_trace, mode ∈ {recomputable, signed}, three-state absence semantics) folded in from public design collaboration</h2>
+      <p><a href="https://github.com/TKCollective/agentoracle-receipt-spec/commit/cad750d" target="_blank" rel="noopener noreferrer">commit ↗</a></p>
+    </li>
+    <li>
+      <time>2026-08-05</time>
+      <h2>Routine credential rotation completed — all previously issued receipts verify unchanged against the published JWKS</h2>
+      <p><a href="https://agentoracle.co/.well-known/jwks.json" target="_blank" rel="noopener noreferrer">jwks ↗</a></p>
+    </li>
+    <li>
+      <time>2026-08-03</time>
+      <h2>/pricing page + MCP homepage block live</h2>
+      <p><a href="https://agentoracle.co/pricing" target="_blank" rel="noopener noreferrer">/pricing ↗</a></p>
+    </li>
+    <li>
       <time>2026-08-02</time>
       <h2>Self-serve open — card → API key → signed receipts, live</h2>
       <p><a href="https://agentoracle.co/#pricing" target="_blank" rel="noopener noreferrer">get a key ↗</a></p>

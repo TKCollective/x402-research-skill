@@ -225,7 +225,7 @@ h1 .g{transition:none}
       <div class="t-line"><span class="t-p">$</span> agentoracle-verify receipt.json</div>
       <div class="t-line t-ok">✓ VALID — signature verifies against published JWKS (offline)</div>
     </div>
-    <p class="sub reveal" style="margin-top:22px">The verifier is MIT-licensed, ~600 lines, no dependencies on us. Read it before you trust it — that's the point.</p>
+    <p class="sub reveal" style="margin-top:22px">The verifier is MIT-licensed, under 250 lines, no dependencies on us. Read it before you trust it — that's the point.</p>
   </div>
 </section>
 
@@ -314,7 +314,7 @@ h1 .g{transition:none}
           <li>Gasless USDC (SKALE) — no gas management</li>
           <li>Same signed receipts, same verification</li>
         </ul>
-        <a class="btn btn-ghost pl-btn" href="/docs/x402">Read the x402 docs</a>
+        <a class="btn btn-ghost pl-btn" href="mailto:joe@agentoracle.co?subject=x402%20pay-per-call%20early%20access">Request early access →</a>
       </div>
       <div class="plan reveal">
         <div class="pl-tag mono">PLATFORM</div>
