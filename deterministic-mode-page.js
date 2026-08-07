@@ -82,13 +82,13 @@ li{padding-left:20px;position:relative;margin-bottom:8px;color:var(--mut-d);font
 li::before{content:"·";color:var(--gold);position:absolute;left:8px;top:0;font-weight:700}
 li strong{color:var(--paper);font-weight:600}
 
-pre{background:linear-gradient(180deg,#161512,#111009);border:1px solid var(--gline);border-radius:4px;padding:18px 20px;overflow-x:auto;margin-bottom:18px}
+pre{background:var(--ink-2);border:1px solid var(--gline);border-radius:4px;padding:18px 20px;overflow-x:auto;margin-bottom:18px}
 pre code{background:none;padding:0;color:var(--paper);font-size:.84rem;line-height:1.65;display:block}
 .c-key{color:var(--gold-2)} .c-str{color:#9ecb8a} .c-cm{color:var(--mut-l)} .c-p{color:var(--gold)}
 
 table{width:100%;border-collapse:collapse;font-size:.9rem;margin-bottom:18px}
 th,td{text-align:left;padding:13px 15px;border-bottom:1px solid var(--gline);vertical-align:top}
-th{background:linear-gradient(180deg,#161512,#111009);color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;font-weight:500}
+th{background:var(--ink-2);color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;font-weight:500}
 tr:last-child td{border-bottom:none}
 td strong{color:var(--paper);font-weight:600}
 td code{font-size:.8rem}
@@ -97,7 +97,7 @@ td code{font-size:.8rem}
 .callout p:last-child{margin-bottom:0}
 .callout strong{color:var(--paper)}
 
-.live{border:1px solid var(--gline);border-radius:4px;padding:22px 24px;background:linear-gradient(180deg,#161512,#111009);margin-bottom:20px}
+.live{border:1px solid var(--gline);border-radius:4px;padding:22px 24px;background:var(--ink-2);margin-bottom:20px}
 .live-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px;flex-wrap:wrap}
 .live-head .lbl{font-family:'JetBrains Mono',monospace;font-size:.74rem;letter-spacing:.16em;color:var(--gold);text-transform:uppercase}
 .live-head .src{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--mut-l)}
