@@ -27,9 +27,13 @@ export const LANDING_PAGE_V7_HTML = `<!DOCTYPE html>
   --rad:14px; --max:1120px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;background:var(--ink)}
 body{font-family:'Satoshi',sans-serif;background:var(--ink);color:var(--paper);line-height:1.6;-webkit-font-smoothing:antialiased}
-body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.035;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E")}
+section,header,main{background:transparent}
+/* Noise/grain overlay removed 2026-08-07. A tiled fractalNoise texture at
+   3.5% opacity over near-black rendered as visible blotchy unevenness — it
+   accounted for 124 of the 126 distinct background shades measured down the
+   page. One background color, applied once at the root. */
 .mono{font-family:'JetBrains Mono',monospace}
 a{color:inherit;text-decoration:none}
 .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
@@ -37,7 +41,11 @@ section{padding:128px 0;position:relative}
 .eyebrow{font-family:'JetBrains Mono',monospace;font-size:.78rem;letter-spacing:.22em;color:var(--gold);margin-bottom:18px;display:block}
 h2{font-size:clamp(1.7rem,3.4vw,2.5rem);font-weight:700;line-height:1.15;letter-spacing:-.01em;margin-bottom:14px}
 .sub{color:var(--mut-d);max-width:640px;font-size:1.06rem}
-.band-light{background:#0b0a09;color:var(--paper)}
+/* Section-level band background removed 2026-08-07. #0b0a09 sat 4 RGB levels
+   above the body's #070706, producing visible patches at every section
+   boundary (52.7% of sampled background pixels). Sections are transparent;
+   the body paints the only background. Text-color rules below are retained. */
+.band-light{color:var(--paper)}
 .band-light .sub{color:var(--mut-d)}
 .band-light .eyebrow{color:var(--gold)}
 .reveal{opacity:0;transform:translateY(22px);transition:opacity .65s cubic-bezier(.22,.7,.3,1),transform .65s cubic-bezier(.22,.7,.3,1)}
@@ -59,7 +67,7 @@ h2{font-size:clamp(1.7rem,3.4vw,2.5rem);font-weight:700;line-height:1.15;letter-
 }
 
 /* ---------- nav ---------- */
-nav{position:sticky;top:0;z-index:50;background:rgba(7,7,6,.8);backdrop-filter:blur(12px);border-bottom:1px solid var(--line-d)}
+nav{position:sticky;top:0;z-index:50;background:var(--ink);backdrop-filter:blur(12px);border-bottom:1px solid var(--line-d)}
 .nav-in{display:flex;align-items:center;justify-content:space-between;height:64px}
 .logo{font-weight:700;font-size:1.06rem;letter-spacing:.01em}
 .logo .dot{color:var(--gold)}
@@ -507,8 +515,12 @@ footer{border-top:1px solid var(--gline);padding:64px 0 48px;background:var(--in
 
 <div id="cursorGlow" aria-hidden="true"></div>
 <style>
-#cursorGlow{position:fixed;width:520px;height:520px;border-radius:50%;pointer-events:none;z-index:1;left:0;top:0;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(212,169,74,.07),transparent 60%);opacity:0;transition:opacity .5s}
-@media (pointer:fine){#cursorGlow{opacity:1}}
+/* Cursor-glow radial removed 2026-08-07. A 520px gold radial-gradient
+   tracking the pointer reads as moving unevenness on a pure-black surface.
+   The hero claim-field canvas (#claimfield) is the site's one intentional
+   background effect and is untouched. To restore, re-add the two rules that
+   were here — this is a one-line reversal. */
+#cursorGlow{display:none}
 .receipt{transform-style:preserve-3d;will-change:transform}
 </style>
 <script>

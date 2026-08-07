@@ -23,7 +23,7 @@ export const CHANGELOG_HTML = `<!DOCTYPE html>
 body{font-family:'Satoshi',sans-serif;background:var(--ink);color:var(--paper);line-height:1.65}
 .mono{font-family:'JetBrains Mono',monospace}
 a{color:inherit}
-nav{border-bottom:1px solid var(--gline);background:rgba(7,7,6,.85)}
+nav{border-bottom:1px solid var(--gline);background:var(--ink)}
 .nav-in{max-width:820px;margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between}
 .logo{font-weight:700;text-decoration:none}
 .logo span{color:var(--gold)}
