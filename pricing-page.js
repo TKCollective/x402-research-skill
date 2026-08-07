@@ -99,6 +99,14 @@ nav{border-bottom:1px solid var(--gline);background:var(--ink);position:sticky;t
 .claims table a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(212,169,74,.3)}
 .claims table a:hover{color:var(--gold-2);border-color:var(--gold-2)}
 
+/* deterministic mode */
+.detmode{padding:8px 0 4px}
+.detmode h2{font-size:1.24rem;margin-bottom:10px;color:var(--paper);letter-spacing:-.01em;font-weight:500}
+.detmode p{color:var(--mut-d);font-size:.95rem;line-height:1.7;max-width:900px}
+.detmode p code{font-family:'JetBrains Mono',monospace;font-size:.84rem;background:rgba(212,169,74,.08);padding:1px 5px;border-radius:2px;color:var(--gold-2)}
+.detmode p a{color:var(--gold);border-bottom:1px solid rgba(212,169,74,.3);white-space:nowrap}
+.detmode p a:hover{color:var(--gold-2)}
+
 /* faq */
 .faq{padding:48px 0}
 .faq h2{font-size:1.5rem;margin-bottom:24px;color:var(--paper);letter-spacing:-.01em}
@@ -219,6 +227,13 @@ footer a:hover{color:var(--gold-2)}
       <div class="cta"><a class="btn btn-ghost" href="mailto:joe@agentoracle.co?subject=AgentOracle%20Enterprise">Contact →</a></div>
     </div>
 
+  </div>
+</section>
+
+<section class="detmode">
+  <div class="wrap">
+    <h2>Deterministic mode — included on Self-Serve and Pay-per-Call</h2>
+    <p>For claims that are lookups, not judgments — signature verification, hash comparison, registry checks, regex matching, timestamp validation, JSON schema conformance — <code>POST /v1/verify-facts</code> skips LLM judgment entirely. The receipt records <code>check_mode: "deterministic"</code> and <code>check_types_applied[]</code> inside the signed payload, so a verifier can prove no model was in the trust chain rather than take our word for it. Same envelope, same verifier, same published JWKS, no change to your credentials. If a claim cannot be resolved by a shipped check type the endpoint returns <code>422 claim_not_deterministic</code> — there is no fallback to the judgment path, because a silent escalation would make the mode meaningless. <a href="/docs/deterministic-mode">Read the docs →</a></p>
   </div>
 </section>
 

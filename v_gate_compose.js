@@ -1069,4 +1069,20 @@ function signEvaluateReceipt({
   };
 }
 
-export { registerVGateCompose, COMPOSED_KID, COMPOSED_PUBLIC_JWK, signEvaluateReceipt };
+// Shared crypto/canonicalization primitives, exported so the deterministic
+// tier (/v1/verify-facts) signs with the SAME jcs() implementation and the
+// SAME key. There must be exactly one canonicalization implementation in
+// this process — a second copy would silently diverge from verify.mjs /
+// verify.py in the conformance suite.
+export {
+  registerVGateCompose,
+  COMPOSED_KID,
+  COMPOSED_PUBLIC_JWK,
+  signEvaluateReceipt,
+  jcs,
+  b64uEncode,
+  b64uDecode,
+  getPrivateKey,
+  AO_MAPPING_ID,
+  AO_MAPPING_HASH,
+};
