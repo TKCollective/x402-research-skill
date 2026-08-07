@@ -50,6 +50,11 @@ li p{font-size:.93rem;color:var(--mut);max-width:620px}
   <p class="sub">What shipped, dated. Each entry corresponds to a public, verifiable artifact — that's the house style.</p>
   <ol>
     <li>
+      <time>2026-08-07</time>
+      <h2>Deterministic mode — <code>POST /v1/verify-facts</code>: six check types, no LLM in the trust chain, <code>check_mode</code> recorded inside the signed payload</h2>
+      <p><a href="https://agentoracle.co/docs/deterministic-mode">/docs/deterministic-mode ↗</a></p>
+    </li>
+    <li>
       <time>2026-08-06</time>
       <h2>v0.4 draft rev-2 — per-layer provenance design (layer_trace, mode ∈ {recomputable, signed}, three-state absence semantics) folded in from public design collaboration</h2>
       <p><a href="https://github.com/TKCollective/agentoracle-receipt-spec/commit/cad750d" target="_blank" rel="noopener noreferrer">commit ↗</a></p>
