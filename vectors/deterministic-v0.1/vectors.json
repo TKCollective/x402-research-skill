@@ -1,0 +1,337 @@
+{
+  "generated_at": "2026-08-07T01:25:20.203Z",
+  "vectors": [
+    {
+      "id": "det-001-signature-verification-pass",
+      "expect": "pass",
+      "note": null,
+      "input": {
+        "check_type": "signature_verification",
+        "input": {
+          "signing_input_b64u": "eyJhbGciOiJFZERTQSJ9.eyJ2ZWN0b3IiOiJhZ2VudG9yYWNsZS1kZXRlcm1pbmlzdGljLXYwLjEifQ",
+          "signature_b64u": "-4Kv66edEui688AducPxmJj82-3CZuvj4jeCrT-WWz0dJGJ2jkJ1NidwelC-imvVdGqzlCsHfgn_tqhtvhQKCQ",
+          "public_jwk": {
+            "crv": "Ed25519",
+            "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+            "kty": "OKP",
+            "alg": "EdDSA",
+            "use": "sig",
+            "kid": "vector-ed25519-v1"
+          },
+          "algorithm": "EdDSA"
+        }
+      },
+      "outcome": "pass",
+      "failure_reason": null,
+      "verdict": "act",
+      "canonical_stable_utf8": "{\"agent_id\":\"did:ao:conformance-vector:deterministic-v0.1\",\"check_mode\":\"deterministic\",\"check_results\":[{\"check_type\":\"signature_verification\",\"evidence\":{\"algorithm\":\"EdDSA\",\"kid\":\"vector-ed25519-v1\",\"signature_length\":64,\"signing_input_sha256\":\"sha256-ee631fb4b0ecf3dd9c525ce91983dc115852015b012325bdefe46fed72dabc4d\"},\"outcome\":\"pass\",\"recommendation\":\"signature verifies against the declared key\"}],\"check_types_applied\":[\"signature_verification\"],\"envelope_kind\":\"verification.v0.3+composed\",\"receipt_version\":\"0.3.0-composed\",\"signature_meta\":{\"agentoracle_jwks_url\":\"https://agentoracle.co/.well-known/jwks.json\"},\"subject\":{\"claim_hash\":\"sha256-d07b25ecc0101d6f70f17043a83c7f8a6269dd5fa779a7df07b698fa8fd60f2a\"},\"v_gate\":{\"confidence\":1,\"deterministic_mapping_id\":\"agentoracle-deterministic-v0.1-2026-08-06\",\"issuer\":\"agentoracle.co\",\"mapping_hash\":\"sha256-3b1f2d8e7a5c4b9f6e0a1d2c3b4a5e6f7c8d9e0a1b2c3d4e5f6a7b8c9d0e1f2a\",\"mapping_id\":\"agentoracle-v0.3-2026-05-30\",\"v_adversarial_result\":\"n/a\",\"verdict\":\"act\"}}",
+      "canonical_stable_sha256": "sha256-f3898cd4251ef8de8726d45df9b7f9e30cb43047ec2096a3f52a84571239a2a7"
+    },
+    {
+      "id": "det-002-signature-verification-fail",
+      "expect": "fail",
+      "note": null,
+      "input": {
+        "check_type": "signature_verification",
+        "input": {
+          "signing_input_b64u": "eyJhbGciOiJFZERTQSJ9.eyJ2ZWN0b3IiOiJhZ2VudG9yYWNsZS1kZXRlcm1pbmlzdGljLXYwLjEifQ",
+          "signature_b64u": "-4Kv66edEui688AducPxmJj82-3CZuvj4jeCrT-WWz0dJGJ2jkJ1NidwelC-imvVdGqzlCsHfgn_tqhtvhQKAA",
+          "public_jwk": {
+            "crv": "Ed25519",
+            "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+            "kty": "OKP",
+            "alg": "EdDSA",
+            "use": "sig",
+            "kid": "vector-ed25519-v1"
+          },
+          "algorithm": "EdDSA"
+        }
+      },
+      "outcome": "fail",
+      "failure_reason": "signature_invalid",
+      "verdict": "halt",
+      "canonical_stable_utf8": "{\"agent_id\":\"did:ao:conformance-vector:deterministic-v0.1\",\"check_mode\":\"deterministic\",\"check_results\":[{\"check_type\":\"signature_verification\",\"failure_detail\":\"Ed25519 verification returned false\",\"failure_reason\":\"signature_invalid\",\"outcome\":\"fail\",\"recommendation\":\"signature does not verify against the declared key\"}],\"check_types_applied\":[\"signature_verification\"],\"envelope_kind\":\"verification.v0.3+composed\",\"receipt_version\":\"0.3.0-composed\",\"signature_meta\":{\"agentoracle_jwks_url\":\"https://agentoracle.co/.well-known/jwks.json\"},\"subject\":{\"claim_hash\":\"sha256-d45e5d21c2c4a00ab293e1308bda899a560a9eeaef9079382e60ee1caf23d374\"},\"v_gate\":{\"confidence\":1,\"deterministic_mapping_id\":\"agentoracle-deterministic-v0.1-2026-08-06\",\"issuer\":\"agentoracle.co\",\"mapping_hash\":\"sha256-3b1f2d8e7a5c4b9f6e0a1d2c3b4a5e6f7c8d9e0a1b2c3d4e5f6a7b8c9d0e1f2a\",\"mapping_id\":\"agentoracle-v0.3-2026-05-30\",\"v_adversarial_result\":\"n/a\",\"verdict\":\"halt\"}}",
+      "canonical_stable_sha256": "sha256-5e46ec4512e615a3e4c771978a875392c1961abad499bf1d86350e6d402cce63"
+    },
+    {
+      "id": "det-003-hash-comparison-pass",
+      "expect": "pass",
+      "note": null,
+      "input": {
+        "check_type": "hash_comparison",
+        "input": {
+          "content": "agentoracle deterministic tier conformance vector",
+          "claimed_digest": "sha256-b63ab9800d852ecc48c9c75148d7db40a8aa40e761b970c1bf07624fbb6075dd",
+          "algorithm": "sha256"
+        }
+      },
+      "outcome": "pass",
+      "failure_reason": null,
+      "verdict": "act",
+      "canonical_stable_utf8": "{\"agent_id\":\"did:ao:conformance-vector:deterministic-v0.1\",\"check_mode\":\"deterministic\",\"check_results\":[{\"check_type\":\"hash_comparison\",\"evidence\":{\"algorithm\":\"sha256\",\"computed_digest\":\"sha256-b63ab9800d852ecc48c9c75148d7db40a8aa40e761b970c1bf07624fbb6075dd\",\"content_canonicalized\":false,\"content_length\":49},\"outcome\":\"pass\",\"recommendation\":\"computed digest matches the claimed digest\"}],\"check_types_applied\":[\"hash_comparison\"],\"envelope_kind\":\"verification.v0.3+composed\",\"receipt_version\":\"0.3.0-composed\",\"signature_meta\":{\"agentoracle_jwks_url\":\"https://agentoracle.co/.well-known/jwks.json\"},\"subject\":{\"claim_hash\":\"sha256-1aaa10544b14b182be3cd0111f5342dd0513a3a31ad9e5b8117fead4e87f9d10\"},\"v_gate\":{\"confidence\":1,\"deterministic_mapping_id\":\"agentoracle-deterministic-v0.1-2026-08-06\",\"issuer\":\"agentoracle.co\",\"mapping_hash\":\"sha256-3b1f2d8e7a5c4b9f6e0a1d2c3b4a5e6f7c8d9e0a1b2c3d4e5f6a7b8c9d0e1f2a\",\"mapping_id\":\"agentoracle-v0.3-2026-05-30\",\"v_adversarial_result\":\"n/a\",\"verdict\":\"act\"}}",
+      "canonical_stable_sha256": "sha256-5fb8617fe3bf94a815c3aedeeef484d2251e25be18516e1b3bb48d54e6867e59"
+    },
+    {
+      "id": "det-004-hash-comparison-fail",
+      "expect": "fail",
+      "note": null,
+      "input": {
+        "check_type": "hash_comparison",
+        "input": {
+          "content": "agentoracle deterministic tier conformance vector",
+          "claimed_digest": "sha256-0000000000000000000000000000000000000000000000000000000000000000",
+          "algorithm": "sha256"
+        }
+      },
+      "outcome": "fail",
+      "failure_reason": "digest_mismatch",
+      "verdict": "halt",
+      "canonical_stable_utf8": "{\"agent_id\":\"did:ao:conformance-vector:deterministic-v0.1\",\"check_mode\":\"deterministic\",\"check_results\":[{\"check_type\":\"hash_comparison\",\"failure_detail\":\"claimed 0000000000000000000000000000000000000000000000000000000000000000 != computed b63ab9800d852ecc48c9c75148d7db40a8aa40e761b970c1bf07624fbb6075dd\",\"failure_reason\":\"digest_mismatch\",\"outcome\":\"fail\",\"recommendation\":\"computed digest does not match the claimed digest\"}],\"check_types_applied\":[\"hash_comparison\"],\"envelope_kind\":\"verification.v0.3+composed\",\"receipt_version\":\"0.3.0-composed\",\"signature_meta\":{\"agentoracle_jwks_url\":\"https://agentoracle.co/.well-known/jwks.json\"},\"subject\":{\"claim_hash\":\"sha256-abefd2d94ddb45b19a7b92c01c6280cff7343a28fe7ef27ac1a36e7069beaa08\"},\"v_gate\":{\"confidence\":1,\"deterministic_mapping_id\":\"agentoracle-deterministic-v0.1-2026-08-06\",\"issuer\":\"agentoracle.co\",\"mapping_hash\":\"sha256-3b1f2d8e7a5c4b9f6e0a1d2c3b4a5e6f7c8d9e0a1b2c3d4e5f6a7b8c9d0e1f2a\",\"mapping_id\":\"agentoracle-v0.3-2026-05-30\",\"v_adversarial_result\":\"n/a\",\"verdict\":\"halt\"}}",
+      "canonical_stable_sha256": "sha256-eb5a9b6eae1410a7b1d12dadf354c10a522e3d906cb4014096b2a7d795b58a0d"
+    },
+    {
+      "id": "det-005-regex-match-pass",
+      "expect": "pass",
+      "note": null,
+      "input": {
+        "check_type": "regex_match",
+        "input": {
+          "value": "sha256-abc123",
+          "pattern": "^sha256-[0-9a-f]+$",
+          "flags": "i"
+        }
+      },
+      "outcome": "pass",
+      "failure_reason": null,
+      "verdict": "act",
+      "canonical_stable_utf8": "{\"agent_id\":\"did:ao:conformance-vector:deterministic-v0.1\",\"check_mode\":\"deterministic\",\"check_results\":[{\"check_type\":\"regex_match\",\"evidence\":{\"flags\":\"i\",\"pattern\":\"^sha256-[0-9a-f]+$\",\"value_length\":13,\"value_sha256\":\"sha256-c0069f9f5de8d6d48be1858ebb3c7f6e00a43d92e56fb42301e20d03684e3c57\"},\"outcome\":\"pass\",\"recommendation\":\"value matches the declared pattern\"}],\"check_types_applied\":[\"regex_match\"],\"envelope_kind\":\"verification.v0.3+composed\",\"receipt_version\":\"0.3.0-composed\",\"signature_meta\":{\"agentoracle_jwks_url\":\"https://agentoracle.co/.well-known/jwks.json\"},\"subject\":{\"claim_hash\":\"sha256-f14861a8e67b8170c2502dd418432227b20e29417c8a3290bc39bc47e84523e4\"},\"v_gate\":{\"confidence\":1,\"deterministic_mapping_id\":\"agentoracle-deterministic-v0.1-2026-08-06\",\"issuer\":\"agentoracle.co\",\"mapping_hash\":\"sha256-3b1f2d8e7a5c4b9f6e0a1d2c3b4a5e6f7c8d9e0a1b2c3d4e5f6a7b8c9d0e1f2a\",\"mapping_id\":\"agentoracle-v0.3-2026-05-30\",\"v_adversarial_result\":\"n/a\",\"verdict\":\"act\"}}",
+      "canonical_stable_sha256": "sha256-9da904e65cf137f23659e397c3b8d6243e95809edd214955d00af9193f1b6d1a"
+    },
+    {
+      "id": "det-006-regex-match-fail",
+      "expect": "fail",
+      "note": null,
+      "input": {
+        "check_type": "regex_match",
+        "input": {
+          "value": "md5-abc123",
+          "pattern": "^sha256-[0-9a-f]+$",
+          "flags": "i"
+        }
+      },
+      "outcome": "fail",
+      "failure_reason": "no_match",
+      "verdict": "halt",
+      "canonical_stable_utf8": "{\"agent_id\":\"did:ao:conformance-vector:deterministic-v0.1\",\"check_mode\":\"deterministic\",\"check_results\":[{\"check_type\":\"regex_match\",\"failure_detail\":\"value does not match the declared pattern\",\"failure_reason\":\"no_match\",\"outcome\":\"fail\",\"recommendation\":\"value does not match the declared pattern\"}],\"check_types_applied\":[\"regex_match\"],\"envelope_kind\":\"verification.v0.3+composed\",\"receipt_version\":\"0.3.0-composed\",\"signature_meta\":{\"agentoracle_jwks_url\":\"https://agentoracle.co/.well-known/jwks.json\"},\"subject\":{\"claim_hash\":\"sha256-825dc781ef569518d8848b2f7d5959f6c0d98ff844edb1615b36da3072b06349\"},\"v_gate\":{\"confidence\":1,\"deterministic_mapping_id\":\"agentoracle-deterministic-v0.1-2026-08-06\",\"issuer\":\"agentoracle.co\",\"mapping_hash\":\"sha256-3b1f2d8e7a5c4b9f6e0a1d2c3b4a5e6f7c8d9e0a1b2c3d4e5f6a7b8c9d0e1f2a\",\"mapping_id\":\"agentoracle-v0.3-2026-05-30\",\"v_adversarial_result\":\"n/a\",\"verdict\":\"halt\"}}",
+      "canonical_stable_sha256": "sha256-6a3008eacf81224386770c4a84cf3d54541733f10d1cb825fbba4502779dfecd"
+    },
+    {
+      "id": "det-007-timestamp-validation-pass",
+      "expect": "pass",
+      "note": null,
+      "input": {
+        "check_type": "timestamp_validation",
+        "input": {
+          "timestamp": "2026-08-06T12:00:00.000Z",
+          "not_before": "2026-08-01T00:00:00.000Z",
+          "not_after": "2026-08-31T23:59:59.000Z"
+        }
+      },
+      "outcome": "pass",
+      "failure_reason": null,
+      "verdict": "act",
+      "canonical_stable_utf8": "{\"agent_id\":\"did:ao:conformance-vector:deterministic-v0.1\",\"check_mode\":\"deterministic\",\"check_results\":[{\"check_type\":\"timestamp_validation\",\"evidence\":{\"not_after\":\"2026-08-31T23:59:59.000Z\",\"not_before\":\"2026-08-01T00:00:00.000Z\",\"timestamp\":\"2026-08-06T12:00:00.000Z\",\"timestamp_ms\":1786017600000},\"outcome\":\"pass\",\"recommendation\":\"timestamp falls within the declared bounds\"}],\"check_types_applied\":[\"timestamp_validation\"],\"envelope_kind\":\"verification.v0.3+composed\",\"receipt_version\":\"0.3.0-composed\",\"signature_meta\":{\"agentoracle_jwks_url\":\"https://agentoracle.co/.well-known/jwks.json\"},\"subject\":{\"claim_hash\":\"sha256-fd7ddf96bba3d289e8cd6f5b16ca0c6112f80f42946102d0459ed5dada6b4ef0\"},\"v_gate\":{\"confidence\":1,\"deterministic_mapping_id\":\"agentoracle-deterministic-v0.1-2026-08-06\",\"issuer\":\"agentoracle.co\",\"mapping_hash\":\"sha256-3b1f2d8e7a5c4b9f6e0a1d2c3b4a5e6f7c8d9e0a1b2c3d4e5f6a7b8c9d0e1f2a\",\"mapping_id\":\"agentoracle-v0.3-2026-05-30\",\"v_adversarial_result\":\"n/a\",\"verdict\":\"act\"}}",
+      "canonical_stable_sha256": "sha256-76ee61dba2f8c41a2e1efb55baf75566d3448bde4b246ec4a7cd6c5a899069b4"
+    },
+    {
+      "id": "det-008-timestamp-validation-fail",
+      "expect": "fail",
+      "note": null,
+      "input": {
+        "check_type": "timestamp_validation",
+        "input": {
+          "timestamp": "2026-09-15T12:00:00.000Z",
+          "not_before": "2026-08-01T00:00:00.000Z",
+          "not_after": "2026-08-31T23:59:59.000Z"
+        }
+      },
+      "outcome": "fail",
+      "failure_reason": "after_upper_bound",
+      "verdict": "halt",
+      "canonical_stable_utf8": "{\"agent_id\":\"did:ao:conformance-vector:deterministic-v0.1\",\"check_mode\":\"deterministic\",\"check_results\":[{\"check_type\":\"timestamp_validation\",\"failure_detail\":\"2026-09-15T12:00:00.000Z > 2026-08-31T23:59:59.000Z\",\"failure_reason\":\"after_upper_bound\",\"outcome\":\"fail\",\"recommendation\":\"timestamp falls outside the declared bounds\"}],\"check_types_applied\":[\"timestamp_validation\"],\"envelope_kind\":\"verification.v0.3+composed\",\"receipt_version\":\"0.3.0-composed\",\"signature_meta\":{\"agentoracle_jwks_url\":\"https://agentoracle.co/.well-known/jwks.json\"},\"subject\":{\"claim_hash\":\"sha256-d3efc4076e83603360ab8ba004bc460ce2e0a142e438739655c1f2fb914beeec\"},\"v_gate\":{\"confidence\":1,\"deterministic_mapping_id\":\"agentoracle-deterministic-v0.1-2026-08-06\",\"issuer\":\"agentoracle.co\",\"mapping_hash\":\"sha256-3b1f2d8e7a5c4b9f6e0a1d2c3b4a5e6f7c8d9e0a1b2c3d4e5f6a7b8c9d0e1f2a\",\"mapping_id\":\"agentoracle-v0.3-2026-05-30\",\"v_adversarial_result\":\"n/a\",\"verdict\":\"halt\"}}",
+      "canonical_stable_sha256": "sha256-6d533db0d3a133a6e928b1acd74af6e29e668b2991fd36f2246844233ed753df"
+    },
+    {
+      "id": "det-009-json-schema-conformance-pass",
+      "expect": "pass",
+      "note": null,
+      "input": {
+        "check_type": "json_schema_conformance",
+        "input": {
+          "document": {
+            "name": "agentoracle-receipt-verify",
+            "version": "0.0.1",
+            "verified": true
+          },
+          "schema": {
+            "type": "object",
+            "required": [
+              "name",
+              "version"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "version": {
+                "type": "string",
+                "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+              },
+              "verified": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "outcome": "pass",
+      "failure_reason": null,
+      "verdict": "act",
+      "canonical_stable_utf8": "{\"agent_id\":\"did:ao:conformance-vector:deterministic-v0.1\",\"check_mode\":\"deterministic\",\"check_results\":[{\"check_type\":\"json_schema_conformance\",\"evidence\":{\"document_sha256\":\"sha256-425f6c44cf5c06c4dc15fe426ed498425c868db1f2884706799bc11205ffdec6\",\"keywords_applied\":[\"properties\",\"required\",\"type\"],\"schema_sha256\":\"sha256-1729f7df8de9ba5bbd52a7693f155f7f03c7130946d714aaf089ec4eafd2edb3\"},\"outcome\":\"pass\",\"recommendation\":\"document conforms to the declared schema\"}],\"check_types_applied\":[\"json_schema_conformance\"],\"envelope_kind\":\"verification.v0.3+composed\",\"receipt_version\":\"0.3.0-composed\",\"signature_meta\":{\"agentoracle_jwks_url\":\"https://agentoracle.co/.well-known/jwks.json\"},\"subject\":{\"claim_hash\":\"sha256-46c1f8e711442275b013c24f6e1ff7f129c721680bad9c4b7dd1377f23a34244\"},\"v_gate\":{\"confidence\":1,\"deterministic_mapping_id\":\"agentoracle-deterministic-v0.1-2026-08-06\",\"issuer\":\"agentoracle.co\",\"mapping_hash\":\"sha256-3b1f2d8e7a5c4b9f6e0a1d2c3b4a5e6f7c8d9e0a1b2c3d4e5f6a7b8c9d0e1f2a\",\"mapping_id\":\"agentoracle-v0.3-2026-05-30\",\"v_adversarial_result\":\"n/a\",\"verdict\":\"act\"}}",
+      "canonical_stable_sha256": "sha256-f2bd33cea20b0dfa51bec0b031e2e172b257c1e795be784121bb0f42ac440f06"
+    },
+    {
+      "id": "det-010-json-schema-conformance-fail",
+      "expect": "fail",
+      "note": null,
+      "input": {
+        "check_type": "json_schema_conformance",
+        "input": {
+          "document": {
+            "name": "",
+            "version": "not-semver"
+          },
+          "schema": {
+            "type": "object",
+            "required": [
+              "name",
+              "version"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "version": {
+                "type": "string",
+                "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+              }
+            }
+          }
+        }
+      },
+      "outcome": "fail",
+      "failure_reason": "schema_violation",
+      "verdict": "halt",
+      "canonical_stable_utf8": "{\"agent_id\":\"did:ao:conformance-vector:deterministic-v0.1\",\"check_mode\":\"deterministic\",\"check_results\":[{\"check_type\":\"json_schema_conformance\",\"failure_detail\":\"$.name: shorter than minLength; $.version: does not match pattern\",\"failure_reason\":\"schema_violation\",\"outcome\":\"fail\",\"recommendation\":\"document does not conform to the declared schema\"}],\"check_types_applied\":[\"json_schema_conformance\"],\"envelope_kind\":\"verification.v0.3+composed\",\"receipt_version\":\"0.3.0-composed\",\"signature_meta\":{\"agentoracle_jwks_url\":\"https://agentoracle.co/.well-known/jwks.json\"},\"subject\":{\"claim_hash\":\"sha256-bdb14a3228d8283229280b12657e701dfa7e27a6333cce43296b4221fa725bba\"},\"v_gate\":{\"confidence\":1,\"deterministic_mapping_id\":\"agentoracle-deterministic-v0.1-2026-08-06\",\"issuer\":\"agentoracle.co\",\"mapping_hash\":\"sha256-3b1f2d8e7a5c4b9f6e0a1d2c3b4a5e6f7c8d9e0a1b2c3d4e5f6a7b8c9d0e1f2a\",\"mapping_id\":\"agentoracle-v0.3-2026-05-30\",\"v_adversarial_result\":\"n/a\",\"verdict\":\"halt\"}}",
+      "canonical_stable_sha256": "sha256-36f36dc58d7a8a92ac5f4b711527460b781a0087629c99f231e1a4ac5aa95def"
+    },
+    {
+      "id": "det-011-registry-lookup-pass",
+      "expect": "pass",
+      "note": null,
+      "input": {
+        "check_type": "registry_lookup",
+        "input": {
+          "registry": "pypi",
+          "identifier": "agentoracle-receipt-verify"
+        }
+      },
+      "outcome": "pass",
+      "failure_reason": null,
+      "verdict": "act",
+      "canonical_stable_utf8": "{\"agent_id\":\"did:ao:conformance-vector:deterministic-v0.1\",\"check_mode\":\"deterministic\",\"check_results\":[{\"check_type\":\"registry_lookup\",\"evidence\":{\"identifier\":\"agentoracle-receipt-verify\",\"observed\":{\"exists\":true,\"name\":\"agentoracle-receipt-verify\",\"version\":\"0.0.1\"},\"registry\":\"pypi\",\"registry_label\":\"PyPI\",\"response_sha256\":\"sha256-efe9eef61af0935db757b575378674baeef577a81c5f8f9adc5f2497f2fdc135\"},\"outcome\":\"pass\",\"recommendation\":\"entry exists in the declared registry and metadata matches\"}],\"check_types_applied\":[\"registry_lookup\"],\"envelope_kind\":\"verification.v0.3+composed\",\"receipt_version\":\"0.3.0-composed\",\"signature_meta\":{\"agentoracle_jwks_url\":\"https://agentoracle.co/.well-known/jwks.json\"},\"subject\":{\"claim_hash\":\"sha256-66f38178d2f1a0650b1ecd823919bb1341f2715f3e36743532c161efedd8e99f\"},\"v_gate\":{\"confidence\":1,\"deterministic_mapping_id\":\"agentoracle-deterministic-v0.1-2026-08-06\",\"issuer\":\"agentoracle.co\",\"mapping_hash\":\"sha256-3b1f2d8e7a5c4b9f6e0a1d2c3b4a5e6f7c8d9e0a1b2c3d4e5f6a7b8c9d0e1f2a\",\"mapping_id\":\"agentoracle-v0.3-2026-05-30\",\"v_adversarial_result\":\"n/a\",\"verdict\":\"act\"}}",
+      "canonical_stable_sha256": "sha256-57c3ac89c076f4cfd3c9da8e27f5feb0e8299088c8568befffcb274f67c97d23"
+    },
+    {
+      "id": "det-r01-unknown-check-type",
+      "expect": "422",
+      "note": "Unknown check type. Must 422 with claim_not_deterministic, never fall back to a model.",
+      "input": {
+        "check_type": "vibes_assessment",
+        "input": {
+          "claim": "this feels right"
+        }
+      },
+      "outcome": "rejected",
+      "http_status": 422,
+      "error": "claim_not_deterministic",
+      "llm_fallback": false,
+      "canonical_stable_utf8": null,
+      "canonical_stable_sha256": null
+    },
+    {
+      "id": "det-r02-missing-required-input",
+      "expect": "422",
+      "note": "Shipped check type, missing required input. Must 422 before any work runs.",
+      "input": {
+        "check_type": "hash_comparison",
+        "input": {
+          "content": "no digest declared"
+        }
+      },
+      "outcome": "rejected",
+      "http_status": 422,
+      "error": "claim_not_deterministic",
+      "llm_fallback": false,
+      "canonical_stable_utf8": null,
+      "canonical_stable_sha256": null
+    },
+    {
+      "id": "det-r03-unsupported-schema-keyword",
+      "expect": "422",
+      "note": "Schema uses a keyword outside the shipped subset. Must 422 rather than silently pass — a receipt must never attest a check we did not actually perform.",
+      "input": {
+        "check_type": "json_schema_conformance",
+        "input": {
+          "document": {
+            "a": 1
+          },
+          "schema": {
+            "type": "object",
+            "allOf": [
+              {
+                "type": "object"
+              }
+            ]
+          }
+        }
+      },
+      "outcome": "rejected",
+      "http_status": 422,
+      "error": "claim_not_deterministic",
+      "llm_fallback": false,
+      "canonical_stable_utf8": null,
+      "canonical_stable_sha256": null
+    },
+    {
+      "id": "det-r04-unsupported-registry",
+      "expect": "422",
+      "note": "Registry outside the allowlist. Open fetch would make the check non-recomputable.",
+      "input": {
+        "check_type": "registry_lookup",
+        "input": {
+          "registry": "some-server-i-control",
+          "identifier": "x"
+        }
+      },
+      "outcome": "rejected",
+      "http_status": 422,
+      "error": "claim_not_deterministic",
+      "llm_fallback": false,
+      "canonical_stable_utf8": null,
+      "canonical_stable_sha256": null
+    }
+  ]
+}
