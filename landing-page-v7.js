@@ -104,6 +104,8 @@ h1 .g{transition:none}
 .hero-ctas{display:flex;gap:14px;flex-wrap:wrap}
 .proof-strip{margin-top:44px;font-family:'JetBrains Mono',monospace;font-size:.8rem;letter-spacing:.06em;color:var(--mut-d);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 .proof-strip .sep{color:var(--gold);opacity:.8}
+.proof-strip a{color:inherit;text-decoration:none;border-bottom:1px dotted var(--gline-hi);transition:color .2s ease,border-color .2s ease}
+.proof-strip a:hover{color:var(--gold);border-bottom-color:var(--gold)}
 
 /* the signature: a receipt that types itself */
 .receipt{background:linear-gradient(180deg,#161512,#111009);color:var(--paper);border:1px solid var(--gline-hi);border-radius:4px;padding:30px 28px 26px;position:relative;box-shadow:0 0 90px rgba(212,169,74,.14),0 30px 80px rgba(0,0,0,.65);max-width:430px;justify-self:end;width:100%}
@@ -149,7 +151,7 @@ h1 .g{transition:none}
       </div>
       <div class="proof-strip">
         <span>IETF draft</span><span class="sep">·</span>
-        <span>first registered profile</span><span class="sep">·</span>
+        <span><a href="https://github.com/wangbin9953/erc8210-aap/pull/4" target="_blank" rel="noopener noreferrer">first registered profile</a></span><span class="sep">·</span>
         <span>independently implemented, byte-identical</span>
       </div>
     </div>

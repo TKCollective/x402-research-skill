@@ -80,7 +80,7 @@ export const RECEIPT_REGISTRY_PAGE_HTML = `<!DOCTYPE html>
     <p class="lede">Issuer-side implementation details for <strong>verification.v0.3</strong>, the first entry in the <a href="https://ethereum-magicians.org/t/erc-8210-agent-assurance/28097/46">ERC-8210 Receipt Profile Registry</a> introduced by <a href="https://ethereum-magicians.org/u/jackywang">Jacky Wang</a> in the ERC-8210 v2 Progress Update on 2026-07-05.</p>
 
     <div class="attribution">
-      <strong>Attribution.</strong> The registry itself is maintained by <a href="https://ethereum-magicians.org/u/jackywang">@wangbin9953</a> (independent ERC-8210 editor, agent.tech). AgentOracle contributed the first profile entry via PR #4 (merged 2026-06-23). Two independent issuers produce conformant receipts against the profile: AgentOracle and AgentTrust — meeting the registry\u2019s two-implementer threshold for elevating a pattern.
+      <strong>Attribution.</strong> The registry itself is maintained by <a href="https://ethereum-magicians.org/u/jackywang">@wangbin9953</a> (independent ERC-8210 editor, agent.tech). AgentOracle contributed the first profile entry via <a href="https://github.com/wangbin9953/erc8210-aap/pull/4" target="_blank" rel="noopener noreferrer">PR #4 ↗</a> (merged 2026-06-23 by the ERC author). Two independent issuers produce conformant receipts against the profile: AgentOracle and AgentTrust — meeting the registry\u2019s two-implementer threshold for elevating a pattern.
     </div>
 
     <h2>Where verification.v0.3 is produced</h2>
