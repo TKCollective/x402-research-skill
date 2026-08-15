@@ -84,6 +84,7 @@ import { BENCHMARKS_HTML } from "./benchmarks-page.js";
 import { WHITEPAPER_HTML } from "./whitepaper-page.js";
 import { PRICING_PAGE_HTML } from "./pricing-page.js";
 import { DETERMINISTIC_MODE_PAGE_HTML } from "./deterministic-mode-page.js";
+import { DOCS_HUB_PAGE_HTML } from "./docs-hub-page.js";
 import { FAVICON_ICO, FAVICON_SVG, FAVICON_16, FAVICON_32, APPLE_TOUCH, OG_IMAGE } from "./favicons.js";
 import { registerVGateCompose, COMPOSED_PUBLIC_JWK, signEvaluateReceipt } from "./v_gate_compose.js";
 import { registerVerifyFacts } from "./verify-facts.js";
@@ -622,7 +623,7 @@ app.get("/robots.txt", (_req, res) => {
 // SEO: sitemap.xml
 app.get("/sitemap.xml", (_req, res) => {
   res.setHeader("Content-Type", "application/xml");
-  res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://agentoracle.co/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n  <url><loc>https://agentoracle.co/pricing</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>\n  <url><loc>https://agentoracle.co/docs/deterministic-mode</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/x402.json</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/x402-manifest.json</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://agentoracle.co/demo</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>\n  <url><loc>https://agentoracle.co/llms.txt</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n  <url><loc>https://agentoracle.co/skill.md</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/agent-card.json</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n</urlset>`);
+  res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://agentoracle.co/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n  <url><loc>https://agentoracle.co/pricing</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>\n  <url><loc>https://agentoracle.co/docs</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>\n  <url><loc>https://agentoracle.co/docs/deterministic-mode</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/x402.json</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/x402-manifest.json</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://agentoracle.co/demo</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>\n  <url><loc>https://agentoracle.co/llms.txt</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n  <url><loc>https://agentoracle.co/skill.md</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n  <url><loc>https://agentoracle.co/.well-known/agent-card.json</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n</urlset>`);
 });
 
 app.get("/favicon.ico", (_req, res) => {
@@ -3644,6 +3645,16 @@ app.get("/pricing", (_req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("Cache-Control", "public, max-age=300, s-maxage=600");
   res.send(PRICING_PAGE_HTML);
+});
+
+// /docs — the docs hub. Registered ABOVE /docs/deterministic-mode so the
+// hub answers the bare path; the deterministic-mode route keeps working
+// unchanged beneath it. Previously /docs fell through to the API 404
+// handler and returned a JSON endpoint list, which read as a dead end.
+app.get(["/docs", "/docs/"], (_req, res) => {
+  res.setHeader("content-type", "text/html; charset=utf-8");
+  res.setHeader("cache-control", "public, max-age=300");
+  res.send(DOCS_HUB_PAGE_HTML);
 });
 
 // /docs/deterministic-mode — the checkable version of "no LLM in the trust

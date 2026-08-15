@@ -50,6 +50,21 @@ li p{font-size:.93rem;color:var(--mut);max-width:620px}
   <p class="sub">What shipped, dated. Each entry corresponds to a public, verifiable artifact — that's the house style.</p>
   <ol>
     <li>
+      <time>2026-08-13</time>
+      <h2>Verifier v0.1.0 published to PyPI — three-outcome status semantics live on the released artifact</h2>
+      <p><code>pip install agentoracle-receipt-verify==0.1.0</code> · MIT · offline verification against the published JWKS. Public API exposes <code>STATUS_VALID</code>, <code>STATUS_INVALID</code>, <code>STATUS_INDETERMINATE</code>. Post-publish gate ran against the installed package in a fresh venv — the no-key path returns invalid rather than valid. <a href="https://pypi.org/project/agentoracle-receipt-verify/0.1.0/" target="_blank" rel="noopener noreferrer">pypi ↗</a></p>
+    </li>
+    <li>
+      <time>2026-08-12</time>
+      <h2>Experiment A pre-registered — design frozen, three model families, results Sep 2</h2>
+      <p>Two deep-research agents, one gated through <code>/evaluate</code> (fail-closed, replans on failing verdict), 200 questions across four domains. Measured quantity: which citations survive independent verification. Ground-truth stack deterministic. Pre-registration document, harness, and questions all public before any data was collected. <a href="https://github.com/TKCollective/agentoracle-benchmark-a-b" target="_blank" rel="noopener noreferrer">repo ↗</a></p>
+    </li>
+    <li>
+      <time>2026-08-11</time>
+      <h2>Virtuals showcase merged — a live production receipt now sits in Virtual-Protocol/acp-cli-demos</h2>
+      <p>10 files, +670/-0, merge commit <code>c08af80e7a12</code>. Receipt blob <code>d13a275e1c4d</code> is byte-identical to the production receipt. Anyone can clone the showcase folder, install the verifier, and run <code>python3 verify.py receipt.json</code> against the live JWKS. <a href="https://github.com/Virtual-Protocol/acp-cli-demos/tree/c08af80e7a12/showcase/agentoracle-verifiable-delivery" target="_blank" rel="noopener noreferrer">showcase ↗</a></p>
+    </li>
+    <li>
       <time>2026-08-07</time>
       <h2>Deterministic mode — <code>POST /v1/verify-facts</code>: six check types, no LLM in the trust chain, <code>check_mode</code> recorded inside the signed payload</h2>
       <p><a href="https://agentoracle.co/docs/deterministic-mode">/docs/deterministic-mode ↗</a></p>
