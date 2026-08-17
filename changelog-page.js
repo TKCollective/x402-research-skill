@@ -38,6 +38,8 @@ li::before{content:"";position:absolute;left:-6px;top:8px;width:10px;height:10px
 time{font-family:'JetBrains Mono',monospace;font-size:.75rem;letter-spacing:.12em;color:var(--mut)}
 li h2{font-size:1.08rem;margin:6px 0 4px}
 li p{font-size:.93rem;color:var(--mut);max-width:620px}
+li p.correction{font-size:.84rem;margin-top:10px;padding:10px 12px;border-left:2px solid var(--gold);background:rgba(255,255,255,.03);border-radius:0 4px 4px 0}
+li p.correction strong{color:var(--gold);font-weight:600}
 </style>
 </head>
 <body>
@@ -57,7 +59,8 @@ li p{font-size:.93rem;color:var(--mut);max-width:620px}
     <li>
       <time>2026-08-12</time>
       <h2>Experiment A pre-registered — design frozen, three model families, results Sep 2</h2>
-      <p>Two deep-research agents, one gated through <code>/evaluate</code> (fail-closed, replans on failing verdict), 200 questions across four domains. Measured quantity: which citations survive independent verification. Ground-truth stack deterministic. Pre-registration document, harness, and questions all public before any data was collected. <a href="https://github.com/TKCollective/agentoracle-benchmark-a-b" target="_blank" rel="noopener noreferrer">repo ↗</a></p>
+      <p>Two deep-research agents, one gated through <code>/evaluate</code> (fail-closed, replans on failing verdict), 200 questions across four domains. Measured quantity: which citations survive independent verification. Ground-truth stack deterministic. The pre-registration document was public before any data was collected; the harness and the frozen question set land before the first run, on the schedule published in the repository README. <a href="https://github.com/TKCollective/agentoracle-benchmark-a-b/blob/main/docs/pre-registration.md" target="_blank" rel="noopener noreferrer">pre-registration ↗</a></p>
+      <p class="correction"><strong>Corrected 2026-08-17.</strong> This entry originally read “Pre-registration document, harness, and questions all public before any data was collected.” That overstated what was public: at the time of writing the harness was a disclosed stub and the question set was an empty array, both scheduled in the repository README for 2026-08-17, ahead of the 2026-08-19 run start. The pre-registration document itself was complete and public as described. No data had been collected at any point, and none has been collected as of this correction.</p>
     </li>
     <li>
       <time>2026-08-11</time>
