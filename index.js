@@ -958,6 +958,40 @@ function buildDiscoveryManifest() {
     // Top-level name + description required by Bazaar listing UI per
     // x402trace bazaar-check (fardinvahdat/x402trace v0.3.0). The listing
     // falls back to the raw URL when these are missing.
+    //
+    // AUG 18 2026 — TOP-LEVEL DISCOVERY METADATA.
+    // Diagnosis: GET /x402/discovery/merchant?payTo=<our PAY_TO> returns our
+    // /research record with provider, category and tags all EMPTY, indexed
+    // 2026-05-26 and not refreshed since. Consequence:
+    // GET /x402/discovery/search?query=agentoracle returns 0 results for us
+    // and 2 results for the aiagentoracle.ai impersonator (fake wallet
+    // 0x2feCabD...EF35C, 11 indexed resources, freshest 2026-08-17).
+    //
+    // Our metadata lived only at items[].metadata. The indexer appears to
+    // read the fields it ranks on from the TOP LEVEL — which is where the
+    // impersonating manifest carries category/tags/provider/facilitator.
+    // Promoting them here (keeping items[].metadata intact for crawlers that
+    // read per-item) so the next facilitator-triggered refresh stores
+    // searchable metadata. Declaring the CDP facilitator explicitly for the
+    // same reason: the Bazaar is "a catalog of payment-gated services
+    // discovered by the CDP Facilitator" (docs.cdp.coinbase.com/x402/buyer/
+    // discover-services), and ours was absent from the doc entirely.
+    category: "verification",
+    tags: [
+      "verification", "pre-action-verification", "agent-verification",
+      "fact-checking", "claim-verification", "signed-receipts",
+      "audit-trail", "agents", "ietf-draft", "research",
+    ],
+    provider: "AgentOracle",
+    providerUrl: "https://agentoracle.co",
+    domain: "agentoracle.co",
+    documentation: "https://agentoracle.co/docs",
+    facilitator: "https://api.cdp.coinbase.com/platform/v2/x402",
+    networks: ["eip155:8453"],
+    asset: "USDC",
+    scheme: "exact",
+    payTo: PAY_TO,
+    jwks: "https://agentoracle.co/.well-known/jwks.json",
     name: "AgentOracle Verification API",
     description:
       "Pre-action verification layer for AI agents. /evaluate returns per-claim verdict + confidence + JWS-signed receipt. /research returns structured citations + confidence + signed receipt. /deep-research adds Sonar Pro multi-step analysis. /deep-research/skale settles gasless on SKALE Base. Receipts are offline-verifiable per draft-krausz-verification-state-01 (filed at IETF June 6, 2026; -01 published June 12, 2026). Second conforming implementer (AgentTrust) live since June 8, 2026.",
