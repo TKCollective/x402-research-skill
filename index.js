@@ -4375,6 +4375,12 @@ app.post("/evaluate", async (req, res) => {
     const proEval = parseEvalResponse(proRes, "sonar-pro");
     const advEval = parseEvalResponse(advRes, "adversarial");
 
+    // D2: whether the adversarial DIMENSION was evaluated at all. Distinct from
+    // a per-claim `adversarial_result === "not_checked"`, which also fires when
+    // the source ran fine but the fuzzy matcher found no row for that claim.
+    // Conflating the two is the collapse this patch exists to prevent.
+    const advSourceEvaluated = advEval !== null;
+
     // Use sonar as primary, pro as secondary, Gemma as fallback
     let primaryClaims = sonarEval?.claims || proEval?.claims || [];
     const proClaims = proEval?.claims || [];
@@ -4480,6 +4486,44 @@ app.post("/evaluate", async (req, res) => {
       };
     });
 
+    // ── D1: NON-EVALUATION IS NOT A VERDICT ──
+    // Reached when no source produced a parseable claim set: sonar, sonar-pro AND
+    // the Gemma fallback all failed. Every synthesizing statement in this handler
+    // is below this line, so returning here is what guarantees no confidence, no
+    // verdict, no recommendation text, no receipt and no cache write.
+    if (mergedClaims.length === 0) {
+      const _unavailable = [
+        ["sonar", sonarRes], ["sonar-pro", proRes],
+        ["adversarial", advRes], ["gemma", gemmaRes],
+      ]
+        .filter(([, r]) => !r || r.status === "rejected")
+        .map(([label, r]) => {
+          const raw = r && r.reason;
+          const httpStatus = raw && raw.response && raw.response.status;
+          let cause;
+          if (httpStatus === 402) cause = "upstream_insufficient_credit";
+          else if (httpStatus === 429) cause = "upstream_rate_limited";
+          else if (httpStatus === 401 || httpStatus === 403) cause = "upstream_auth_rejected";
+          else if (httpStatus >= 500) cause = "upstream_server_error";
+          else if (typeof raw === "string") cause = raw;
+          else cause = (raw && (raw.code || raw.message)) || "unknown";
+          return `${label}:${cause}`;
+        });
+      console.error(
+        `[ALARM][/evaluate][no_members_evaluated] ` +
+        `unavailable="${_unavailable.join(",") || "all_sources_unparseable"}"`
+      );
+      return res.status(503).json({
+        status: "not_evaluated",
+        reason: "upstream_verification_unavailable",
+        unavailable_sources: _unavailable,
+        detail:
+          "No verification source returned a parseable claim set. No verdict, " +
+          "confidence, or recommendation is reported and no receipt is signed. " +
+          "Insufficient upstream credit is a first-class case of this condition.",
+      });
+    }
+
     const total = mergedClaims.length;
     const verified = mergedClaims.filter(c=>c.verdict==="supported").length;
     const refuted = mergedClaims.filter(c=>c.verdict==="refuted").length;
@@ -4518,6 +4562,12 @@ app.post("/evaluate", async (req, res) => {
 
     const threshold = min_confidence ? parseFloat(min_confidence) : 0.8;
     let rec = "verify"; if(overall>=threshold)rec="act"; else if(overall<0.5)rec="reject";
+
+    // D2 (response body): an "act" recommendation is unreachable when the
+    // adversarial dimension was never evaluated. Mirrors the receipt-side
+    // invariant so the body and the receipt cannot disagree. "reject" is left
+    // alone — a refutation stands on its own evidence.
+    if (!advSourceEvaluated && rec === "act") rec = "verify";
 
     const assessment = sonarEval?.content_assessment || proEval?.content_assessment || {};
     const flags = (assessment.adversarial_flags||[]).filter(f=>f!=="");
@@ -4593,7 +4643,7 @@ app.post("/evaluate", async (req, res) => {
         agg_v_verdict = "refuted";
       } else if (mergedClaims.some(c => c.verdict === "unverifiable")) {
         agg_v_verdict = "unverifiable";
-      } else if (mergedClaims.every(c => c.verdict === "supported")) {
+      } else if (advSourceEvaluated && mergedClaims.every(c => c.verdict === "supported")) {
         agg_v_verdict = "supported";
       } else {
         agg_v_verdict = "unknown";
@@ -4607,10 +4657,18 @@ app.post("/evaluate", async (req, res) => {
       const _advVulnerable = (v) => v === "vulnerable" || v === "contradicted";
       if (mergedClaims.some(c => _advVulnerable(c.adversarial_result))) {
         agg_v_adv = "vulnerable";
-      } else if (mergedClaims.length > 0 && mergedClaims.every(c => _advResilient(c.adversarial_result))) {
+      } else if (advSourceEvaluated && mergedClaims.length > 0 && mergedClaims.every(c => _advResilient(c.adversarial_result))) {
         agg_v_adv = "resilient";
       } else {
         agg_v_adv = "not_checked";
+      }
+
+      // D2 INVARIANT: "supported" is unreachable while the adversarial dimension
+      // reads not_checked. Belt to the braces above — if either branch is ever
+      // edited independently, this line still prevents the contradiction that
+      // produced the 2026-08-25 receipts.
+      if (agg_v_adv === "not_checked" && agg_v_verdict === "supported") {
+        agg_v_verdict = "unknown";
       }
 
       const receipt = signEvaluateReceipt({
@@ -4641,7 +4699,23 @@ app.post("/evaluate", async (req, res) => {
     // and gate on residual budget so persistence cannot blow past the 20s SLO.
     const persistElapsed = Date.now() - evalStart;
     const persistBudget = Math.max(0, EVAL_BUDGET_MS - persistElapsed - 250); // 250ms response buffer
-    if (persistBudget >= 500) {
+    // D4: cache admission is gated on evaluation completeness. An incompletely
+    // evaluated result must not outlive the request that produced it — that is
+    // what let the 2026-08-25 fabrications survive the credit top-up. Gates the
+    // claim: fingerprints too, since they are written in the same block and have
+    // NO TTL.
+    const fullyEvaluated =
+      advSourceEvaluated &&
+      mergedClaims.length > 0 &&
+      response.meta.receipt_status === "signed";
+    if (!fullyEvaluated) {
+      console.log(
+        `[EVALUATE] Cache write skipped: not fully evaluated ` +
+        `(adv=${advSourceEvaluated}, members=${mergedClaims.length}, ` +
+        `receipt=${response.meta.receipt_status})`
+      );
+    }
+    if (persistBudget >= 500 && fullyEvaluated) {
       try {
         await Promise.race([
           (async () => {
