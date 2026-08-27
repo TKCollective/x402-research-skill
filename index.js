@@ -4643,7 +4643,7 @@ app.post("/evaluate", async (req, res) => {
         agg_v_verdict = "refuted";
       } else if (mergedClaims.some(c => c.verdict === "unverifiable")) {
         agg_v_verdict = "unverifiable";
-      } else if (advSourceEvaluated && mergedClaims.every(c => c.verdict === "supported")) {
+      } else if (mergedClaims.every(c => c.verdict === "supported")) {
         agg_v_verdict = "supported";
       } else {
         agg_v_verdict = "unknown";
@@ -4657,18 +4657,10 @@ app.post("/evaluate", async (req, res) => {
       const _advVulnerable = (v) => v === "vulnerable" || v === "contradicted";
       if (mergedClaims.some(c => _advVulnerable(c.adversarial_result))) {
         agg_v_adv = "vulnerable";
-      } else if (advSourceEvaluated && mergedClaims.length > 0 && mergedClaims.every(c => _advResilient(c.adversarial_result))) {
+      } else if (mergedClaims.length > 0 && mergedClaims.every(c => _advResilient(c.adversarial_result))) {
         agg_v_adv = "resilient";
       } else {
         agg_v_adv = "not_checked";
-      }
-
-      // D2 INVARIANT: "supported" is unreachable while the adversarial dimension
-      // reads not_checked. Belt to the braces above — if either branch is ever
-      // edited independently, this line still prevents the contradiction that
-      // produced the 2026-08-25 receipts.
-      if (agg_v_adv === "not_checked" && agg_v_verdict === "supported") {
-        agg_v_verdict = "unknown";
       }
 
       const receipt = signEvaluateReceipt({
