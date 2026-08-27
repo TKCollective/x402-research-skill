@@ -2763,7 +2763,7 @@ app.get("/health", (_req, res) => {
       "POST /preview": { price: "free", model: PERPLEXITY_MODEL, note: "Live truncated preview, 10/hr" },
       "POST /research": { price: PRICE, model: PERPLEXITY_MODEL, tier_selector: true },
       "POST /deep-research": { price: DEEP_PRICE, model: PERPLEXITY_MODEL_PRO },
-      "POST /evaluate": { price: "$0.01", description: "Per-claim verification with confidence scoring" },
+      "POST /evaluate": { price: "$0.00 (beta; $0.09 at GA)", description: "Per-claim verification with confidence scoring" },
       "POST /verify-gate": { price: "free (beta)", description: "Bi-directional verification gate — embed trust into any API" },
       "GET /fingerprints": { price: "free", description: "Claim fingerprint database stats" },
       "POST /feedback": { price: "free", description: "Report evaluation accuracy to improve reputation" },
@@ -4235,7 +4235,7 @@ app.get("/evaluate", (_req, res) => {
       content: "Bitcoin is currently trading around $80,000",
       min_confidence: 0.7,
     },
-    pricing: "$0.01 USDC per call (x402 gated). $0 if cached.",
+    pricing: "Free during beta — /evaluate is not payment-gated. $0.09 USDC per call at general availability. $0 if cached.",
     note: "Use POST with one of {content, url} required. GET returns this doc.",
   });
 });
@@ -4613,7 +4613,7 @@ app.post("/evaluate", async (req, res) => {
       meta: {
         evaluation_time_ms: Date.now()-startTime,
         endpoint: "/evaluate",
-        price: "$0.01 USDC",
+        price: "$0.00 (beta; $0.09 USDC per call at GA)",
         verification_method: "multi-source (sonar + sonar-pro + adversarial)",
         cache_hit: false,
         feedback_url: "POST /feedback with this evaluation_id",
