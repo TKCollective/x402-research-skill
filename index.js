@@ -4574,13 +4574,13 @@ app.post("/evaluate", async (req, res) => {
     if(flags.length>0){overall=Math.round(Math.max(0,overall-flags.length*0.1)*100)/100;if(overall<0.5)rec="reject";}
 
     // Plain-English recommendation for developers new to the API
-    function buildRecommendationText(conf, rec, flags){
+    function buildRecommendationText(conf, rec, flags, threshold){
       const flagNote = flags && flags.length > 0 ? ` Adversarial layer raised ${flags.length} flag${flags.length===1?"":"s"}: ${flags.slice(0,3).join(", ")}.` : "";
       if (rec === "reject" || conf < 0.50) return `Do not act. This claim is likely false or unsupported (confidence ${conf.toFixed(2)}).${flagNote}`;
-      if (rec === "verify" || conf < 0.80) return `Verify with a human before acting. Claim is partially supported but not conclusive (confidence ${conf.toFixed(2)}).${flagNote}`;
+      if (rec === "verify" || conf < threshold) return `Verify with a human before acting. Claim is partially supported but not conclusive (confidence ${conf.toFixed(2)}).${flagNote}`;
       return `Safe to act. Claim is well-supported by multiple sources (confidence ${conf.toFixed(2)}).${flagNote}`;
     }
-    const recText = buildRecommendationText(overall, rec, flags);
+    const recText = buildRecommendationText(overall, rec, flags, threshold);
 
     if(url){try{updateSourceRep(new URL(url).hostname.replace("www.",""),overall);}catch{}}
 
