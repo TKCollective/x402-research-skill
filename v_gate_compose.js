@@ -26,9 +26,72 @@ const COMPOSED_PUBLIC_JWK = {
 };
 
 // Stable AO mapping pointer for v0.3+composed traffic.
+//
+// The mapping hash is NOT a constant. It is derived at boot from the bytes of
+// the published mapping document, which the entrypoint loads from disk and
+// injects via registerVGateCompose({ mappingBytes }). This module deliberately
+// does not read the file itself: @vercel/node does not reliably bundle sibling
+// JSON into an imported module's filesystem (see the CONFORMANCE_SAMPLE note
+// below), and index.js already loads those exact bytes to serve /mappings/.
+// One set of bytes, one hash, one source of truth.
+//
+// This replaces a hard-coded literal that never matched any mapping document.
+// Because it was a module constant, it was stamped into every receipt signed by
+// /v1/compose and /v1/v_gate, not just into a fixture — so every one of those
+// receipts carried a mapping binding no relying party could resolve. The same
+// defect class was found in the entrypoint by Msebenzi and fixed there on
+// 2026-07-28; this module kept its own stale copy. Deriving it removes the
+// possibility of the two drifting again.
+//
+// Fail loudly, never fall back: a process that cannot establish which mapping
+// document it is binding to has nothing honest to sign.
 const AO_MAPPING_ID = "agentoracle-v0.3-2026-05-30";
-const AO_MAPPING_HASH =
-  "sha256-3b1f2d8e7a5c4b9f6e0a1d2c3b4a5e6f7c8d9e0a1b2c3d4e5f6a7b8c9d0e1f2a";
+let AO_MAPPING_HASH = null;
+
+/**
+ * initMappingBinding — derive the content address from the mapping bytes.
+ * Throws rather than defaulting. Idempotent for identical bytes; a second call
+ * with different bytes is a hard error, because two mapping documents cannot
+ * both be the one this process signs against.
+ */
+function initMappingBinding(mappingBytes) {
+  if (!mappingBytes || typeof mappingBytes.length !== "number" || mappingBytes.length === 0) {
+    throw new Error(
+      "v_gate_compose: mappingBytes is required — cannot derive v_gate.mapping_hash. " +
+      "Pass registerVGateCompose(app, { mappingBytes }) with the bytes of " +
+      AO_MAPPING_ID + " as loaded from disk."
+    );
+  }
+  const hex = crypto.createHash("sha256").update(mappingBytes).digest("hex");
+  if (!/^[0-9a-f]{64}$/.test(hex)) {
+    throw new Error(`v_gate_compose: derived mapping hash is not 64-hex: ${hex}`);
+  }
+  const derived = "sha256-" + hex;
+  if (AO_MAPPING_HASH !== null && AO_MAPPING_HASH !== derived) {
+    throw new Error(
+      `v_gate_compose: mapping binding already initialised to ${AO_MAPPING_HASH}, ` +
+      `refusing to rebind to ${derived}`
+    );
+  }
+  AO_MAPPING_HASH = derived;
+  console.log(`[v_gate_compose] mapping binding derived: ${AO_MAPPING_ID} -> ${AO_MAPPING_HASH}`);
+  return AO_MAPPING_HASH;
+}
+
+/**
+ * requireMappingHash — call at every signing site. Refuses to return a value
+ * that was never derived, so an unbound process cannot sign a receipt whose
+ * mapping binding is a guess.
+ */
+function requireMappingHash() {
+  if (AO_MAPPING_HASH === null) {
+    throw new Error(
+      "v_gate_compose: refusing to sign — mapping binding was never derived. " +
+      "registerVGateCompose must be called with { mappingBytes } before any signing route runs."
+    );
+  }
+  return AO_MAPPING_HASH;
+}
 
 // RFC 7468 / RFC 8410 — load an Ed25519 raw seed (base64url) into a
 // node:crypto KeyObject usable with sign().
@@ -261,7 +324,72 @@ async function submitTrailAsync(canonical_sha256, canonical_bytes_b64u, outcome_
   }
 }
 
-function registerVGateCompose(app) {
+// Wire-up gate. Default OFF: the composed endpoints do not issue while their
+// verdict path is a stub. Set STUB_ISSUANCE=allow ONLY in a private test
+// environment that does not hold the production signing key.
+const STUB_ISSUANCE_ENABLED = process.env.STUB_ISSUANCE === "allow";
+
+// ── SIGNING-ORACLE CLOSURE (2026-08-28) ────────────────────────────────────
+// /v1/sign and /v1/sign/batch sign caller-supplied canonical bytes with the
+// production issuer key. Both were reachable with no authentication.
+//
+// Verified 2026-08-28: a fabricated payload for a claim nothing evaluated,
+// submitted to /v1/sign/batch, came back signed under COMPOSED_KID. The
+// resulting envelope passes the published verifier AND the full
+// draft-krausz-verification-state Section 4.3 recompute, because a forger
+// controls the inputs and can make them mutually consistent. That is a forgery
+// oracle for this receipt format: while it is open, anyone can mint an envelope
+// this issuer did not issue, and non-repudiation — the property the format
+// exists to provide — does not hold.
+//
+// There is no key-validation layer at the origin: authentication for the paid
+// tier lives in the Zuplo gateway, which is why these routes were never meant
+// to be reachable directly. So the gate is a shared secret the gateway (or a
+// coordinated partner) presents, and it FAILS CLOSED: if the secret is not
+// configured, the routes refuse rather than sign. An unconfigured signer that
+// signs anything is the condition being fixed, so it cannot be the default.
+//
+// This is necessary but NOT sufficient. See the kid-conflation note in
+// agenttrust_integration_impact.md: the same COMPOSED_KID signs both receipts
+// where AgentOracle evaluated the claim (/evaluate) and receipts where it only
+// signed bytes a caller supplied (/v1/sign*). A verifier cannot tell those
+// apart from the receipt alone. Separating the kid is the structural fix and it
+// is not in this change.
+const SIGNING_SECRET = process.env.AO_SIGNING_SECRET || "";
+
+function requireSigningAuth(req, res) {
+  if (!SIGNING_SECRET) {
+    res.status(503).json({
+      status: "not_issuing",
+      reason: "signing_auth_not_configured",
+      detail:
+        "This endpoint signs caller-supplied bytes with the production issuer " +
+        "key and refuses to operate without an authentication secret " +
+        "configured. No signature is produced.",
+    });
+    return false;
+  }
+  const got = req.get && req.get("authorization");
+  if (got !== `Bearer ${SIGNING_SECRET}`) {
+    res.status(401).json({
+      status: "not_issuing",
+      reason: "signing_auth_required",
+      detail:
+        "Signing caller-supplied bytes with the AgentOracle issuer key requires " +
+        "authorization. No signature is produced. Note that a signature from " +
+        "this endpoint attests only that these bytes were signed, not that " +
+        "AgentOracle evaluated the claim they describe.",
+    });
+    return false;
+  }
+  return true;
+}
+
+function registerVGateCompose(app, { mappingBytes } = {}) {
+  // Derive before any route is registered: if the binding cannot be
+  // established, this throws at boot rather than at first signature.
+  initMappingBinding(mappingBytes);
+
   // POST /v1/sign/batch
   //
   // Bulk sign primitive: N canonical_bytes_b64u in, N signature entries out.
@@ -272,6 +400,7 @@ function registerVGateCompose(app) {
   // Response: { "signatures": [ { protected, signature, kid }, ... ], "kid": "..." }
   app.post("/v1/sign/batch", async (req, res) => {
     try {
+      if (!requireSigningAuth(req, res)) return;
       const body = req.body || {};
       const list = body.canonical_bytes_b64u;
       if (!Array.isArray(list) || list.length === 0) {
@@ -337,7 +466,25 @@ function registerVGateCompose(app) {
   // anchor proof is recompute-verifiable via the published recompute_cmd.
   // Inlined as a JSON literal because Vercel @vercel/node doesn't bundle
   // sibling JSON files into the function's filesystem by default.
-  const CONFORMANCE_SAMPLE = JSON.parse('{"jws":{"payload":"eyJhZ2VudF9pZCI6ImRpZDphbzpjb25mb3JtYW5jZS1zYW1wbGU6YWdlbnRvcmFjbGUtdjEiLCJjb21wb3NlZF9kZWNpc2lvbiI6ImhhbHQiLCJjb21wb3NlZF9kZWNpc2lvbl9ydWxlIjoiQU5EX1BSRVNFTlQiLCJlbnZlbG9wZV9raW5kIjoidmVyaWZpY2F0aW9uLnYwLjMrY29tcG9zZWQiLCJyZWNlaXB0X3ZlcnNpb24iOiIwLjMuMC1jb21wb3NlZCIsInNjcmVlbl9yZWYiOnsiYWN0aW9uX3JlZiI6Ijg2YWMxNjUzYTI0YmE5NjMxOWU0MmM1ODY5YmIxOGNiNWJhZTNhOWM4NGIzNzQ0ODUzYWM3YWYxZDEzOGU3MjYiLCJpc3N1ZXIiOiJwcmVzaWRpbyIsIm1hcHBpbmdfaWQiOiJwcmVzaWRpby14NDAyLXNjcmVlbi12MC4xLTIwMjYtMDYiLCJzY3JlZW4iOnsiYWN0aW9uX3R5cGUiOiJwaWlfc2NyZWVuIiwiYWdlbnRfaWQiOiJkaWQ6YW86Y29uZm9ybWFuY2Utc2FtcGxlOmFnZW50b3JhY2xlLXYxIiwic2NvcGUiOiJwcmVzaWRpbzp4NDAyLnNjcmVlbjpQSUlfQkxPQ0tFRDpFTUFJTF9BRERSRVNTLFVTX1NTTiIsInRpbWVzdGFtcCI6IjIwMjYtMDYtMzBUMTM6Mjg6MTguMDAwWiJ9LCJ2ZXJkaWN0IjoiUElJX0JMT0NLRUQifSwic2lnbmF0dXJlX21ldGEiOnsiYWdlbnRvcmFjbGVfandrc191cmwiOiJodHRwczovL2FnZW50b3JhY2xlLmNvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImFnZW50dHJ1c3Rfandrc191cmwiOiJodHRwczovL2FnZW50dHJ1c3QudWsvLndlbGwta25vd24vandrcy5qc29uIn0sInN1YmplY3QiOnsiY2xhaW1faGFzaCI6InNoYTI1Ni1jb25mb3JtYW5jZS1zYW1wbGUtYWdlbnRvcmFjbGUtdjEiLCJza2lsbF9oYXNoIjoic2hhMjU2LWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWEifSwidGltZXN0YW1wIjoiMjAyNi0wNi0zMFQxMzoyODoxOC42NzRaIiwidGltZXN0YW1wX21zIjoxNzgyODI2MDk4Njc0LCJ2X2dhdGUiOnsiY29uZmlkZW5jZSI6MC44NywiaXNzdWVyIjoiYWdlbnRvcmFjbGUuY28iLCJtYXBwaW5nX2hhc2giOiJzaGEyNTYtM2IxZjJkOGU3YTVjNGI5ZjZlMGExZDJjM2I0YTVlNmY3YzhkOWUwYTFiMmMzZDRlNWY2YTdiOGM5ZDBlMWYyYSIsIm1hcHBpbmdfaWQiOiJhZ2VudG9yYWNsZS12MC4zLTIwMjYtMDUtMzAiLCJzaWduZWRfYXQiOiIyMDI2LTA2LTMwVDEzOjI4OjE4LjY3NFoiLCJ2ZXJkaWN0IjoiYWN0In0sInZfZ2F0ZV9za2lsbCI6eyJlbmRwb2ludF9yZXN1bHRzIjpbXSwiaXNzdWVyIjoiYWdlbnR0cnVzdCIsIm1hcHBpbmdfaWQiOiJhZ2VudHRydXN0LXYwLjMtMjAyNi0wNi0wNyIsIm1jcF9yZXN1bHRzIjpbXSwic2tpbGxfcmVzdWx0cyI6W3sic3RhdHVzIjoiY2xlYW4ifV0sInZfZ2F0ZV9tYXBwaW5nX2hhc2giOiJzaGEyNTYtMzA3ZGI5ZmFhMzY0Y2ZlMTQ5ZmI1MTIwZDA0NTExNzUxNzVkZTQwZDc0MzNjNDQ5MTViZmVjNTdhY2MxNmVjNCIsInZlcmRpY3QiOiJhY3QifX0","signatures":[{"protected":"eyJhbGciOiJFZERTQSIsImtpZCI6ImFnZW50dHJ1c3QtZWQyNTUxOS12MSIsInR5cCI6ImFwcGxpY2F0aW9uL3ZuZC52ZXJpZmljYXRpb24udjAuMytjb21wb3NlZCtqd3MifQ","signature":"BaPe-qC6Gcdn5OHmILs0UDW0tDaejSit6poj-LjBgd-3uA-mhUOiMwINTxujYtibbozhN1sCBj_9IgtbrEOEBQ"},{"protected":"eyJhbGciOiJFZERTQSIsImtpZCI6ImFvLWNvbXBvc2VkLTIwMjYtMDYtZWQyNTUxOS1jM2FiZmNlMyIsInR5cCI6ImFwcGxpY2F0aW9uL3ZuZC52ZXJpZmljYXRpb24udjAuMytjb21wb3NlZCtqd3MifQ","signature":"vmF3_KOZjYZIykvW-7BgRmALcDbMyc_CsEiw49p2mp32GRZAOGiDOqVKFpELFdQj8jZ86l-RVsiaxL_pnEGiDg"}]},"canonical_sha256":"sha256-b18238d6e425f239b5011e2a01f865f39173200e9c463708272c5fccecc8225d","canonical_bytes_length":1475,"composed_decision":"halt","signers":[{"issuer":"agenttrust.uk","kid":"agenttrust-ed25519-v1"},{"issuer":"agentoracle.co","kid":"ao-composed-2026-06-ed25519-c3abfce3"}],"governance":{"envelope_hash":"b18238d6e425f239b5011e2a01f865f39173200e9c463708272c5fccecc8225d","canonical_bytes_utf8":"{\\"agent_id\\":\\"did:ao:conformance-sample:agentoracle-v1\\",\\"composed_decision\\":\\"halt\\",\\"composed_decision_rule\\":\\"AND_PRESENT\\",\\"envelope_kind\\":\\"verification.v0.3+composed\\",\\"receipt_version\\":\\"0.3.0-composed\\",\\"screen_ref\\":{\\"action_ref\\":\\"86ac1653a24ba96319e42c5869bb18cb5bae3a9c84b3744853ac7af1d138e726\\",\\"issuer\\":\\"presidio\\",\\"mapping_id\\":\\"presidio-x402-screen-v0.1-2026-06\\",\\"screen\\":{\\"action_type\\":\\"pii_screen\\",\\"agent_id\\":\\"did:ao:conformance-sample:agentoracle-v1\\",\\"scope\\":\\"presidio:x402.screen:PII_BLOCKED:EMAIL_ADDRESS,US_SSN\\",\\"timestamp\\":\\"2026-06-30T13:28:18.000Z\\"},\\"verdict\\":\\"PII_BLOCKED\\"},\\"signature_meta\\":{\\"agentoracle_jwks_url\\":\\"https://agentoracle.co/.well-known/jwks.json\\",\\"agenttrust_jwks_url\\":\\"https://agenttrust.uk/.well-known/jwks.json\\"},\\"subject\\":{\\"claim_hash\\":\\"sha256-conformance-sample-agentoracle-v1\\",\\"skill_hash\\":\\"sha256-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\"},\\"timestamp\\":\\"2026-06-30T13:28:18.674Z\\",\\"timestamp_ms\\":1782826098674,\\"v_gate\\":{\\"confidence\\":0.87,\\"issuer\\":\\"agentoracle.co\\",\\"mapping_hash\\":\\"sha256-3b1f2d8e7a5c4b9f6e0a1d2c3b4a5e6f7c8d9e0a1b2c3d4e5f6a7b8c9d0e1f2a\\",\\"mapping_id\\":\\"agentoracle-v0.3-2026-05-30\\",\\"signed_at\\":\\"2026-06-30T13:28:18.674Z\\",\\"verdict\\":\\"act\\"},\\"v_gate_skill\\":{\\"endpoint_results\\":[],\\"issuer\\":\\"agenttrust\\",\\"mapping_id\\":\\"agenttrust-v0.3-2026-06-07\\",\\"mcp_results\\":[],\\"skill_results\\":[{\\"status\\":\\"clean\\"}],\\"v_gate_mapping_hash\\":\\"sha256-307db9faa364cfe149fb5120d0451175175de40d7433c44915bfec57acc16ec4\\",\\"verdict\\":\\"act\\"}}","verifier_pubkey":"171b4df82481832913a7706017146b024c4d5112309e649f453c1fbd7066052a","signature":"f047a31029a8d1d428ef0c32c542eb0227521a95d2905c27e4fc49b8dec9bb23b4bcfdd31503d7669a2559ed313d6468d31d75245eadf2065c44bcd3f8cfe308","sig_scheme":"ed25519-jcs","kid":"ao-composed-2026-06-ed25519-c3abfce3","co_signers":[{"issuer":"agenttrust.uk","kid":"agenttrust-ed25519-v1","pubkey":"98e73aa9d4c701092ccd3f3f450be9ce6293727b41087d5ff9dc83c2e2a91312","pubkey_hash":"0d60ec39d3d5f69fee6141c4fd82a13edb224412ea2079bc699428936141b148","key_source":"published_jwks","jwks_url":"https://agenttrust.uk/.well-known/jwks.json","jws_signature":"05a3defaa0ba19c767e4e1e620bb345035b4b4369e8d28adea9a23f8b8c181dfb7b80fa68543a233020d4f1ba362d89b6e8ce1375b02063ffd220b5bac438405"}],"anchor":{"method":"on-chain","tier":"on-chain","reference":"9f390877-41e8-4b0c-8b03-7e8639323f75","tx_hash":"d1eddc5b6ccc487af4cdd67e6b8baf5690099062d8db0ffd55becef30fe14b42","anchor_block":478930660,"anchor_block_time":1782824299,"precedence":true,"canonicalization_profile_id":"8c7f71754e3daae1a0390d5e0287d51097d011e40df36bf15cad5c0f47efa05a","anchor_proof":{"preimage":{"action_type":"pii_screen","agent_id":"did:ao:conformance-sample:agentoracle-v1","scope":"presidio:x402.screen:PII_BLOCKED:EMAIL_ADDRESS,US_SSN","timestamp":"2026-06-30T13:28:18.000Z"},"hash_algo":"sha256","preimage_format":"jcs-rfc8785","action_ref_verified":true},"action_ref":"86ac1653a24ba96319e42c5869bb18cb5bae3a9c84b3744853ac7af1d138e726","proof_url":"https://argentum.rgiskard.xyz/trails/9f390877-41e8-4b0c-8b03-7e8639323f75","recompute_cmd":"curl -s https://argentum.rgiskard.xyz/mycelium/trails/9f390877-41e8-4b0c-8b03-7e8639323f75/verify_chain","anchor_status":"anchored"}},"elapsed_ms":663}');
+//
+// ⚠ TWO COPIES EXIST AND THEY CAN DRIFT. These bytes are duplicated in
+// ./conformance_sample.json at the repo root. THE ENDPOINT SERVES THIS LITERAL,
+// NOT THAT FILE — editing the file alone changes nothing a caller can see.
+// Change both together, or the repo will claim one thing while the endpoint
+// serves another. That is exactly how the previous sample went stale.
+//
+// This sample is a genuine, unmodified /evaluate receipt: real signature, real
+// mapping binding matching the published mapping document byte-for-byte, and the
+// full signed intermediates (v_verdict, v_confidence, v_adversarial_result,
+// v_recommendation, v_gate_threshold) so a relying party can actually run the
+// recompute sequence against it. It replaces a sample whose mapping_hash was a
+// hand-typed placeholder and which omitted the intermediates entirely —
+// reported by Pablo Ferreiro (giskard09) after running the recompute procedure
+// we published for that purpose.
+//
+// Single-issuer. A co-signed two-issuer sample follows when AgentTrust re-signs
+// a corrected envelope.
+  const CONFORMANCE_SAMPLE = JSON.parse('{"jws":{"payload":"eyJjb21wb3NlZF9kZWNpc2lvbiI6ImFjdCIsImNvbXBvc2VkX2RlY2lzaW9uX3J1bGUiOiJBTkRfUFJFU0VOVCIsImVudmVsb3BlX2tpbmQiOiJ2ZXJpZmljYXRpb24udjAuMytjb21wb3NlZCIsInJlY2VpcHRfdmVyc2lvbiI6IjAuMy4wLWNvbXBvc2VkIiwic2lnbmF0dXJlX21ldGEiOnsiYWdlbnRvcmFjbGVfandrc191cmwiOiJodHRwczovL2FnZW50b3JhY2xlLmNvLy53ZWxsLWtub3duL2p3a3MuanNvbiJ9LCJzdWJqZWN0Ijp7ImNsYWltX2hhc2giOiJzaGEyNTYtYjU1MTBjNTk2OGIzMjJlYTE5NTE4ZWQ4YzU3ZTc5MWQ2OWVjYzUyNDRmNTNkZmI4M2IwNzVjNmMwOGI3ODU3YyIsInNraWxsX2hhc2giOiJzaGEyNTYtMGE3ODI2Mzk3Njc5MGRmNmU3NmNkOWYzZjQ0MWJmNWEzYjVjM2E4MmUzNDZiNWFjYTQzZTQ5NjI2ODgxZDdiMCJ9LCJ0aW1lc3RhbXAiOiIyMDI2LTA4LTI4VDAzOjM3OjE4LjQ1OFoiLCJ0aW1lc3RhbXBfbXMiOjE3ODc4ODgyMzg0NTgsInZfZ2F0ZSI6eyJjb25maWRlbmNlIjoxLCJpc3N1ZXIiOiJhZ2VudG9yYWNsZS5jbyIsIm1hcHBpbmdfaGFzaCI6InNoYTI1Ni0wYTc4MjYzOTc2NzkwZGY2ZTc2Y2Q5ZjNmNDQxYmY1YTNiNWMzYTgyZTM0NmI1YWNhNDNlNDk2MjY4ODFkN2IwIiwibWFwcGluZ19pZCI6ImFnZW50b3JhY2xlLXYwLjMtMjAyNi0wNS0zMCIsInNpZ25lZF9hdCI6IjIwMjYtMDgtMjhUMDM6Mzc6MTguNDU4WiIsInZfYWR2ZXJzYXJpYWxfcmVzdWx0IjoicmVzaWxpZW50Iiwidl9jb25maWRlbmNlIjoxLCJ2X2dhdGVfdGhyZXNob2xkIjowLjcsInZfcmVjb21tZW5kYXRpb24iOiJjb25maWRlbnRfc3VwcG9ydGVkIiwidl92ZXJkaWN0Ijoic3VwcG9ydGVkIiwidmVyZGljdCI6ImFjdCJ9fQ","signatures":[{"protected":"eyJhbGciOiJFZERTQSIsImtpZCI6ImFvLWNvbXBvc2VkLTIwMjYtMDYtZWQyNTUxOS1jM2FiZmNlMyIsInR5cCI6ImFwcGxpY2F0aW9uL3ZuZC52ZXJpZmljYXRpb24udjAuMytjb21wb3NlZCtqd3MifQ","signature":"sbVc7re5Ow4MRP-2CO33_ygKuxsF_ncV_V0dz-yU_TWjiBLt-Z-z4UqNChcXmYb2aMmymGhbLTvBI9jGYkuVBw"}]},"canonical_sha256":"sha256-818541d893b0b5c3e8f1004da793d241491aeeeecc52042c4a9b416d16d4137a","canonical_bytes_length":868,"composed_decision":"act","signers":[{"kid":"ao-composed-2026-06-ed25519-c3abfce3","issuer":"https://agentoracle.co/.well-known/jwks.json"}],"governance":{"envelope_hash":"818541d893b0b5c3e8f1004da793d241491aeeeecc52042c4a9b416d16d4137a","canonical_bytes_utf8":"{\\"composed_decision\\":\\"act\\",\\"composed_decision_rule\\":\\"AND_PRESENT\\",\\"envelope_kind\\":\\"verification.v0.3+composed\\",\\"receipt_version\\":\\"0.3.0-composed\\",\\"signature_meta\\":{\\"agentoracle_jwks_url\\":\\"https://agentoracle.co/.well-known/jwks.json\\"},\\"subject\\":{\\"claim_hash\\":\\"sha256-b5510c5968b322ea19518ed8c57e791d69ecc5244f53dfb83b075c6c08b7857c\\",\\"skill_hash\\":\\"sha256-0a78263976790df6e76cd9f3f441bf5a3b5c3a82e346b5aca43e49626881d7b0\\"},\\"timestamp\\":\\"2026-08-28T03:37:18.458Z\\",\\"timestamp_ms\\":1787888238458,\\"v_gate\\":{\\"confidence\\":1,\\"issuer\\":\\"agentoracle.co\\",\\"mapping_hash\\":\\"sha256-0a78263976790df6e76cd9f3f441bf5a3b5c3a82e346b5aca43e49626881d7b0\\",\\"mapping_id\\":\\"agentoracle-v0.3-2026-05-30\\",\\"signed_at\\":\\"2026-08-28T03:37:18.458Z\\",\\"v_adversarial_result\\":\\"resilient\\",\\"v_confidence\\":1,\\"v_gate_threshold\\":0.7,\\"v_recommendation\\":\\"confident_supported\\",\\"v_verdict\\":\\"supported\\",\\"verdict\\":\\"act\\"}}","mapping_document":"https://agentoracle.co/mappings/agentoracle-v0.3-2026-05-30.json","mapping_sha256":"sha256-0a78263976790df6e76cd9f3f441bf5a3b5c3a82e346b5aca43e49626881d7b0","recompute_procedure":"draft-krausz-verification-state-01 Section 4.3 steps 1-8","issuer_count":1,"note":"Single-issuer snapshot of a genuine /evaluate receipt. Every field is as signed; nothing is synthesized."},"elapsed_ms":76,"note":"Single-issuer snapshot of a genuine /evaluate receipt. A co-signed two-issuer sample follows when AgentTrust re-signs a corrected envelope."}');
   app.get("/v1/conformance/sample", (req, res) => {
     res.setHeader("Cache-Control", "public, max-age=300");
     res.setHeader("Content-Type", "application/json");
@@ -346,6 +493,35 @@ function registerVGateCompose(app) {
 
   app.post("/v1/compose", async (req, res) => {
     const start = Date.now();
+
+// ── WIRE-UP CLOSURE (2026-08-28) ───────────────────────────────────────────
+// This endpoint's AO verdict came from evaluateVerdict(), which is a stub: it
+// returns act at a hard-coded confidence of 0.87 for any well-formed
+// claim_hash, without reading the claim. It was reachable without
+// authentication and signed with the production issuer key.
+//
+// It does not auth-gate. An authenticated stub verdict is still a stub verdict
+// with our key on it, and a receipt is a non-repudiable commitment — issuing
+// one for an evaluation that never happened is the same defect as the
+// 2026-08-21 incident, chosen deliberately instead of by accident.
+//
+// So it stops issuing. Honest absence, mirroring the /evaluate 503: no
+// confidence, no verdict, no recommendation, no receipt, no signature.
+// Remove this block only together with the commit that replaces
+// evaluateVerdict() with the real policy engine.
+if (!STUB_ISSUANCE_ENABLED) {
+  return res.status(503).json({
+    status: "not_issuing",
+    reason: "endpoint_in_wire_up",
+    detail:
+      "This endpoint is in wire-up and is not issuing signed receipts. The " +
+      "verdict path is not yet connected to a verification engine, so any " +
+      "receipt it produced would attest an evaluation that did not happen. " +
+      "No verdict, confidence, or receipt is returned. Use POST /evaluate, " +
+      "which performs a real evaluation and issues a receipt bound to it.",
+    alternative: "POST /evaluate",
+  });
+}
     try {
       const { claim_hash, mcp_content, agent_id, timestamp_ms, screen_ref } = req.body || {};
       if (!claim_hash || typeof claim_hash !== "string") {
@@ -414,7 +590,7 @@ function registerVGateCompose(app) {
       const v_gate = {
         issuer: "agentoracle.co",
         mapping_id: AO_MAPPING_ID,
-        mapping_hash: AO_MAPPING_HASH,
+        mapping_hash: requireMappingHash(),
         verdict: aoVerdict.verdict,
         signed_at:
           timestamp_ms !== undefined
@@ -736,6 +912,7 @@ function registerVGateCompose(app) {
   // Response: { "protected": "...", "signature": "...", "kid": "..." }
   app.post("/v1/sign", async (req, res) => {
     try {
+      if (!requireSigningAuth(req, res)) return;
       const { canonical_bytes_b64u } = req.body || {};
       if (!canonical_bytes_b64u || typeof canonical_bytes_b64u !== "string") {
         return res.status(400).json({
@@ -795,6 +972,35 @@ function registerVGateCompose(app) {
   //   }
   app.post("/v1/v_gate", async (req, res) => {
     try {
+
+// ── WIRE-UP CLOSURE (2026-08-28) ───────────────────────────────────────────
+// This endpoint's AO verdict came from evaluateVerdict(), which is a stub: it
+// returns act at a hard-coded confidence of 0.87 for any well-formed
+// claim_hash, without reading the claim. It was reachable without
+// authentication and signed with the production issuer key.
+//
+// It does not auth-gate. An authenticated stub verdict is still a stub verdict
+// with our key on it, and a receipt is a non-repudiable commitment — issuing
+// one for an evaluation that never happened is the same defect as the
+// 2026-08-21 incident, chosen deliberately instead of by accident.
+//
+// So it stops issuing. Honest absence, mirroring the /evaluate 503: no
+// confidence, no verdict, no recommendation, no receipt, no signature.
+// Remove this block only together with the commit that replaces
+// evaluateVerdict() with the real policy engine.
+if (!STUB_ISSUANCE_ENABLED) {
+  return res.status(503).json({
+    status: "not_issuing",
+    reason: "endpoint_in_wire_up",
+    detail:
+      "This endpoint is in wire-up and is not issuing signed receipts. The " +
+      "verdict path is not yet connected to a verification engine, so any " +
+      "receipt it produced would attest an evaluation that did not happen. " +
+      "No verdict, confidence, or receipt is returned. Use POST /evaluate, " +
+      "which performs a real evaluation and issues a receipt bound to it.",
+    alternative: "POST /evaluate",
+  });
+}
       const body = req.body || {};
       const { claim_hash, mcp_content, canonical_template, mapping_context } =
         body;
@@ -820,7 +1026,7 @@ function registerVGateCompose(app) {
       const v_gate = {
         issuer: "agentoracle.co",
         mapping_id: AO_MAPPING_ID,
-        mapping_hash: AO_MAPPING_HASH,
+        mapping_hash: requireMappingHash(),
         verdict: verdictResult.verdict,
         signed_at: new Date().toISOString(),
       };
@@ -1084,5 +1290,6 @@ export {
   b64uDecode,
   getPrivateKey,
   AO_MAPPING_ID,
-  AO_MAPPING_HASH,
+  initMappingBinding,
+  requireMappingHash,
 };
