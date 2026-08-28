@@ -1,9 +1,10 @@
-# AgentOracle — The Trust Layer for AI Agents
+# AgentOracle — pre-action verification for AI agents
 
 *Verify before you act.*
 
 [![npm](https://img.shields.io/npm/v/agentoracle-mcp?label=agentoracle-mcp)](https://www.npmjs.com/package/agentoracle-mcp)
 [![npm](https://img.shields.io/npm/v/agentoracle-verify?label=agentoracle-verify)](https://www.npmjs.com/package/agentoracle-verify)
+[![PyPI](https://img.shields.io/pypi/v/agentoracle-receipt-verify?label=agentoracle-receipt-verify)](https://pypi.org/project/agentoracle-receipt-verify/)
 [![PyPI](https://img.shields.io/pypi/v/langchain-agentoracle?label=langchain-agentoracle)](https://pypi.org/project/langchain-agentoracle/)
 [![PyPI](https://img.shields.io/pypi/v/crewai-agentoracle?label=crewai-agentoracle)](https://pypi.org/project/crewai-agentoracle/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
@@ -13,71 +14,62 @@
 
 ![AgentOracle Hero](./hero-screenshot.png)
 
-AI agents hallucinate. AgentOracle doesn't let them act on it.
+Before an AI agent acts on a factual claim, AgentOracle verifies it and returns a signed, offline-checkable receipt of that decision. The receipt binds a claim to an act / halt gate and the mapping document that produced it, so a relying party can re-derive the gate without trusting our runtime.
 
-Every claim passes through 4-source verification — Sonar, Sonar Pro, Adversarial scanning, and Gemma 4 cross-checking — before it gets a `"recommendation": "act"`. Per-claim confidence scores from 0.00 to 1.00, multi-source agreement-weighted. No API keys. No accounts. Pay $0.01 per claim via [x402](https://x402.org) on Base, SKALE (gasless), and Stellar.
-
-**[agentoracle.co](https://agentoracle.co) · [Live Demo](https://agentoracle.co/#playground) · [x402 Manifest](https://agentoracle.co/.well-known/x402.json)**
-
----
-
-## What it does
-
-- **Evaluates any data before an agent acts on it.** Submit a payload with claims; get back per-claim confidence scores and `act / verify / reject` recommendations.
-- **Per-claim verification, not per-query.** A single `POST /evaluate` call decomposes your input, checks each claim independently across multiple sources, then scores the whole response 0–1.
-- **The moat compounds over time.** Every verified claim is fingerprinted and stored. Source reputation updates with every feedback cycle. The longer it runs, the better the scores get.
+- **Per-claim verification, not per-query.** A single `POST /evaluate` call decomposes your input, checks each claim across multiple sources, and returns a per-claim verdict plus an overall recommendation.
+- **A signed receipt every time.** Every response includes a JWS v0.3 composed envelope, canonicalized with RFC 8785 JCS and signed with Ed25519 against keys published at [`/.well-known/jwks.json`](https://agentoracle.co/.well-known/jwks.json). Verify offline; no callback to our service required.
+- **Deterministic mode for lookups.** Claims that resolve without judgment — signatures, hashes, registry lookups, regex, timestamps, JSON-schema conformance — route to `POST /v1/verify-facts`. No LLM in the trust chain. Same envelope, same JWKS, same verifier.
+- **Two independent implementers agree.** [AgentTrust](https://agenttrust.uk) produces byte-identical canonical bytes from published fixtures against the same v0.3 spec.
 
 ---
 
-## Quick Start
-
-No wallet? Hit `/preview` for free. With a wallet, `/evaluate` costs $0.02 USDC and returns per-claim verdicts.
+## Quick start
 
 ```bash
 curl -X POST https://agentoracle.co/evaluate \
-  -H "Content-Type: application/json" \
+  -H 'content-type: application/json' \
   -d '{
-    "claims": [
-      "The x402 protocol was built by Coinbase",
-      "Base is an Ethereum L2",
-      "SKALE charges $0.05 per transaction"
-    ]
+    "content": "The Louvre Museum is located in Paris, France.",
+    "min_confidence": 0.7
   }'
 ```
 
+Response (abridged):
+
 ```json
 {
-  "confidence": 0.71,
-  "recommendation": "verify",
-  "claims": [
-    {
-      "claim": "The x402 protocol was built by Coinbase",
-      "verdict": "supported",
-      "confidence": 0.97,
-      "recommendation": "act",
-      "sources": ["https://x402.org", "https://docs.cdp.coinbase.com/x402/welcome"]
-    },
-    {
-      "claim": "Base is an Ethereum L2",
-      "verdict": "supported",
-      "confidence": 0.99,
-      "recommendation": "act",
-      "sources": ["https://base.org"]
-    },
-    {
-      "claim": "SKALE charges $0.05 per transaction",
-      "verdict": "refuted",
-      "confidence": 0.12,
-      "recommendation": "reject",
-      "sources": ["https://skale.space/"]
-    }
-  ],
-  "metadata": {
-    "claims_evaluated": 3,
-    "supported": 2,
-    "refuted": 1,
-    "model": "sonar-pro+adversarial",
-    "price_paid": "$0.02"
+  "evaluation_id": "eval_...",
+  "evaluation": {
+    "overall_confidence": 1.0,
+    "recommendation": "act",
+    "recommendation_text": "Safe to act. Claim is well-supported by multiple sources (confidence 1.00).",
+    "threshold_applied": 0.7,
+    "total_claims": 1,
+    "verified_claims": 1,
+    "refuted_claims": 0,
+    "unverifiable_claims": 0,
+    "sources_used": ["sonar", "adversarial", "gemma-4"],
+    "claims": [
+      {
+        "claim": "The Louvre Museum is located in Paris, France.",
+        "verdict": "supported",
+        "confidence": 1.0,
+        "adversarial_result": "resistant"
+      }
+    ]
+  },
+  "meta": {
+    "endpoint": "/evaluate",
+    "price": "$0.00 (beta; $0.09 USDC per call at GA)",
+    "verification_method": "multi-source (sonar + sonar-pro + adversarial)",
+    "cache_hit": false,
+    "receipt_status": "signed"
+  },
+  "receipt": {
+    "jws": { "payload": "...", "signatures": [ ... ] },
+    "canonical_sha256": "sha256-...",
+    "envelope_kind": "verification.v0.3+composed",
+    "kid": "ao-composed-2026-06-ed25519-c3abfce3"
   }
 }
 ```
@@ -88,327 +80,110 @@ curl -X POST https://agentoracle.co/evaluate \
 
 | Method | Path | Price | Description |
 |--------|------|-------|-------------|
-| `POST` | `/evaluate` | $0.02 USDC | Per-claim verification with confidence scoring and act/verify/reject recommendations |
-| `POST` | `/research` | $0.02 USDC | Real-time research query — summary, key facts, sources, confidence score |
-| `POST` | `/deep-research` | $0.10 USDC | Deep analysis via Sonar Pro — extended context, higher confidence |
-| `POST` | `/compare` | $0.05 USDC | Side-by-side comparison of two claims or data points |
-| `GET` | `/preview` | Free | Truncated summary + confidence score — no wallet needed |
-| `POST` | `/verify-gate` | Free (beta) | Bi-directional verification gate — embed trust into any API |
-| `POST` | `/feedback` | Free | Report agent outcomes to improve source reputation scores |
-| `GET` | `/reputation` | Free | Source reputation scores from the persistent trust graph |
-| `GET` | `/fingerprints` | Free | Claim fingerprint database stats (374+ keys) |
-| `GET` | `/.well-known/x402-manifest.json` | Free | x402 discovery manifest — pricing, networks, pay-to addresses |
+| `POST` | `/evaluate` | Free during beta; $0.09 USDC per call at GA | Per-claim verification with confidence scoring, an act/verify/reject recommendation, and a signed receipt |
+| `POST` | `/v1/verify-facts` | Free during beta | Deterministic-only tier: signature, hash, registry, regex, timestamp, JSON-schema. No LLM in the trust chain |
+| `POST` | `/research` | $0.02 USDC | Real-time research query — summary, key facts, sources |
+| `POST` | `/deep-research` | $0.10 USDC | Extended context via Sonar Pro |
+| `GET`  | `/preview` | Free | Truncated preview — no wallet needed |
+| `POST` | `/verify-gate` | Free during beta | Bi-directional verification gate for embedding |
+| `POST` | `/feedback` | Free | Report agent outcomes into source reputation |
+| `GET`  | `/reputation` | Free | Source reputation scores |
+| `GET`  | `/fingerprints` | Free | Claim-fingerprint database stats |
+| `GET`  | `/mappings/<id>.json` | Free | Immutable, content-addressed v_gate mapping documents |
+| `GET`  | `/.well-known/x402-manifest.json` | Free | x402 discovery manifest |
+| `GET`  | `/.well-known/jwks.json` | Free | Published signing keys |
+
+`POST /v1/compose`, `POST /v1/v_gate`, `POST /v1/sign`, and `POST /v1/sign/batch` return `503 not_issuing` while their verdict path is completed — the 2026-08-25 incident record publishes 2026-09-02.
 
 ---
 
 ## How `/evaluate` works
 
-```
-1. Extract claims
-   Input is decomposed into discrete, checkable assertions.
+1. **Decompose.** Input is split into discrete checkable claims.
+2. **Multi-source verify.** Each claim goes to Sonar (real-time web), Sonar Pro (extended context), and an adversarial pass designed to look for contradicting evidence.
+3. **Score.** Each claim gets a confidence in `[0, 1]`; the overall confidence is the weighted aggregate.
+4. **Recommend, then bind.** Recommendation follows the caller's `min_confidence` (default `0.8`):
+   - `act` if confidence ≥ threshold and the adversarial pass ran and cleared
+   - `verify` otherwise
+   - `reject` on refutation or confidence < 0.5
 
-2. Multi-source verify
-   Each claim is checked against Sonar (real-time web), Sonar Pro (extended
-   context), and an adversarial pass designed to find contradicting evidence.
+   The **receipt-side** gate is separate and immutable: it uses the threshold pinned in the mapping document (`0.7` at `agentoracle-v0.3-2026-05-30`), so what a caller sees as `verify` at their higher personal bar and what the signed receipt binds as `halt` never disagree. The mapping's threshold and rule table are the single source of truth; the caller's `min_confidence` is advisory to the response body only.
 
-3. Score
-   Each claim gets a confidence score from 0 (no support) to 1 (strong
-   consensus). The overall response score is the weighted aggregate.
+5. **Sign.** A v0.3 composed JWS is issued over the JCS-canonicalized payload, binding claim, verdict, threshold applied, mapping id, and the mapping's SHA-256.
 
-4. Recommend
-   act     → confidence ≥ 0.85, consistent support across sources
-   verify  → confidence 0.50–0.84, or sources conflict
-   reject  → confidence < 0.50, or actively refuted
-```
+Every step is checkable by re-running it against the published mapping. See `agentoracle-receipt-spec` for the [Section 4.3 verification protocol](https://github.com/TKCollective/agentoracle-receipt-spec) — resolve the mapping, hash it, recompute the recommendation, recompute the gate, refuse the receipt on any mismatch.
 
 ---
 
-## Response Example
+## Payment (at GA)
 
-Full `/evaluate` response with mixed claims:
-
-```json
-{
-  "confidence": 0.61,
-  "recommendation": "verify",
-  "claims": [
-    {
-      "claim": "Stellar completed its first x402 payment on April 6, 2026",
-      "verdict": "supported",
-      "confidence": 0.94,
-      "recommendation": "act",
-      "sources": [
-        "https://agentoracle.co/trust",
-        "https://github.com/TKCollective/x402-research-skill"
-      ]
-    },
-    {
-      "claim": "x402 requires API keys to function",
-      "verdict": "refuted",
-      "confidence": 0.08,
-      "recommendation": "reject",
-      "sources": [
-        "https://x402.org",
-        "https://docs.cdp.coinbase.com/x402/welcome"
-      ]
-    }
-  ],
-  "metadata": {
-    "claims_evaluated": 2,
-    "supported": 1,
-    "refuted": 1,
-    "cached_claims": 1,
-    "model": "sonar-pro+adversarial",
-    "response_time_ms": 3120,
-    "price_paid": "$0.02"
-  }
-}
-```
-
----
-
-## Multi-Chain
-
-AgentOracle accepts payment on three networks. Same endpoints — the agent picks the cheapest chain.
+`/evaluate` is free during the current beta. At general availability it will be `$0.09 USDC per call` via x402.
 
 | Network | Details |
 |---------|---------|
-| **Base** | EVM mainnet (eip155:8453) — $0.02 USDC, ~$0.001 gas |
-| **SKALE** | Gasless EVM (eip155:1187947933) — zero gas cost, USDC.e |
-| **Stellar** | Soroban smart contracts, sponsored fees — first x402 Stellar payment: April 6, 2026 |
+| **Base** | EVM mainnet (eip155:8453) — USDC, ~$0.001 gas |
+| **SKALE** | Titan hub (eip155:1350216234) — USDC, **zero gas** |
+| **Stellar** | Native USDC via Soroban |
 
-Auto-discover payment parameters:
-
-```bash
-curl https://agentoracle.co/.well-known/x402-manifest.json
-```
+x402 discovery: [`agentoracle.co/.well-known/x402-manifest.json`](https://agentoracle.co/.well-known/x402-manifest.json).
 
 ---
 
-## SDK: agentoracle-verify
-
-Embed trust verification into any agent or API.
-
-```bash
-npm install agentoracle-verify
-```
-
-## Feedback & Support
-
-Built something with AgentOracle? Hit an issue? We want to hear from you.
-
-- **GitHub Discussions** — questions, ideas, show and tell: [github.com/TKCollective/x402-research-skill/discussions](https://github.com/TKCollective/x402-research-skill/discussions)
-- **X / Twitter** — [@AgentOracle_AI](https://x.com/AgentOracle_AI)
-- **Issues** — bugs and feature requests: open an issue in this repo
-
-If you're evaluating AgentOracle for a project, drop a note in Discussions — we respond fast and can help with integration.
-
-```javascript
-import { verify } from "@agentoracle/verify";
-
-// One line — verify any claim
-const result = await verify("Bitcoin was created in 2009");
-console.log(result.evaluation.overall_confidence); // 0.97
-```
-
-### Verification Gate Middleware
-
-Protect any Express API endpoint with automatic trust verification:
-
-```javascript
-import { createVerificationGate } from "@agentoracle/verify/middleware";
-
-app.post("/api/submit",
-  createVerificationGate({ minConfidence: 0.6 }),
-  (req, res) => {
-    // Only reaches here if content is verified above 0.6 confidence
-    res.json({ accepted: true, verification: req.verification });
-  }
-);
-```
-
-This is the bi-directional shift: agents don't just consume verification — any API can embed it.
-
----
-
-## MCP
-
-Use AgentOracle inside Claude, Cursor, or any MCP-compatible client:
-
-```bash
-npx agentoracle-mcp
-```
-
-```json
-{
-  "mcpServers": {
-    "agentoracle": {
-      "command": "npx",
-      "args": ["agentoracle-mcp"],
-      "env": {
-        "AGENTORACLE_WALLET_PRIVATE_KEY": "0x..."
-      }
-    }
-  }
-}
-```
-
-Payment is handled transparently. Set the private key once; the MCP server signs x402 payments on every call.
-
----
-
-## Testing
-
-36 tests across 12 suites. CI runs on Node 18/20/22 via GitHub Actions.
-
-```bash
-npm test
-```
-
-Covers: health, discovery, preview, paid endpoints, x402 payment flow validation (Base + SKALE + Stellar), trust layer, fingerprints, cache, error handling, CORS, and static assets.
-
----
-
-## The Moat
-
-AgentOracle gets more accurate the more it's used. Four compounding mechanisms:
-
-**Persistent claim storage (Redis / Upstash)**
-Verified claims are fingerprinted and stored. Repeated claims return instantly — no re-verification cost — and confidence scores improve as more sources confirm them over time. State survives deploys.
-
-**Claim fingerprinting**
-Semantically equivalent claims resolve to the same fingerprint. "Base is a Coinbase L2" and "Base is built by Coinbase" hit the same cache entry. Agents don't pay to re-verify known facts.
-
-**Source reputation**
-Each source has a persistent reputation score updated after every verification. Sources that consistently support claims that later prove correct get higher weight. Sources that misfire get downweighted.
-
-**Feedback flywheel (`POST /feedback`)**
-Agents report outcomes for free. Did acting on a `"recommendation": "act"` claim succeed or fail? That signal flows back into source reputation, improving future recommendations for everyone.
-
----
-
-## Traction
-
-- **$4.32 USDC** received on-chain across 30+ paid transactions (Base mainnet)
-- **1,094+ claim fingerprints** in persistent Redis database, growing daily
-- **Live since March 2026** — production API at agentoracle.co
-- **3 chains** — Base, SKALE (gasless), Stellar (sponsored fees)
-- **MCP server** on npm — works in Claude, Cursor
-- **Product Hunt** launched April 8, 2026
-- **36 tests**, CI on Node 18/20/22
-
----
-
-## Production integrators
-
-Independent x402 / Coinbase Bazaar integrators we cross-link to. If you're shipping a paid agent endpoint on Base and want to compare notes, see the ongoing discussion on [x402-foundation/x402#2207](https://github.com/x402-foundation/x402/issues/2207).
-
-- **[hyperd-py](https://github.com/0xdespot/hyperd-py)** — Reference Python buyer for x402 in ~210 LOC. The canonical non-TypeScript integration pattern. By [@0xdespot](https://github.com/0xdespot).
-- **[x402-market](https://github.com/AsaiShota/x402-market)** — Multi-merchant marketplace with paid `test-echo-cdp-*` resources for cross-merchant probing on Base. By [@AsaiShota](https://github.com/AsaiShota).
-- **[Syndicate Links](https://syndicatelinks.co)** — `api.syndicatelinks.co/affiliate/links` paid affiliate-link API on Base mainnet. By [@cmcgrabby-hue](https://github.com/cmcgrabby-hue).
-
-All four of us share standing instrumentation (ring buffers + CDP discovery-API watchdogs) for Bazaar attribution debugging. If you're integrating and hit something unusual, the four-merchant dataset on issue #2207 is the public record of what we've seen so far.
-
----
-
-## Links
-
-- White paper: [agentoracle.co/whitepaper](https://agentoracle.co/whitepaper) — Verifiable AI Action Records (standards-track EU AI Act Article 12)
-- Receipt spec: [TKCollective/agentoracle-receipt-spec](https://github.com/TKCollective/agentoracle-receipt-spec) — receipt profile, conformance vectors, reference verifiers (MIT)
-- PyPI: [langchain-agentoracle](https://pypi.org/project/langchain-agentoracle/) · reference verifier [agentoracle-receipt-verify](https://pypi.org/project/agentoracle-receipt-verify/)
-- IETF draft: [draft-krausz-verification-state](https://datatracker.ietf.org/doc/draft-krausz-verification-state/)
-- ERC-8210: [Agent Assurance / Receipt Profile Registry](https://ethereum-magicians.org/t/erc-8210-agent-assurance/28097)
-- Website: [agentoracle.co](https://agentoracle.co)
-- Trust docs: [agentoracle.co/trust](https://agentoracle.co/trust)
-- SDK: [packages/verify](./packages/verify)
-- x402 manifest: [agentoracle.co/.well-known/x402-manifest.json](https://agentoracle.co/.well-known/x402-manifest.json)
-- Fingerprints: [agentoracle.co/fingerprints](https://agentoracle.co/fingerprints)
-- Verify Gate: [agentoracle.co/verify-gate](https://agentoracle.co/verify-gate)
-- GitHub: [TKCollective/x402-research-skill](https://github.com/TKCollective/x402-research-skill)
-- Product Hunt: [AgentOracle on PH](https://www.producthunt.com/posts/agentoracle)
-- npm (MCP): [agentoracle-mcp](https://www.npmjs.com/package/agentoracle-mcp)
-
----
-
-MIT License
-
-## Framework Integrations
-
-### LangChain
-
-`langchain-agentoracle` adds a verification step between what a LangChain agent retrieves
-and what it acts on. Each factual claim returns a cryptographically signed verification
-record — an `act` / `halt` / `abstain` recommendation with a per-claim confidence score,
-issued under the standards-track AgentOracle receipt profile (first entry in the ERC-8210
-Receipt Profile Registry) and byte-level verifiable offline against the reference verifier.
-
-```bash
-pip install langchain-agentoracle
-```
-
-Use it as a tool inside an agent flow:
-
-```python
-from langchain.agents import initialize_agent, AgentType
-from langchain_openai import ChatOpenAI
-from langchain_agentoracle import AgentOracleVerifyTool
-
-verify = AgentOracleVerifyTool()
-
-agent = initialize_agent(
-    tools=[verify],
-    llm=ChatOpenAI(model="gpt-4o", temperature=0),
-    agent=AgentType.OPENAI_FUNCTIONS,
-    verbose=True,
-)
-
-# The agent calls the verify tool before acting on any factual claim
-agent.invoke("Confirm whether GPT-5 was released in March 2026 before you cite it.")
-```
-
-#### Verify the signed receipt
-
-Each verdict ships with a cryptographically signed verification record (JWS over a
-JCS-canonicalized payload, Ed25519/ES256). Records verify byte-for-byte offline against
-the reference verifier — no trust in the issuer required:
+## Verifying a receipt
 
 ```bash
 pip install agentoracle-receipt-verify
 ```
 
 ```python
-from agentoracle_receipt_verify import verify as verify_receipt
+import json, urllib.request
+from agentoracle_receipt_verify import verify
 
-# `receipt` is the signed envelope returned alongside each verdict;
-# `ao_jwks` is fetched from https://agentoracle.co/.well-known/jwks.json
-result = verify_receipt(receipt, jwks_by_issuer={
-    "https://agentoracle.co/.well-known/jwks.json": ao_jwks,
-})
+jwks_url = "https://agentoracle.co/.well-known/jwks.json"
+jwks = json.load(urllib.request.urlopen(jwks_url))
 
-if result.valid:
-    print("verified — canonical:", result.canonical_sha256)
+result = verify(receipt_json, {jwks_url: jwks})
+print(result.status)   # "valid", "invalid", or "indeterminate"
+print(result.checks)   # canonical_recomputes, canonical_matches_claimed, all_signatures_verified
 ```
 
-The verifier recomputes the canonical byte string, checks the signature against the
-published key set, and returns the canonical SHA-256 — identical output to the TypeScript
-sibling `@agentoracle/receipt-verify`.
+**Pass the JWKS map.** `verify(receipt_json)` without keys returns `status: "indeterminate"` (`valid: None`), not `"valid"` — the verifier will not report a pass on an unverified signature. `None` is falsy, so `if result.valid:` fails closed. See the spec repo's README for the three-outcome contract.
 
-PyPI: [langchain-agentoracle](https://pypi.org/project/langchain-agentoracle/) · GitHub: [TKCollective/x402-research-skill](https://github.com/TKCollective/x402-research-skill)
+Independent RFC 8785 canonicalization implementations produce byte-identical hashes from this format ([AgentTrust](https://agenttrust.uk), and Pablo Ferreiro's [golden-vector-provenance](https://github.com/SolomonisBlack/golden-vector-provenance) cross-check).
 
-### CrewAI
+---
 
-```bash
-pip install crewai-agentoracle
-```
+## Testing
 
-```python
-from crewai_agentoracle import AgentOracleVerifyTool
+37 tests across the suite. CI matrix on Node 20 and 22, run via GitHub Actions against the live service (`TEST_URL=https://agentoracle.co`).
 
-verify_tool = AgentOracleVerifyTool()
-# Add to any CrewAI agent's tools list
-```
+An hourly **A1 canary** probes `/evaluate` with a rotating stable claim set and asserts on the *contents* of the response — sources present, confidence not equal to the unevaluated seed value, mapping hash matching the published mapping. A cache hit triggers a same-run retry with a claim from a disjoint bucket; a stuck cache trips its own alarm. See [`.github/workflows/alarm-canary.yml`](.github/workflows/alarm-canary.yml).
 
-GitHub: [TKCollective/crewai-agentoracle](https://github.com/TKCollective/crewai-agentoracle)
+---
 
+## Ecosystem and traction
 
+- **npm:** [`agentoracle-mcp`](https://www.npmjs.com/package/agentoracle-mcp), [`agentoracle-verify`](https://www.npmjs.com/package/agentoracle-verify)
+- **PyPI:** [`agentoracle-receipt-verify`](https://pypi.org/project/agentoracle-receipt-verify/), [`langchain-agentoracle`](https://pypi.org/project/langchain-agentoracle/), [`crewai-agentoracle`](https://pypi.org/project/crewai-agentoracle/)
+- **AgentTrust** independently produces byte-identical canonical bytes from published v0.3 fixtures.
+- **`verification.v0.3`** is the first candidate profile entry in the ERC-8210 Receipt Profile Registry ([entry merged 2026-06-23](https://github.com/wangbin9953/erc8210-aap/pull/4)). `candidate` per the registry's own definition means one live issuer, with a second independent implementation not yet recorded by the registry maintainer.
+- **IETF Internet-Draft:** [draft-krausz-verification-state-01](https://datatracker.ietf.org/doc/draft-krausz-verification-state/), individual submission, filed 2026-06-06.
 
+---
+
+## Links
+
+- Website: [agentoracle.co](https://agentoracle.co)
+- Whitepaper: [agentoracle.co/whitepaper](https://agentoracle.co/whitepaper)
+- Docs: [agentoracle.co/docs](https://agentoracle.co/docs)
+- Deterministic mode: [agentoracle.co/docs/deterministic-mode](https://agentoracle.co/docs/deterministic-mode)
+- Trust: [agentoracle.co/trust](https://agentoracle.co/trust)
+- Fingerprints: [agentoracle.co/fingerprints](https://agentoracle.co/fingerprints)
+- Receipt spec: [TKCollective/agentoracle-receipt-spec](https://github.com/TKCollective/agentoracle-receipt-spec)
+- Conformance vectors: [`conformance/`](https://github.com/TKCollective/agentoracle-receipt-spec/tree/main/conformance) in the spec repo
+
+---
+
+## License
+
+MIT. See [LICENSE](./LICENSE).
