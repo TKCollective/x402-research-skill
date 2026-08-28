@@ -4571,7 +4571,7 @@ app.post("/evaluate", async (req, res) => {
 
     const assessment = sonarEval?.content_assessment || proEval?.content_assessment || {};
     const flags = (assessment.adversarial_flags||[]).filter(f=>f!=="");
-    if(flags.length>0){overall=Math.round(Math.max(0,overall-flags.length*0.1)*100)/100;if(overall<0.5)rec="reject";}
+    if(flags.length>0){overall=Math.round(Math.max(0,overall-flags.length*0.1)*100)/100;if(rec==="act"&&overall<threshold)rec="verify";if(overall<0.5)rec="reject";}
 
     // Plain-English recommendation for developers new to the API
     function buildRecommendationText(conf, rec, flags, threshold){
