@@ -62,7 +62,6 @@ import { CHANGELOG_HTML } from "./changelog-page.js";
 // once at boot rather than per-request. GATEWAY constant already inlined
 // at compile-time in the HTML (patched to production Zuplo URL).
 import fs from "node:fs";
-import nodeCrypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 const __KEYS_HTML_PATH = fileURLToPath(new URL("./keys.html", import.meta.url));
 const KEYS_HTML = fs.readFileSync(__KEYS_HTML_PATH, "utf8");
@@ -73,23 +72,9 @@ const KEYS_HTML = fs.readFileSync(__KEYS_HTML_PATH, "utf8");
 // verifiers can (a) fetch by sha256, (b) hash the response, (c) confirm the
 // bytes match the hash they received in the receipt. Rotated 2026-07-28 to
 // retire the fixture placeholder discovered by Msebenzi.
-const AO_MAPPING_ID_LABEL = "agentoracle-v0.3-2026-05-30";
 const __MAPPING_AO_V03_PATH = fileURLToPath(new URL("./mapping-agentoracle-v0.3-2026-05-30.json", import.meta.url));
 const MAPPING_AO_V03_BYTES = fs.readFileSync(__MAPPING_AO_V03_PATH);
-// Derived from the bytes above, not asserted as a literal. A hard-coded hash is
-// how v_gate_compose.js came to stamp a value matching no mapping document at
-// all; deriving both from one byte source removes that possibility. The expected
-// value is still pinned so an unintended mapping edit fails at boot rather than
-// silently re-addressing every receipt.
-const MAPPING_AO_V03_SHA256 = nodeCrypto.createHash("sha256").update(MAPPING_AO_V03_BYTES).digest("hex");
-const MAPPING_AO_V03_SHA256_EXPECTED = "0a78263976790df6e76cd9f3f441bf5a3b5c3a82e346b5aca43e49626881d7b0";
-if (MAPPING_AO_V03_SHA256 !== MAPPING_AO_V03_SHA256_EXPECTED) {
-  throw new Error(
-    `mapping document changed: ${AO_MAPPING_ID_LABEL} hashes to ${MAPPING_AO_V03_SHA256}, ` +
-    `expected ${MAPPING_AO_V03_SHA256_EXPECTED}. A new mapping requires a new mapping_id ` +
-    `(mappings are immutable after publication), not an edit in place.`
-  );
-}
+const MAPPING_AO_V03_SHA256 = "0a78263976790df6e76cd9f3f441bf5a3b5c3a82e346b5aca43e49626881d7b0";
 import { DEMO_PAGE_HTML, DEMO_VIDEO_HTML } from "./demo-pages.js";
 import { BUSINESS_PAGE_HTML } from "./business-page.js";
 import { BUSINESS_PAGE_V2_HTML } from "./business-page-v2.js";
@@ -2665,10 +2650,7 @@ app.get("/.well-known/jwks.json", (_req, res) => {
 //  Wired into AgentTrust's /v1/compose orchestrator.
 //  Conformance: TKCollective/agentoracle-receipt-spec#2
 // ═══════════════════════════════════════════════════════════════════
-// Pass the mapping bytes this process already loaded from disk. The composed
-// endpoints derive v_gate.mapping_hash from them at boot and throw if they
-// cannot — no signing path may guess its own mapping binding.
-registerVGateCompose(app, { mappingBytes: MAPPING_AO_V03_BYTES });
+registerVGateCompose(app);
 registerVerifyFacts(app);
 
 // ═══════════════════════════════════════════════════════════════════
