@@ -103,6 +103,7 @@ import { DOCS_HUB_PAGE_HTML } from "./docs-hub-page.js";
 import { FAVICON_ICO, FAVICON_SVG, FAVICON_16, FAVICON_32, APPLE_TOUCH, OG_IMAGE } from "./favicons.js";
 import { registerVGateCompose, COMPOSED_PUBLIC_JWK, signEvaluateReceipt } from "./v_gate_compose.js";
 import { registerVerifyFacts } from "./verify-facts.js";
+import { raise as alarmRaise, registerAlarmRoutes } from "./alarms.js";
 
 // ── x402 v2 SDK imports ──────────────────────────────────────────
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
@@ -2670,6 +2671,7 @@ app.get("/.well-known/jwks.json", (_req, res) => {
 // cannot — no signing path may guess its own mapping binding.
 registerVGateCompose(app, { mappingBytes: MAPPING_AO_V03_BYTES });
 registerVerifyFacts(app);
+registerAlarmRoutes(app);
 
 // ═══════════════════════════════════════════════════════════════════
 //  GET /health — Health check with feature flags
@@ -4531,6 +4533,7 @@ app.post("/evaluate", async (req, res) => {
         `[ALARM][/evaluate][no_members_evaluated] ` +
         `unavailable="${_unavailable.join(",") || "all_sources_unparseable"}"`
       );
+      alarmRaise("/evaluate", "no_members_evaluated", `unavailable=${JSON.stringify(_unavailable)}`);
       return res.status(503).json({
         status: "not_evaluated",
         reason: "upstream_verification_unavailable",
@@ -4702,6 +4705,7 @@ app.post("/evaluate", async (req, res) => {
         `error="${(e.message || "unknown").slice(0, 200)}" ` +
         `stack="${(e.stack || "").split("\n").slice(0, 3).join(" | ").slice(0, 400)}"`
       );
+      alarmRaise("/evaluate", "receipt_signing_failed", `evaluation_id=${evalId} error=${(e.message || "unknown").slice(0, 200)}`, { evaluation_id: evalId });
     }
 
     // ── STORE IN CLAIM CACHE ──

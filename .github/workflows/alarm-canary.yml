@@ -1,0 +1,38 @@
+# Hourly A1 canary — hits the token-guarded trigger route on the deployed
+# service, so the run is measured against the real edge, not a local process.
+#
+# Setup: add repo secret ALARM_CANARY_TOKEN with the same value the service
+# reads from its environment. The workflow's run history is itself the audit
+# trail — a failure lands as a red run in Actions plus a webhook fire if
+# ALARM_WEBHOOK_URL is configured on the service.
+
+name: alarm-canary
+on:
+  schedule:
+    - cron: "0 * * * *"     # once per hour, UTC
+  workflow_dispatch: {}
+
+concurrency:
+  group: alarm-canary
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Fire canary
+        env:
+          TOKEN: ${{ secrets.ALARM_CANARY_TOKEN }}
+        run: |
+          set -euo pipefail
+          resp=$(mktemp)
+          code=$(curl -sS -o "$resp" -w "%{http_code}" -m 60 \
+            -X POST https://agentoracle.co/internal/alarms/canary \
+            -H "authorization: Bearer $TOKEN")
+          echo "HTTP $code"
+          cat "$resp"
+          echo
+          # 200 = ok; 503 with ok:false = a trip condition fired; anything
+          # else is unexpected. Fail the run on non-200 so Actions surfaces it.
+          if [ "$code" != "200" ]; then exit 1; fi
