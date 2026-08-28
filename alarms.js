@@ -118,9 +118,67 @@ export const CANARY_CLAIMS = [
   "The Yangtze is the longest river in Asia.",
 ];
 
-export function canaryClaimForNow(d = new Date()) {
+// Two-bucket rotation with a monotonic per-process counter.
+//
+// The earlier version was `CANARY_CLAIMS[hour % 36]`: pure hour-modular. Any
+// two runs in the same UTC hour — a manual test plus the scheduled cron — got
+// the same claim, and the second run measured the cache. First live workflow
+// run tripped `canary_served_from_cache` for exactly this reason.
+//
+// The fix has two moving parts:
+//   1. Two disjoint 18-claim buckets, alternated by hour. A same-hour retry
+//      draws from the opposite bucket, guaranteeing the retry cannot be
+//      served from the primary's cache entry.
+//   2. Within a bucket, a monotonic counter (bucket-scoped) picks the claim.
+//      Two calls in the same bucket advance the counter, so a manual+cron
+//      collision inside one hour still moves. The counter is per-process, so
+//      a cold instance restarts at 0 — that is fine: the bucket alternation
+//      still holds across processes because it is time-derived.
+//
+// Reuse interval floor: within a single bucket the same claim recurs every
+// 18 counter steps. At the hourly cadence a bucket is reached every 2 hours,
+// so the same claim recurs no more often than 18 * 2h = 36h — comfortably
+// past the 24h TTL. A manual test in an off-hour advances the counter but
+// does not shorten the reuse floor: same-hour retries land in the OTHER
+// bucket by construction.
+
+const BUCKET_SIZE = CANARY_CLAIMS.length / 2;
+const _bucketCounters = [0, 0];
+
+function _bucketForHour(d) {
   const hours = Math.floor(d.getTime() / 3600000);
-  return CANARY_CLAIMS[hours % CANARY_CLAIMS.length];
+  return hours & 1; // 0 or 1
+}
+
+/**
+ * canaryClaimForNow — primary claim for this run. Same external signature as
+ * before; every call at the same wall-clock hour advances the same bucket's
+ * counter, so repeated same-hour calls return different claims.
+ */
+export function canaryClaimForNow(d = new Date()) {
+  const b = _bucketForHour(d);
+  const idx = _bucketCounters[b] % BUCKET_SIZE;
+  _bucketCounters[b] = (_bucketCounters[b] + 1) % BUCKET_SIZE;
+  return CANARY_CLAIMS[b * BUCKET_SIZE + idx];
+}
+
+/**
+ * canaryRetryClaim — claim for a retry after the primary was served from
+ * cache. Drawn from the opposite bucket, so it cannot share a cache entry
+ * with the primary. Advances that bucket's counter.
+ */
+export function canaryRetryClaim(d = new Date()) {
+  const b = _bucketForHour(d) ^ 1;
+  const idx = _bucketCounters[b] % BUCKET_SIZE;
+  _bucketCounters[b] = (_bucketCounters[b] + 1) % BUCKET_SIZE;
+  return CANARY_CLAIMS[b * BUCKET_SIZE + idx];
+}
+
+// Exported for tests only — resets the per-process bucket counters. Not used
+// by the running service.
+export function _resetCanaryCountersForTest() {
+  _bucketCounters[0] = 0;
+  _bucketCounters[1] = 0;
 }
 
 /**
@@ -147,10 +205,9 @@ export function evaluateCanary(body, publishedMappingHash) {
     problems.push({ key: "adversarial_not_live",
                     detail: `adversarial pass absent from sources_used=${JSON.stringify(sources)} — act is unreachable` });
   }
-  if (meta.cache_hit === true) {
-    problems.push({ key: "canary_served_from_cache",
-                    detail: "canary answered from cache — it proves nothing about live evaluation" });
-  }
+  // NOTE: cache_hit is NOT collected here. It is not a defect signal; it means
+  // this run measured nothing about live evaluation. runCanary() handles the
+  // retry-with-a-fresh-claim, and only trips if the SECOND run also hits.
   if (publishedMappingHash && body?.__mappingHash && body.__mappingHash !== publishedMappingHash) {
     problems.push({
       key: "mapping_hash_unresolvable",
@@ -164,50 +221,107 @@ export function evaluateCanary(body, publishedMappingHash) {
  * runCanary — probe /evaluate, resolve and hash the mapping the receipt binds
  * to, and raise on every trip. Never throws.
  */
+async function probeOnce(baseUrl, claim) {
+  const res = await fetch(`${baseUrl}/evaluate`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ content: claim, min_confidence: 0.7 }),
+    signal: AbortSignal.timeout(45000),
+  });
+  if (!res.ok) return { httpError: res.status };
+  const body = await res.json();
+  let mappingHash = null, publishedHash = null;
+  try {
+    const payload = JSON.parse(
+      Buffer.from(body.receipt.jws.payload, "base64url").toString("utf8")
+    );
+    mappingHash = payload?.v_gate?.mapping_hash || null;
+    const mid = payload?.v_gate?.mapping_id;
+    if (mid) {
+      const m = await fetch(`${baseUrl}/mappings/${mid}.json`, {
+        signal: AbortSignal.timeout(10000),
+      });
+      if (m.ok) {
+        const raw = Buffer.from(await m.arrayBuffer());
+        publishedHash = "sha256-" + createHash("sha256").update(raw).digest("hex");
+      }
+    }
+  } catch { /* mapping check is best-effort */ }
+  return {
+    body,
+    cacheHit: body?.meta?.cache_hit === true,
+    mappingHash,
+    publishedHash,
+  };
+}
+
+/**
+ * runCanary — probe /evaluate.
+ *
+ * A cache_hit does not trip. It means "this run measured nothing about live
+ * evaluation," which is different from a defect. On cache_hit we retry once
+ * with a claim from the opposite bucket — which cannot share a cache entry
+ * with the primary by construction — and only trip `canary_stuck_on_cache`
+ * if that also hits. That case is worth alarming on: two consecutive
+ * un-colliding claims served from cache implies the cache layer, not just a
+ * single pre-warmed key.
+ */
 export async function runCanary({ baseUrl = "https://agentoracle.co" } = {}) {
   const started = Date.now();
-  const claim = canaryClaimForNow();
+  const primaryClaim = canaryClaimForNow();
   try {
-    const res = await fetch(`${baseUrl}/evaluate`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ content: claim, min_confidence: 0.7 }),
-      signal: AbortSignal.timeout(45000),
-    });
-    if (!res.ok) {
-      await raise("/evaluate", "canary_http_error", `canary got HTTP ${res.status}`, { status: res.status });
-      return { ok: false, status: res.status };
+    let attempt = await probeOnce(baseUrl, primaryClaim);
+    if (attempt.httpError !== undefined) {
+      await raise("/evaluate", "canary_http_error", `canary got HTTP ${attempt.httpError}`, { status: attempt.httpError });
+      return { ok: false, status: attempt.httpError };
     }
-    const body = await res.json();
 
-    let mappingHash = null, publishedHash = null;
-    try {
-      const payload = JSON.parse(
-        Buffer.from(body.receipt.jws.payload, "base64url").toString("utf8")
-      );
-      mappingHash = payload?.v_gate?.mapping_hash || null;
-      const mid = payload?.v_gate?.mapping_id;
-      if (mid) {
-        const m = await fetch(`${baseUrl}/mappings/${mid}.json`, {
-          signal: AbortSignal.timeout(10000),
-        });
-        if (m.ok) {
-          const raw = Buffer.from(await m.arrayBuffer());
-          publishedHash = "sha256-" + createHash("sha256").update(raw).digest("hex");
-        }
+    let retriedWith = null;
+    if (attempt.cacheHit) {
+      retriedWith = canaryRetryClaim();
+      const retry = await probeOnce(baseUrl, retriedWith);
+      if (retry.httpError !== undefined) {
+        await raise("/evaluate", "canary_http_error", `retry got HTTP ${retry.httpError}`, { status: retry.httpError, retry: true });
+        return { ok: false, status: retry.httpError, retried: true };
       }
-    } catch { /* mapping check is best-effort */ }
+      if (retry.cacheHit) {
+        await raise(
+          "/evaluate",
+          "canary_stuck_on_cache",
+          `two consecutive canary claims from disjoint buckets both cache_hit=true — cache is misclassifying novel evaluations`,
+          { canary: true, primary_claim: primaryClaim, retry_claim: retriedWith, elapsed_ms: Date.now() - started }
+        );
+        return {
+          ok: false,
+          problems: ["canary_stuck_on_cache"],
+          primary_cache_hit: true,
+          retry_cache_hit: true,
+          elapsed_ms: Date.now() - started,
+        };
+      }
+      // retry landed on live evaluation; use its body for the content checks.
+      attempt = retry;
+    }
 
-    const problems = evaluateCanary({ ...body, __mappingHash: mappingHash }, publishedHash);
+    const problems = evaluateCanary(
+      { ...attempt.body, __mappingHash: attempt.mappingHash },
+      attempt.publishedHash
+    );
     for (const p of problems) {
-      await raise("/evaluate", p.key, p.detail, { canary: true, claim, elapsed_ms: Date.now() - started });
+      await raise("/evaluate", p.key, p.detail, {
+        canary: true,
+        claim: retriedWith || primaryClaim,
+        retried: retriedWith !== null,
+        elapsed_ms: Date.now() - started,
+      });
     }
     return {
       ok: problems.length === 0,
       problems: problems.map((p) => p.key),
-      confidence: body?.evaluation?.overall_confidence,
-      sources: body?.evaluation?.sources_used,
-      mapping_resolves: publishedHash != null && mappingHash === publishedHash,
+      confidence: attempt.body?.evaluation?.overall_confidence,
+      sources: attempt.body?.evaluation?.sources_used,
+      mapping_resolves: attempt.publishedHash != null && attempt.mappingHash === attempt.publishedHash,
+      retried: retriedWith !== null,
       elapsed_ms: Date.now() - started,
     };
   } catch (e) {
