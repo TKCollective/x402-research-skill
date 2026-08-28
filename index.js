@@ -93,6 +93,7 @@ if (MAPPING_AO_V03_SHA256 !== MAPPING_AO_V03_SHA256_EXPECTED) {
 import { DEMO_PAGE_HTML, DEMO_VIDEO_HTML } from "./demo-pages.js";
 import { BUSINESS_PAGE_HTML } from "./business-page.js";
 import { BUSINESS_PAGE_V2_HTML } from "./business-page-v2.js";
+import { INCIDENT_2026_08_25_PAGE_HTML } from "./incident-page.js";
 import { registerArticle12Checker } from "./article-12-checker.js";
 import { RECEIPT_REGISTRY_PAGE_HTML } from "./receipt-registry-page.js";
 import { BENCHMARKS_HTML } from "./benchmarks-page.js";
@@ -3795,6 +3796,16 @@ app.get("/business-preview", (_req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("X-Robots-Tag", "noindex, nofollow");
   res.send(BUSINESS_PAGE_V2_HTML);
+});
+
+// /incidents/2026-08-25-canned-verdicts — Sep 2 publication.
+// Ships dark: no page links to it before publication morning. noindex/nofollow
+// is set in the page meta and via X-Robots-Tag below.
+app.get("/incidents/2026-08-25-canned-verdicts", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Cache-Control", "public, max-age=300, s-maxage=600");
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  res.send(INCIDENT_2026_08_25_PAGE_HTML);
 });
 
 // /article-12 — free EU AI Act Article 12 Considerations tool.
