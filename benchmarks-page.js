@@ -177,6 +177,7 @@ python3 scripts/score.py results/2026-05-28-dev/results.jsonl</pre>
 
 <div class="card">
 <h3><code>POST /v1/compose</code> — full 2-signer composed envelope</h3>
+<p class="meta"><strong>Withdrawn 2026-08-28.</strong> These timings measured a path whose AgentOracle leg returned a hard-coded verdict without evaluating the claim, so they are not comparable to any figure that includes verification work. The endpoint no longer issues while that path is in wire-up. Republished when the verdict path is connected and re-measured.</p>
 <p class="sub">Single HTTP call. Orchestrates AT <code>/v1/compose</code> → v_gate_skill, AO computes v_gate, builds canonical bytes once, AT <code>/v1/sign</code> for AT's signature, AO signs locally, assembles JWS general serialization. Returns full 2-signer envelope verifiable against both published JWKS.</p>
 <table>
 <thead><tr><th>Statistic</th><th class="num">ms</th></tr></thead>

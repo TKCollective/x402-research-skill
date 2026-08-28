@@ -25,7 +25,7 @@ import {
   getPrivateKey,
   COMPOSED_KID,
   AO_MAPPING_ID,
-  AO_MAPPING_HASH,
+  requireMappingHash,
 } from "./v_gate_compose.js";
 
 // Deterministic-tier mapping pointer. Distinct from the judgment-mode
@@ -529,7 +529,7 @@ function buildDeterministicPayload({ checks, results, subject, agent_id }) {
       // check that could not resolve returns 422 rather than a low score.
       confidence: 1.0,
       issuer: "agentoracle.co",
-      mapping_hash: AO_MAPPING_HASH,
+      mapping_hash: requireMappingHash(),
       mapping_id: AO_MAPPING_ID,
       // Deterministic-tier rule catalog, distinct from judgment policy.
       deterministic_mapping_id: DETERMINISTIC_MAPPING_ID,
