@@ -196,10 +196,10 @@ footer a:hover{color:var(--gold-2)}
     <div class="tier">
       <h2>Pay-per-Call</h2>
       <div class="price">$0.09<small> /verification</small></div>
-      <p class="pitch">High-frequency agent loops. Attach a payment header, receive a signed receipt. No subscription.</p>
+      <p class="pitch">High-frequency agent loops. At GA: attach a payment header, receive a signed receipt, no subscription. During beta the endpoint is open and unmetered.</p>
       <ul>
-        <li><code>POST /evaluate</code> gated by x402</li>
-        <li>$0.09 USDC per call, settled on Base</li>
+        <li><code>POST /evaluate</code> — free during beta</li>
+        <li>$0.09 USDC per call, settled on Base, at GA</li>
         <li>Per-call metering, no floor</li>
         <li>Same envelope as Self-Serve tier</li>
         <li>Zero credential setup</li>

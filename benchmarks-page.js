@@ -99,7 +99,8 @@ const BENCHMARKS_HTML = `<!doctype html>
 <tr><td><strong>AgentOracle <code>/evaluate</code></strong></td><td class="num strong">57.6%</td></tr>
 </tbody>
 </table>
-<p class="meta">AVeriTeC is multi-evidence fact-checking with a 4-label space. Published academic systems land near 30%. AgentOracle's pipeline scores roughly double the strongest paper-provided baseline on the same dev set. The score is high because the benchmark is hard, not because the bar is low.</p>
+<p class="meta">Reported on the AVeriTeC 2024 dev set, with the verdict mapping selected by inspection on the calibration half. Retrieval recall is not reported and parametric-knowledge contamination is not controlled for. Treat as an internal baseline, not a leaderboard result.</p>
+      <p class="meta">AVeriTeC is multi-evidence fact-checking with a 4-label space. Published academic systems land near 30%. AgentOracle's pipeline scores roughly double the strongest paper-provided baseline on the same dev set. The score is high because the benchmark is hard, not because the bar is low.</p>
 </div>
 
 <div class="card">
@@ -112,7 +113,8 @@ const BENCHMARKS_HTML = `<!doctype html>
 <tr><td>Held-out half</td><td class="num">248</td><td class="num strong">57.7%</td></tr>
 </tbody>
 </table>
-<p class="meta">Held-out matches calibration → verdict mapping is not overfit. Selected via inspection on the calibration half; held-out is untouched during selection.</p>
+<p class="meta">Reported on the AVeriTeC 2024 dev set, with the verdict mapping selected by inspection on the calibration half. Retrieval recall is not reported and parametric-knowledge contamination is not controlled for. Treat as an internal baseline, not a leaderboard result.</p>
+      <p class="meta">Held-out matches calibration → verdict mapping is not overfit. Selected via inspection on the calibration half; held-out is untouched during selection.</p>
 </div>
 
 <div class="card">
@@ -138,10 +140,10 @@ python3 scripts/score.py results/2026-05-28-dev/results.jsonl</pre>
 <p class="meta">Run completes in ~25 minutes at 3 concurrent workers against the live <code>/evaluate</code> endpoint. Submission registered at <a href="https://github.com/TKCollective/agentoracle-benchmark">TKCollective/agentoracle-benchmark</a>. MIT-licensed. Open submissions — see <a href="https://github.com/TKCollective/agentoracle-benchmark/blob/main/methodology/submission-format.md">submission-format.md</a>.</p>
 
 <h3>Footnote on inference path</h3>
-<p class="meta">The harness uses the unauthenticated <code>/evaluate</code> tier. Inference path is identical to paid x402 settles; payment gates the response, not the model.</p>
+<p class="meta">The harness uses <code>POST /evaluate</code>, which is free and unmetered during beta. The inference path will be identical once x402 settlement ships at GA; payment will gate the response, not the model.</p>
 
 <div class="note">
-<strong>What's coming — deterministic-first grounding.</strong> The 57.6% number above measures AgentOracle's <em>probabilistic</em> pipeline on AVeriTeC's full claim mix. The next architectural step (<a href="https://github.com/TKCollective/x402-research-skill/blob/main/docs/deterministic-first-grounding.md">spec</a>) routes claims that resolve via structural lookup — field match, range check, comparison, set membership, citation existence — through a deterministic path that doesn't invoke an LLM at all and resolves at near-100%. The LLM tier becomes the small probabilistic slice. Every receipt will disclose <code>resolution_path: deterministic | probabilistic | hybrid</code> so the buyer can see exactly how each verdict was reached. Not yet implemented — scoped, repo-visible, on the roadmap.
+<strong>Shipped — deterministic-first grounding.</strong> Claims that resolve by lookup rather than judgment route to <code>POST /v1/verify-facts</code>, with no model in the trust chain. The 57.6% number above measures AgentOracle's <em>probabilistic</em> pipeline on AVeriTeC's full claim mix (<a href="https://github.com/TKCollective/x402-research-skill/blob/main/docs/deterministic-first-grounding.md">spec</a>) routes claims that resolve via structural lookup — field match, range check, comparison, set membership, citation existence — through a deterministic path that doesn't invoke an LLM at all and resolves at near-100%. The LLM tier becomes the small probabilistic slice. Every receipt will disclose <code>resolution_path: deterministic | probabilistic | hybrid</code> so the buyer can see exactly how each verdict was reached. Not yet implemented — scoped, repo-visible, on the roadmap.
 </div>
 
 <div class="note">

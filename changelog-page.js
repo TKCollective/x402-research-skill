@@ -129,7 +129,7 @@ li p.correction strong{color:var(--gold);font-weight:600}
     </li>
     <li>
       <time>2026-06-23</time>
-      <h2>First registered profile in the receipt-format registry — verification.v0.3 entered as the first profile in the ERC-8210 Receipt Profile Registry</h2>
+      <h2>First candidate profile entry in the receipt-format registry — verification.v0.3 entered as a candidate profile in the ERC-8210 Receipt Profile Registry</h2>
       <p><a href="https://github.com/wangbin9953/erc8210-aap/pull/4" target="_blank" rel="noopener noreferrer">registry ↗</a></p>
     </li>
     <li>

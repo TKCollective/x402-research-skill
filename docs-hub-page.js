@@ -166,7 +166,7 @@ python3 verify.py receipt.json
 
     <section>
       <h3>Measurement</h3>
-      <p>Experiment A measures which citations survive independent verification when an agent is gated fail-closed. The design, harness, and question set were published before any data was collected. Results ship 2 September whatever they show.</p>
+      <p>Experiment A pre-registered a citation-survival measurement under a fail-closed gate. The design, harness, and question set were published before any data was collected. Collection closed 25 August at 593 of 600, with 7 documented-unresolved. The pre-registered headline finding is withdrawn because the gated arm measured a degraded service. What publishes on 2 September is the null result, the service-integrity defect that caused it, and the raw JSONL.</p>
       <div class="links">
         <a class="lk" href="https://github.com/TKCollective/agentoracle-benchmark-a-b" target="_blank" rel="noopener noreferrer">Pre-registration and harness ↗</a>
       </div>

@@ -377,7 +377,7 @@ a:hover { color: var(--gold-bright); }
       <a class="proof-card" href="https://github.com/TKCollective/agentoracle-benchmark" target="_blank" rel="noopener">
         <span class="proof-card__label">AVeriTeC 2024 Benchmark</span>
         <span class="proof-card__title">agentoracle-benchmark v0.1</span>
-        <span class="proof-card__desc">57.6% overall \u00b7 57.7% held-out (vs ~30% paper baseline) \u00b7 open methodology \u00b7 open submissions \u00b7 MIT licensed.</span>
+        <span class="proof-card__desc">57.6% overall \u00b7 57.7% held-out (vs ~30% paper baseline) \u00b7 verdict mapping selected by inspection on the calibration half \u00b7 retrieval recall not reported \u00b7 contamination not controlled for \u00b7 internal baseline, not a leaderboard result \u00b7 open methodology \u00b7 open submissions \u00b7 MIT licensed.</span>
         <span class="proof-card__arrow">View results \u2192</span>
       </a>
       <a class="proof-card" href="https://agenttrust.uk" target="_blank" rel="noopener">

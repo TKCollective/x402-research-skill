@@ -205,6 +205,7 @@ footer a:hover{color:var(--gold-2)}
 <section>
   <div class="wrap">
     <h2>Call shape</h2>
+<p class="meta">During beta the <code>authorization</code> header is optional — anonymous calls succeed and are signed with <code>agent_id: did:ao:verify-facts:anonymous</code>. A key binds receipts to your identity and will be required at GA.</p>
 <pre><code><span class="c-p">$</span> curl -sS https://agentoracle.co/v1/verify-facts \\
     -H <span class="c-str">"authorization: Bearer \$AO_API_KEY"</span> \\
     -H <span class="c-str">"content-type: application/json"</span> \\
