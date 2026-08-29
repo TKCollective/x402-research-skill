@@ -151,7 +151,7 @@ h1 .g{transition:none}
       </div>
       <div class="proof-strip">
         <span>IETF draft</span><span class="sep">·</span>
-        <span><a href="https://github.com/wangbin9953/erc8210-aap/pull/4" target="_blank" rel="noopener noreferrer">first registered profile</a></span><span class="sep">·</span>
+        <span><a href="https://github.com/wangbin9953/erc8210-aap/pull/4" target="_blank" rel="noopener noreferrer">first candidate profile entry</a></span><span class="sep">·</span>
         <span>independently implemented, byte-identical</span>
       </div>
     </div>
@@ -271,21 +271,6 @@ h1 .g{transition:none}
       <div class="pcard reveal"><h3>One implementation is a product.<br><span class="gld">Two, byte-identical, is a standard.</span></h3><p>An independent team rebuilt the format from the spec text alone — matching to the last byte.</p></div>
       <div class="pcard reveal"><h3>Proprietary dies with the vendor.<br><span class="gld">Open formats outlive everyone.</span></h3><p>IETF-filed, MIT reference code, published conformance vectors in two languages.</p></div>
     </div>
-    <div class="stdrow mono reveal">
-      <a href="https://datatracker.ietf.org/doc/draft-krausz-verification-state" target="_blank" rel="noopener">IETF draft ↗</a>
-      <a href="https://github.com/TKCollective/agentoracle-receipt-spec" target="_blank" rel="noopener">Receipt spec ↗</a>
-      <a href="https://github.com/TKCollective/agentoracle-receipt-spec/tree/main/conformance" target="_blank" rel="noopener">Conformance vectors ↗</a>
-      <a href="https://pypi.org/project/agentoracle-receipt-verify" target="_blank" rel="noopener">PyPI verifier ↗</a>
-      <a href="/docs/deterministic-mode">Deterministic mode ↗</a>
-      <a href="/whitepaper">Whitepaper</a>
-      <a href="/pricing">Pricing</a>
-      <a href="/changelog">Changelog</a>
-    </div>
-
-    <div class="partnerrow reveal">
-      <a href="https://hol.org/partner-program/profile/agentoracle" target="_blank" rel="noopener noreferrer"><img src="https://hol.org/partner-program/profile/agentoracle/badge.svg?theme=dark" alt="AgentOracle — HOL Partner Program" width="600" height="315" style="max-width:100%;height:auto;border:0;border-radius:12px" /></a>
-      <p class="partnerrow__note mono">Partner in the Hashgraph Online Partner Program. Participant in the Cryptographic Agent Execution working group. <a href="https://hol.org/partner-program/profile/agentoracle" target="_blank" rel="noopener noreferrer">Partner profile ↗</a></p>
-    </div>
   </div>
 </section>
 
@@ -344,6 +329,21 @@ h1 .g{transition:none}
         </ul>
         <a class="btn btn-ghost pl-btn" id="platformTierTalkBtn" href="mailto:joe@agentoracle.co?subject=Platform%20tier">Talk to us</a>
       </div>
+    </div>
+    <div class="stdrow mono reveal">
+      <a href="https://datatracker.ietf.org/doc/draft-krausz-verification-state" target="_blank" rel="noopener">IETF draft ↗</a>
+      <a href="https://github.com/TKCollective/agentoracle-receipt-spec" target="_blank" rel="noopener">Receipt spec ↗</a>
+      <a href="https://github.com/TKCollective/agentoracle-receipt-spec/tree/main/conformance" target="_blank" rel="noopener">Conformance vectors ↗</a>
+      <a href="https://pypi.org/project/agentoracle-receipt-verify" target="_blank" rel="noopener">PyPI verifier ↗</a>
+      <a href="/docs/deterministic-mode">Deterministic mode ↗</a>
+      <a href="/whitepaper">Whitepaper</a>
+      <a href="/pricing">Pricing</a>
+      <a href="/changelog">Changelog</a>
+    </div>
+
+    <div class="partnerrow reveal">
+      <a href="https://hol.org/partner-program/profile/agentoracle" target="_blank" rel="noopener noreferrer"><img src="https://hol.org/partner-program/profile/agentoracle/badge.svg?theme=dark" alt="AgentOracle — HOL Partner Program" width="600" height="315" style="max-width:100%;height:auto;border:0;border-radius:12px" /></a>
+      <p class="partnerrow__note mono">Partner in the Hashgraph Online Partner Program. Participant in the Cryptographic Agent Execution working group. <a href="https://hol.org/partner-program/profile/agentoracle" target="_blank" rel="noopener noreferrer">Partner profile ↗</a></p>
     </div>
   </div>
 </section>
