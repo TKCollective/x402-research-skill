@@ -118,67 +118,98 @@ export const CANARY_CLAIMS = [
   "The Yangtze is the longest river in Asia.",
 ];
 
-// Two-bucket rotation with a monotonic per-process counter.
+// Two-bucket rotation, fully time-derived. No process-local state.
 //
-// The earlier version was `CANARY_CLAIMS[hour % 36]`: pure hour-modular. Any
-// two runs in the same UTC hour — a manual test plus the scheduled cron — got
-// the same claim, and the second run measured the cache. First live workflow
-// run tripped `canary_served_from_cache` for exactly this reason.
+// HISTORY — two corrections, both dated, neither rewritten:
 //
-// The fix has two moving parts:
-//   1. Two disjoint 18-claim buckets, alternated by hour. A same-hour retry
-//      draws from the opposite bucket, guaranteeing the retry cannot be
-//      served from the primary's cache entry.
-//   2. Within a bucket, a monotonic counter (bucket-scoped) picks the claim.
-//      Two calls in the same bucket advance the counter, so a manual+cron
-//      collision inside one hour still moves. The counter is per-process, so
-//      a cold instance restarts at 0 — that is fine: the bucket alternation
-//      still holds across processes because it is time-derived.
+//   v1 was `CANARY_CLAIMS[hour % 36]`: pure hour-modular. Two runs in the same
+//   UTC hour (a manual test plus the scheduled cron) got the same claim and the
+//   second measured the cache. First live workflow run tripped
+//   `canary_served_from_cache` for exactly that reason.
 //
-// Reuse interval floor: within a single bucket the same claim recurs every
-// 18 counter steps. At the hourly cadence a bucket is reached every 2 hours,
-// so the same claim recurs no more often than 18 * 2h = 36h — comfortably
-// past the 24h TTL. A manual test in an off-hour advances the counter but
-// does not shorten the reuse floor: same-hour retries land in the OTHER
-// bucket by construction.
+//   v2 added two disjoint 18-claim buckets plus a monotonic PER-PROCESS counter
+//   inside each bucket. The counter was the defect. On serverless every
+//   invocation may be a cold start, so `_bucketCounters` reset to [0,0] on
+//   essentially every canary run, and the selector therefore returned index 0
+//   of the current bucket every single time. Measured, not inferred: over 12
+//   simulated cold runs only claims 0 and 18 were ever used — 4 of 36 including
+//   retries — and they swapped between primary and retry each hour. The stated
+//   36h reuse floor was actually 1h, off by 36x. With a 24h cache TTL both
+//   claims stayed warm permanently, so the primary cache-hit, the retry
+//   cache-hit, and the run hard-tripped `canary_stuck_on_cache` on a service
+//   that was behaving correctly. Four of six runs failed between
+//   2026-08-28 18:55Z and 2026-08-29 14:16Z.
+//
+// v3 (this version) derives the index from the hour instead of from process
+// state, so it behaves identically on a warm instance and a cold one:
+//
+//   bucket        = hour & 1
+//   primary index = floor(hour / 2) % 18
+//   retry  index  = (floor(hour / 2) + 9) % 18   , opposite bucket
+//
+// Verified by simulation over 200 hours before shipping:
+//   * minimum primary reuse gap: 36h — clears the 24h TTL.
+//   * all 36 claims used as primary within 72h.
+//   * same-hour primary == retry collisions: 0, by construction (disjoint
+//     buckets), so a retry can never be served from the primary's cache entry.
+//
+// The same-hour manual+cron collision that motivated the v2 counter is handled
+// by the retry mechanism, not by claim rotation: two runs in one hour means the
+// second sees primary cache_hit=true, retries into the opposite bucket, gets a
+// cold claim, and does not trip. One cache hit is not a trip. The counter was
+// therefore redundant as well as broken, and removing it is a simplification
+// rather than a tradeoff.
+//
+// RESIDUAL, stated rather than hidden: a claim used as a RETRY at hour h next
+// appears as a PRIMARY 17h later (measured minimum over 200h), which is inside
+// the 24h TTL. So if a retry fires at hour h, the primary 17h later can
+// cache-hit. That path requires a retry to have fired first, which under v3
+// only happens when something is already anomalous — a primary cache-hit is
+// itself unexpected once primaries recur no more often than 36h. Closing the
+// residual entirely needs more claims (>=60 for a 30h retry-echo gap), not a
+// different selector. Not doing that here; the claim list is content, and
+// inventing 24 more factual claims is a separate task with its own review.
 
 const BUCKET_SIZE = CANARY_CLAIMS.length / 2;
-const _bucketCounters = [0, 0];
+
+function _hoursSinceEpoch(d) {
+  return Math.floor(d.getTime() / 3600000);
+}
 
 function _bucketForHour(d) {
-  const hours = Math.floor(d.getTime() / 3600000);
-  return hours & 1; // 0 or 1
+  return _hoursSinceEpoch(d) & 1; // 0 or 1
 }
 
 /**
- * canaryClaimForNow — primary claim for this run. Same external signature as
- * before; every call at the same wall-clock hour advances the same bucket's
- * counter, so repeated same-hour calls return different claims.
+ * canaryClaimForNow — primary claim for this run. Time-derived: the same hour
+ * always yields the same claim, and consecutive hours walk the full 36-claim
+ * list with a 36h reuse floor. Identical on cold and warm instances.
  */
 export function canaryClaimForNow(d = new Date()) {
   const b = _bucketForHour(d);
-  const idx = _bucketCounters[b] % BUCKET_SIZE;
-  _bucketCounters[b] = (_bucketCounters[b] + 1) % BUCKET_SIZE;
+  const idx = Math.floor(_hoursSinceEpoch(d) / 2) % BUCKET_SIZE;
   return CANARY_CLAIMS[b * BUCKET_SIZE + idx];
 }
 
 /**
  * canaryRetryClaim — claim for a retry after the primary was served from
- * cache. Drawn from the opposite bucket, so it cannot share a cache entry
- * with the primary. Advances that bucket's counter.
+ * cache. Drawn from the opposite bucket at a half-bucket offset, so it can
+ * never share a cache entry with the primary of the same hour.
  */
 export function canaryRetryClaim(d = new Date()) {
   const b = _bucketForHour(d) ^ 1;
-  const idx = _bucketCounters[b] % BUCKET_SIZE;
-  _bucketCounters[b] = (_bucketCounters[b] + 1) % BUCKET_SIZE;
+  const idx = (Math.floor(_hoursSinceEpoch(d) / 2) + BUCKET_SIZE / 2) % BUCKET_SIZE;
   return CANARY_CLAIMS[b * BUCKET_SIZE + idx];
 }
 
-// Exported for tests only — resets the per-process bucket counters. Not used
-// by the running service.
+/**
+ * Retained for API compatibility with the v2 test surface. v3 holds no
+ * process-local state, so there is nothing to reset and this is a no-op.
+ * Kept exported so any existing caller does not break; see the whole-repo
+ * grep in the delivery note.
+ */
 export function _resetCanaryCountersForTest() {
-  _bucketCounters[0] = 0;
-  _bucketCounters[1] = 0;
+  /* no-op in v3 — selection is time-derived */
 }
 
 /**
