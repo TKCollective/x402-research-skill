@@ -273,11 +273,18 @@ h1 .g{transition:none}
     </div>
     <div class="stdrow mono reveal">
       <a href="https://datatracker.ietf.org/doc/draft-krausz-verification-state" target="_blank" rel="noopener">IETF draft ↗</a>
-      <a href="https://github.com/TKCollective/agentoracle-receipt-spec" target="_blank" rel="noopener">Spec + vectors ↗</a>
+      <a href="https://github.com/TKCollective/agentoracle-receipt-spec" target="_blank" rel="noopener">Receipt spec ↗</a>
+      <a href="https://github.com/TKCollective/agentoracle-receipt-spec/tree/main/conformance" target="_blank" rel="noopener">Conformance vectors ↗</a>
       <a href="https://pypi.org/project/agentoracle-receipt-verify" target="_blank" rel="noopener">PyPI verifier ↗</a>
+      <a href="/docs/deterministic-mode">Deterministic mode ↗</a>
       <a href="/whitepaper">Whitepaper</a>
       <a href="/pricing">Pricing</a>
       <a href="/changelog">Changelog</a>
+    </div>
+
+    <div class="partnerrow reveal">
+      <a href="https://hol.org/partner-program/profile/agentoracle" target="_blank" rel="noopener noreferrer"><img src="https://hol.org/partner-program/profile/agentoracle/badge.svg?theme=dark" alt="AgentOracle — HOL Partner Program" width="600" height="315" style="max-width:100%;height:auto;border:0;border-radius:12px" /></a>
+      <p class="partnerrow__note mono">Partner in the Hashgraph Online Partner Program. Participant in the Cryptographic Agent Execution working group. <a href="https://hol.org/partner-program/profile/agentoracle" target="_blank" rel="noopener noreferrer">Partner profile ↗</a></p>
     </div>
   </div>
 </section>
@@ -367,9 +374,12 @@ h1 .g{transition:none}
     <div class="f-col mono">
       <b>Trust</b>
       <a href="https://datatracker.ietf.org/doc/draft-krausz-verification-state" target="_blank" rel="noopener">IETF draft</a>
-      <a href="https://github.com/TKCollective/agentoracle-receipt-spec" target="_blank" rel="noopener">Spec + conformance vectors</a>
+      <a href="https://github.com/TKCollective/agentoracle-receipt-spec" target="_blank" rel="noopener">Receipt spec</a>
+      <a href="https://github.com/TKCollective/agentoracle-receipt-spec/tree/main/conformance" target="_blank" rel="noopener">Conformance vectors</a>
       <a href="https://agentoracle.co/.well-known/jwks.json">Published keys (JWKS)</a>
       <a href="https://pypi.org/project/agentoracle-receipt-verify" target="_blank" rel="noopener">Offline verifier (PyPI)</a>
+      <a href="/docs/deterministic-mode">Deterministic mode</a>
+      <a href="https://github.com/TKCollective/x402-research-skill/blob/main/.github/workflows/alarm-canary.yml" target="_blank" rel="noopener">Hourly canary</a>
       <a href="/whitepaper">Whitepaper</a>
     </div>
     <div class="f-col mono">
@@ -466,6 +476,10 @@ h1 .g{transition:none}
 .pcard h3{font-size:1.05rem;line-height:1.35;margin-bottom:10px}
 .pcard p{font-size:.88rem;color:var(--mut-d)}
 .gld{color:var(--gold-2)}
+.partnerrow{margin:34px auto 0;max-width:620px;text-align:center}
+.partnerrow img{display:block;margin:0 auto}
+.partnerrow__note{margin-top:12px;font-size:.78rem;line-height:1.6;opacity:.62}
+.partnerrow__note a{border-bottom:1px solid currentColor}
 .stdrow{margin-top:40px;display:flex;gap:26px;flex-wrap:wrap;font-size:.8rem;letter-spacing:.04em;color:var(--mut-d);border-top:1px solid var(--gline);padding-top:22px}
 .stdrow a:hover{color:var(--gold-2)}
 @media(max-width:900px){.grid6{grid-template-columns:1fr 1fr}}

@@ -10,7 +10,7 @@ export const RECEIPT_REGISTRY_PAGE_HTML = `<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>verification.v0.3 in the ERC-8210 Receipt Profile Registry — AgentOracle</title>
-<meta name="description" content="Issuer-side implementation details for verification.v0.3, the first entry in the ERC-8210 Receipt Profile Registry.">
+<meta name="description" content="Issuer-side implementation details for verification.v0.3, the first candidate profile entry in the ERC-8210 Receipt Profile Registry.">
 <link rel="icon" type="image/png" href="/assets/ao-logo-v8.png">
 <link rel="apple-touch-icon" href="/assets/ao-logo-v8.png">
 <style>
@@ -77,7 +77,7 @@ export const RECEIPT_REGISTRY_PAGE_HTML = `<!DOCTYPE html>
   <main class="container">
     <span class="eyebrow">Standards \u00b7 Receipt Profile Registry</span>
     <h1><em>verification.v0.3</em> — issuer-side implementation.</h1>
-    <p class="lede">Issuer-side implementation details for <strong>verification.v0.3</strong>, the first entry in the <a href="https://ethereum-magicians.org/t/erc-8210-agent-assurance/28097/46">ERC-8210 Receipt Profile Registry</a> introduced by <a href="https://ethereum-magicians.org/u/jackywang">Jacky Wang</a> in the ERC-8210 v2 Progress Update on 2026-07-05.</p>
+    <p class="lede">Issuer-side implementation details for <strong>verification.v0.3</strong>, the first candidate profile entry in the <a href="https://ethereum-magicians.org/t/erc-8210-agent-assurance/28097/46">ERC-8210 Receipt Profile Registry</a> (<a href="https://github.com/wangbin9953/erc8210-aap/pull/4">entry merged 2026-06-23</a>) introduced by <a href="https://ethereum-magicians.org/u/jackywang">Jacky Wang</a> in the ERC-8210 v2 Progress Update on 2026-07-05.</p>
 
     <div class="attribution">
       <strong>Attribution.</strong> The registry itself is maintained by <a href="https://ethereum-magicians.org/u/jackywang">@wangbin9953</a> (independent ERC-8210 editor, agent.tech). AgentOracle contributed the first profile entry via <a href="https://github.com/wangbin9953/erc8210-aap/pull/4" target="_blank" rel="noopener noreferrer">PR #4 ↗</a> (merged 2026-06-23 by the ERC author). Two independent issuers produce conformant receipts against the profile: AgentOracle and AgentTrust — meeting the registry\u2019s two-implementer threshold for elevating a pattern.
