@@ -479,7 +479,7 @@ function registerVGateCompose(app, { mappingBytes } = {}) {
 // v_recommendation, v_gate_threshold) so a relying party can actually run the
 // recompute sequence against it. It replaces a sample whose mapping_hash was a
 // hand-typed placeholder and which omitted the intermediates entirely —
-// reported by Pablo Ferreiro (giskard09) after running the recompute procedure
+// reported by @giskard09 after independently running the recompute procedure
 // we published for that purpose.
 //
 // Single-issuer. A co-signed two-issuer sample follows when AgentTrust re-signs
