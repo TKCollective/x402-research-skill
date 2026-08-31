@@ -19,7 +19,7 @@ Before an AI agent acts on a factual claim, AgentOracle verifies it and returns 
 - **Per-claim verification, not per-query.** A single `POST /evaluate` call decomposes your input, checks each claim across multiple sources, and returns a per-claim verdict plus an overall recommendation.
 - **A signed receipt every time.** Every response includes a JWS v0.3 composed envelope, canonicalized with RFC 8785 JCS and signed with Ed25519 against keys published at [`/.well-known/jwks.json`](https://agentoracle.co/.well-known/jwks.json). Verify offline; no callback to our service required.
 - **Deterministic mode for lookups.** Claims that resolve without judgment — signatures, hashes, registry lookups, regex, timestamps, JSON-schema conformance — route to `POST /v1/verify-facts`. No LLM in the trust chain. Same envelope, same JWKS, same verifier.
-- **Two independent implementers agree.** [AgentTrust](https://agenttrust.uk) produces byte-identical canonical bytes from published fixtures against the same v0.3 spec.
+- **An independent implementation matches byte for byte.** [AgentTrust](https://agenttrust.uk) rebuilt the format from this spec text alone and produces byte-identical canonical bytes on the shared v0.3 fixture set.
 
 ---
 
@@ -149,7 +149,7 @@ print(result.checks)   # canonical_recomputes, canonical_matches_claimed, all_si
 
 **Pass the JWKS map.** `verify(receipt_json)` without keys returns `status: "indeterminate"` (`valid: None`), not `"valid"` — the verifier will not report a pass on an unverified signature. `None` is falsy, so `if result.valid:` fails closed. See the spec repo's README for the three-outcome contract.
 
-Independent RFC 8785 canonicalization implementations produce byte-identical hashes from this format ([AgentTrust](https://agenttrust.uk), and Pablo Ferreiro's [golden-vector-provenance](https://github.com/SolomonisBlack/golden-vector-provenance) cross-check).
+An independent implementation produces byte-identical canonical bytes from this format's published v0.3 fixtures: [AgentTrust](https://agenttrust.uk).
 
 ---
 
