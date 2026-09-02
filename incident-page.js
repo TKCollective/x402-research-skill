@@ -38,7 +38,6 @@ export const INCIDENT_2026_08_25_PAGE_HTML = `<!DOCTYPE html>
 <meta property="og:description" content="The cryptographic layer was right the whole time. The presentation layer understated it. Full record.">
 <meta property="og:image" content="https://agentoracle.co/og-image.png?v=20260803">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/png" href="/assets/ao-logo-v8.png">
 <link rel="preconnect" href="https://api.fontshare.com">
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">

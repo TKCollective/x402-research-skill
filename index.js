@@ -3798,13 +3798,10 @@ app.get("/business-preview", (_req, res) => {
   res.send(BUSINESS_PAGE_V2_HTML);
 });
 
-// /incidents/2026-08-25-canned-verdicts — Sep 2 publication.
-// Ships dark: no page links to it before publication morning. noindex/nofollow
-// is set in the page meta and via X-Robots-Tag below.
+// /incidents/2026-08-25-canned-verdicts — public incident record (published 2026-09-02).
 app.get("/incidents/2026-08-25-canned-verdicts", (_req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("Cache-Control", "public, max-age=300, s-maxage=600");
-  res.setHeader("X-Robots-Tag", "noindex, nofollow");
   res.send(INCIDENT_2026_08_25_PAGE_HTML);
 });
 

@@ -52,6 +52,11 @@ li p.correction strong{color:var(--gold);font-weight:600}
   <p class="sub">What shipped, dated. Each entry corresponds to a public, verifiable artifact — that's the house style.</p>
   <ol>
     <li>
+      <time>2026-09-02</time>
+      <h2>Incident record published — canned verdicts, 21-25 August 2026</h2>
+      <p>Four-day window in which <code>/evaluate</code> signed and returned receipts for evaluations it never performed. The signed layer halted every affected request; the presentation body did not disclose that. Fixes shipped <code>4a8b37177</code>, <code>98b3b7e78</code>, <code>c28c5dd6f</code>, <code>49261a37b</code>, <code>a8ce2a18d</code>. External review by <a href="https://github.com/giskard09" target="_blank" rel="noopener noreferrer">@giskard09</a> found and closed a same-class defect in the conformance sample and an unauthenticated signing path; kid separation remains open with no date. Full record: <a href="/incidents/2026-08-25-canned-verdicts">/incidents/2026-08-25-canned-verdicts ↗</a>.</p>
+    </li>
+    <li>
       <time>2026-08-13</time>
       <h2>Verifier v0.1.0 published to PyPI — three-outcome status semantics live on the released artifact</h2>
       <p><code>pip install agentoracle-receipt-verify==0.1.0</code> · MIT · offline verification against the published JWKS. Public API exposes <code>STATUS_VALID</code>, <code>STATUS_INVALID</code>, <code>STATUS_INDETERMINATE</code>. Post-publish gate ran against the installed package in a fresh venv — the no-key path returns invalid rather than valid. <a href="https://pypi.org/project/agentoracle-receipt-verify/0.1.0/" target="_blank" rel="noopener noreferrer">pypi ↗</a></p>
