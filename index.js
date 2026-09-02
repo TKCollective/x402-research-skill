@@ -72,7 +72,7 @@ const KEYS_HTML = fs.readFileSync(__KEYS_HTML_PATH, "utf8");
 // content address in every receipt's v_gate.v_gate_mapping_hash field, so
 // verifiers can (a) fetch by sha256, (b) hash the response, (c) confirm the
 // bytes match the hash they received in the receipt. Rotated 2026-07-28 to
-// retire the fixture placeholder discovered by Msebenzi.
+// retire the fixture placeholder reported by Michael Msebenzi (headlessoracle).
 const AO_MAPPING_ID_LABEL = "agentoracle-v0.3-2026-05-30";
 const __MAPPING_AO_V03_PATH = fileURLToPath(new URL("./mapping-agentoracle-v0.3-2026-05-30.json", import.meta.url));
 const MAPPING_AO_V03_BYTES = fs.readFileSync(__MAPPING_AO_V03_PATH);

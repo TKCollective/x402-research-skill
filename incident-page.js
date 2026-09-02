@@ -6,7 +6,9 @@
 // corrections list at the bottom, dated, never by editing the body above it.
 //
 // Source of truth: "Sep 2 Option A outline — final.md"
-//   sha256 1ad2a14e69ecb59ea69000268ea2d96e   (verified 2026-08-28)
+//   sha256 8c7c78943d18029b048c19fd7a7c814fd2e3dd491cb394924dda134cd1fb4de4
+//   (verified 2026-09-01, post name-fix, §5b propagation-failure paragraph,
+//    Msebenzi credit, §8 no-receipt correction, and generic role-parameter phrasing)
 //
 // Commit shas cited below are inlined rather than templated, because
 // {{D6_SHA}} was a misleading placeholder name: the git commit 49261a37b
@@ -16,9 +18,10 @@
 //   49261a37b — flag-penalty threshold fix (D5-cluster follow-up in §5)
 //   a8ce2a18d — sample rebuild + oracle close (§5b)
 //
-// Route registration: see the sibling block in index.js. This page ships
-// dark: the module is imported and the route is registered, but no other
-// page links to it until the 2026-09-02 publication window.
+// Route registration: see the sibling block in index.js. The page shipped
+// dark from 2026-08-27 (route registered, X-Robots-Tag noindex, no page linking
+// to it) and is scheduled to publish 2026-09-02 via the queued patch that adds
+// the changelog entry and removes the noindex header.
 
 export const INCIDENT_2026_08_25_PAGE_HTML = `<!DOCTYPE html>
 <html lang="en" data-theme="dark">
@@ -169,19 +172,23 @@ footer{border-top:1px solid var(--gline);margin-top:48px;padding:30px 0 60px;col
   <h2>A defect found by someone else, while this note was being written</h2>
   <div class="defect">
     <span class="tag">Externally reported</span>
-    <p>On 2026-08-28, Pablo Ferreiro (<a href="https://github.com/giskard09">giskard09</a>) independently ran the published recompute procedure against <code>/v1/conformance/sample</code> and reported two things (<a href="https://github.com/x402-foundation/x402/issues/3234">x402-foundation/x402#3234</a>). Both are correct.</p>
+    <p>On 2026-08-28, <a href="https://github.com/giskard09">@giskard09</a> independently ran the published recompute procedure against <code>/v1/conformance/sample</code> and reported two things (<a href="https://github.com/x402-foundation/x402/issues/3234">x402-foundation/x402#3234</a>). Both are correct.</p>
     <p>First, the sample's <code>v_gate.mapping_hash</code> was a hand-typed placeholder rather than a digest of any mapping document. The envelope's signatures were genuine — both issuers verified, canonical bytes recomputed — so the cryptographic layer faithfully committed to a mapping binding that had never been computed. A relying party following our published procedure would resolve that hash, fail to match it, and correctly halt. This is the same failure class as the first defect above: a genuine signature over content the service never produced.</p>
     <p>Second, we found the same hard-coded constant was used by the live <code>POST /v1/compose</code> and <code>POST /v1/v_gate</code> endpoints, both reachable without authentication. It was not confined to a fixture. In the same audit we discovered <code>POST /v1/sign</code> and <code>POST /v1/sign/batch</code> signed caller-supplied bytes under the production issuer key with no authentication — a forgery oracle for this receipt format while it was open.</p>
-    <p><strong>Fixed in <code>a8ce2a18d</code>, 2026-08-28 18:02Z UTC.</strong> The mapping binding is now derived at boot from the published mapping document, or the process refuses to start. All four endpoints return <code>503 not_issuing</code>; <code>/v1/sign*</code> require an authorization header, and the composed endpoints will resume issuing only when their verdict path is completed. The private issuer key was never exposed — an oracle that signs what you hand it is not the same as a stolen key — and closing the routes ended the capability.</p>
+    <p><strong>The same string was reported five weeks earlier.</strong> On 2026-07-28 Michael Msebenzi (<a href="https://github.com/headlessoracle" target="_blank" rel="noopener noreferrer">headlessoracle</a>) reported that the mapping hash carried in our published fixtures was a placeholder that had never resolved. We repaired the fixtures within twenty hours and computed the correct mapping hash on 2026-07-29 — the value the conformance sample carries today. <strong>The identical placeholder string remained in the production constant for five more weeks</strong>, and the defect above is that same string. The July fix was scoped to the artifact that had been reported rather than to the class, so the correct value existed, published, in one location while the placeholder kept being stamped from another.</p>
+  <p><strong>Fixed in <code>a8ce2a18d</code>, 2026-08-28 18:02Z UTC.</strong> The mapping binding is now derived at boot from the published mapping document, or the process refuses to start. All four endpoints return <code>503 not_issuing</code>; <code>/v1/sign*</code> require an authorization header, and the composed endpoints will resume issuing only when their verdict path is completed. The private issuer key was never exposed — an oracle that signs what you hand it is not the same as a stolen key — and closing the routes ended the capability.</p>
     <p><strong>Bound on the exposure window.</strong> Requests to these routes were not counted; the request-tracking helper is called zero times in the composing module. Log retention is roughly one hour. <strong>We cannot enumerate what was signed, or by whom, between 2026-06-23 and 2026-08-28.</strong> Absence of known forgery is absence of evidence, not evidence of absence, and it must be said that way rather than leaned on.</p>
   </div>
 </section>
 
 <section>
   <h2>Where the recompute leg stands</h2>
-  <p>Alongside the sample defect, Pablo also ran the full verification protocol against a genuine <code>/evaluate</code> receipt: cryptographic signature check, mapping-hash match against a SHA-256 he computed himself of the live mapping document, and the Section 4.3 recompute of <code>candidate_recommendation</code> and <code>candidate_gate</code>. All three held. In his own words:</p>
+  <p>Alongside the sample defect, @giskard09 also ran the full verification protocol against a genuine <code>/evaluate</code> receipt: cryptographic signature check, mapping-hash match against a SHA-256 he computed himself of the live mapping document, and the Section 4.3 recompute of <code>candidate_recommendation</code> and <code>candidate_gate</code>. All three held. In his own words:</p>
   <blockquote>"The recompute requirement stands as demonstrated — we ran the full leg independently (signature, mapping_hash, §4.3 steps 3-6) and it held. The signature-implies-issuance step is a separate claim from that, and it shouldn't carry the same weight until kid separation lands on your side. That's not a knock on the recompute work, it's just a different property being verified."</blockquote>
-  <p>That split is right, and it names the property still open. <strong>Same-kid conflation.</strong> The kid <code>ao-composed-2026-06-ed25519-c3abfce3</code> currently signs both receipts where AgentOracle evaluated the claim (<code>/evaluate</code>) and receipts where the service only signed bytes a caller handed it (<code>/v1/sign*</code>). A relying party cannot distinguish those provenances from a receipt alone. Kid separation — a second kid restricted to the caller-bytes-signing path — is committed as the structural fix. It is not in <code>a8ce2a18d</code>. No date is set here. The old kid stays in JWKS so nothing already issued is invalidated.</p>
+  <p>That split is right, and it names the property still open. <strong>Same-kid conflation.</strong> The kid <code>ao-composed-2026-06-ed25519-c3abfce3</code> currently signs both receipts where AgentOracle evaluated the claim (<code>/evaluate</code>) and receipts where the service only signed bytes a caller handed it (<code>/v1/sign*</code>). A relying party cannot distinguish those provenances from a receipt alone.</p>
+  <p>This is a property of the composed format, not of one operator’s implementation. It is present on both issuers we have checked. <a href="https://github.com/poteshniy">@poteshniy</a> independently identified the same conflation on Base-side composed issuance during this review window, and the two of us have converged on a format-level fix rather than two separate operational patches.</p>
+  <p>The fix is an <strong>issuance-path assertion</strong>: a <code>role</code> parameter in the JWS protected header naming what the signature attests, checked against a <code>role</code> member on the signing key in the issuer’s published JWKS, so a verifier resolves what a signature attests from the same fetch that already resolves the key. Semantics are additive — a receipt carrying no role resolves to <code>unknown</code>, not to malformed, so every receipt issued before role annotation keeps verifying. <code>unknown</code> is not a pass: it records that the issuance path was not established, and a relying party whose policy requires an established path treats it as its own fail.</p>
+  <p>Kid separation remains worth doing operationally on both sides as defence in depth, but it is no longer the durable fix — the assertion is, because it survives key rotation and does not require any verifier to carry a mapping table it has to keep current. <strong>No date is set here.</strong> The old kid stays in JWKS so nothing already issued is invalidated.</p>
 </section>
 
 <section>
@@ -207,9 +214,9 @@ footer{border-top:1px solid var(--gline);margin-top:48px;padding:30px 0 60px;col
   <h2>What is still open</h2>
   <ul>
     <li>Body-side presentation redesign to name the actual <code>v_recommendation</code> state rather than compress four states into three prose bands.</li>
-    <li>A <code>not_evaluated</code> value at the receipt layer (v0.4 discussion — non-evaluation currently routes to <code>unknown</code>, which is the same collapse this note otherwise flags).</li>
-    <li>Alarms per the appended spec. Discovery took roughly six hours; the canary alarm would have caught it in one.</li>
-    <li><strong>Kid separation.</strong> As above: the same signing key currently attests both AO-evaluated receipts and receipts where the service only signed caller-supplied bytes. Structural fix committed publicly; no date. Old kid retained in JWKS so nothing already issued is invalidated when the new kid is introduced.</li>
+    <li>A <code>not_evaluated</code> value at the receipt layer (v0.4 discussion). Non-evaluation currently produces <strong>no receipt at all</strong> — see <code>4a8b37177</code> above. No signed artifact records that the service was consulted and could not answer, so the distinction is <strong>absent from the record rather than collapsed within it</strong>: an auditor reading the records later cannot separate “asked and unanswerable” from “never asked.”</li>
+    <li>Alarms A2–A4 per the appended spec. <strong>A1, the hourly content canary, shipped 2026-08-29 as <code>851269789</code></strong> — before this note published. Discovery of this incident took roughly six hours; A1 is the alarm that would have caught it in one, which is why it went first. A2 (credit balance), A3 (rate-limit and upstream-error) and A4 (response-shape anomaly) remain open.</li>
+    <li><strong>Issuance-path assertion.</strong> As above: the same signing key currently attests both AO-evaluated receipts and receipts where the service only signed caller-supplied bytes. Format-level fix converged with a second issuer and committed publicly; no date. Old kid retained in JWKS so nothing already issued is invalidated. Kid separation stays on both sides as operational defence in depth.</li>
     <li><strong>Auto-reload with a cap.</strong> Balance protection remains manual top-up only as of publication. A prepaid balance drained silently once; nothing structural prevents that from repeating.</li>
   </ul>
   <div class="note">Records cannot be backdated. An examiner asking in 2028 about behaviour in 2026 can only be answered by records that existed in 2026. That is the whole argument for this format, and it is why the incident belongs here, in the record, rather than nowhere.</div>
