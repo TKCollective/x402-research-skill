@@ -295,7 +295,7 @@ async function gemmaVerify(claims) {
 async function gemmaCalibrate(sonarResult, proResult, gemmaResult) {
   const result = await callGemma(
     "You are a confidence calibration engine. Given three verification results, produce a final calibrated confidence score. Weight agreement: all agree=high, 2/3 agree=moderate, all disagree=low. Return valid JSON: {\"calibrated_confidence\": 0.0-1.0, \"agreement\": \"strong|moderate|weak\", \"recommendation\": \"act|verify|reject\"}",
-    `Source 1 (Sonar): ${sonarResult}\nSource 2 (Sonar Pro adversarial): ${proResult}\nSource 3 (Gemma independent): ${gemmaResult}`
+    `Source 1 (standard verify): ${sonarResult}\nSource 2 (multi-step adversarial): ${proResult}\nSource 3 (independent model): ${gemmaResult}`
   );
   if (!result) return null;
   try {
@@ -4355,7 +4355,7 @@ async function getDbStats() {
     const info = await redisCmd("DBSIZE");
     const fbCount = await redisCmd("GET", "feedback:count") || 0;
     return { total_keys: info || 0, feedback_count: parseInt(fbCount) || 0 };
-  } catch { return { total_keys: 0, feedback_count: 0 }; }
+  } catch { return { available: false, reason: "store_unreachable" }; }
 }
 
 // Friendly GET handler: returns usage doc instead of 404 so health-check probes
