@@ -115,6 +115,46 @@ import { HTTPFacilitatorClient } from "@x402/core/server";
 // ── CDP Facilitator (for Bazaar discovery indexing) ──────────────
 import { facilitator as cdpFacilitator } from "@coinbase/x402";
 
+// ── evaluation / gate cache keys ─────────────────────────────────────────────
+// One derivation, in one place. Full SHA-256 hex of the canonical text.
+//
+// Replaces three truncated derivations that were live simultaneously:
+//   /evaluate    base64(text).slice(0,32)      ~24 bytes  — PREFIX COLLISION
+//   /verify-gate sha256(text).hex.slice(0,16)    64 bits
+//   fingerprints base64(claim).slice(0,24)     ~18 bytes  — PREFIX COLLISION
+// The base64 prefix forms collided on shared prefixes, so
+//   "The Eiffel Tower was completed in 1889"  and
+//   "The Eiffel Tower was completely destroyed in 1950"
+// mapped to the SAME key — a true claim and a false one able to return each
+// other's verdict.
+//
+// Keys are provider-scoped: flipping INFERENCE_PROVIDER cannot read verdicts
+// produced by a different provider, and flipping back finds the prior cache
+// intact. Structural, so there is no cutover flush to remember or time.
+//
+// Namespaces are separated by route because the value shapes differ:
+//   eval:<provider>:<sha256>  full /evaluate response object (has .meta)
+//   gate:<provider>:<sha256>  /verify-gate summary (no .meta)
+// A reader cannot receive the wrong shape, rather than having to detect it.
+// The `kind` field is defence in depth for anyone inspecting Redis directly.
+const CACHE_PROVIDER = process.env.INFERENCE_PROVIDER || "sonar";
+
+function canonicalCacheText(text) {
+  // Conservative: NFC, trim, collapse whitespace runs. Whitespace-only
+  // differences are not semantic differences. Case and punctuation preserved.
+  return String(text == null ? "" : text).normalize("NFC").trim().replace(/\s+/g, " ");
+}
+
+function cacheDigest(text) {
+  return nodeCrypto.createHash("sha256")
+    .update(canonicalCacheText(text), "utf8").digest("hex");
+}
+
+const evalCacheKey = (text) => "eval:" + CACHE_PROVIDER + ":" + cacheDigest(text);
+const gateCacheKey = (text) => "gate:" + CACHE_PROVIDER + ":" + cacheDigest(text);
+const claimFingerprintKey = (claim) => "claim:" + cacheDigest(claim);
+
+
 // ── Bazaar Discovery Extension ──────────────────────────────────
 import {
   bazaarResourceServerExtension,
@@ -368,6 +408,38 @@ if (!PERPLEXITY_KEY || PERPLEXITY_KEY === "pplx-api-...") {
 const app = express();
 
 // Trust Vercel's proxy so req.protocol returns 'https' (fixes x402 resource URLs)
+
+// ── verification-text scoring ────────────────────────────────────────────────
+// Word-boundary anchored. WITHOUT \\b, /correct/ matched inside "incorrect",
+// /accurate/ inside "inaccurate", and /true/ inside "untrue" — so a clean
+// refutation incremented BOTH counters, scored 0.5, and PASSED at the default
+// threshold. Phrasing decided the verdict.
+// Negated support counts as refutation. Absence of signal is `unverifiable`,
+// not a confidence of 0 masquerading as a confident refutation.
+const SUPPORT_RE = /\b(?:supported|confirmed|accurate|correct|true|verified|substantiated)\b/gi;
+const REFUTE_RE  = /\b(?:refuted|false|incorrect|inaccurate|disproven|unsupported|debunked|fabricated)\b/gi;
+const NEGATED_SUPPORT_RE =
+  /\b(?:not|no|never|isn't|isnt|aren't|arent|wasn't|wasnt|cannot|can't|cant)\s+(?:be\s+)?(?:supported|confirmed|accurate|correct|true|verified|substantiated)\b/gi;
+
+function scoreVerificationText(text) {
+  const t = String(text || "");
+  if (!t.trim()) {
+    return { state: "unverifiable", confidence: 0, recommendation: "reject", supported: 0, refuted: 0 };
+  }
+  const negated = (t.match(NEGATED_SUPPORT_RE) || []).length;
+  const stripped = t.replace(NEGATED_SUPPORT_RE, " ");
+  const supported = (stripped.match(SUPPORT_RE) || []).length;
+  const refuted = (stripped.match(REFUTE_RE) || []).length + negated;
+  const total = supported + refuted;
+  if (total === 0) {
+    // Fail closed: no verdict signal is not a verdict.
+    return { state: "unverifiable", confidence: 0, recommendation: "reject", supported, refuted };
+  }
+  const confidence = parseFloat((supported / total).toFixed(2));
+  const recommendation = confidence >= 0.8 ? "act" : confidence >= 0.5 ? "verify" : "reject";
+  return { state: "scored", confidence, recommendation, supported, refuted };
+}
+
 app.set("trust proxy", true);
 
 // ── CORS — open for AI agents & cross-origin callers ─────────────
@@ -4188,18 +4260,22 @@ async function trackRequest(req, endpoint) {
   } catch {} // fire-and-forget, never block the response
 }
 
-async function getCachedEvaluation(textHash) {
+async function getCachedEvaluation(text, keyFn = evalCacheKey) {
+  const key = keyFn(text);
   try {
-    const cached = await redisCmd("GET", "eval:" + textHash);
+    const cached = await redisCmd("GET", key);
     return cached || null;
-  } catch { return localCache.get(textHash) || null; }
+  } catch { return localCache.get(key) || null; }
 }
 
-async function setCachedEvaluation(textHash, data) {
+async function setCachedEvaluation(text, data, keyFn = evalCacheKey, kind = "evaluation") {
+  const key = keyFn(text);
+  const payload = (data && typeof data === "object" && !Array.isArray(data))
+    ? { ...data, kind } : data;
   try {
-    await redisCmd("SET", "eval:" + textHash, JSON.stringify(data), "EX", "86400");
-    localCache.set(textHash, data);
-  } catch { localCache.set(textHash, data); }
+    await redisCmd("SET", key, JSON.stringify(payload), "EX", "86400");
+    localCache.set(key, payload);
+  } catch { localCache.set(key, payload); }
 }
 
 async function getClaimFingerprint(claimHash) {
@@ -4282,8 +4358,7 @@ app.post("/evaluate", async (req, res) => {
     text = text.slice(0, 4000);
 
     // ── CLAIM FINGERPRINT: Check cache first ──
-    const textHash = Buffer.from(text).toString("base64").slice(0, 32);
-    const cached = await getCachedEvaluation(textHash);
+    const cached = await getCachedEvaluation(text);
     if (cached) {
       const cachedData = typeof cached === "string" ? JSON.parse(cached) : cached;
       cachedData.meta.cache_hit = true;
@@ -4742,9 +4817,9 @@ app.post("/evaluate", async (req, res) => {
         await Promise.race([
           (async () => {
             await Promise.all([
-              setCachedEvaluation(textHash, response),
+              setCachedEvaluation(text, response, evalCacheKey, "evaluation"),
               ...mergedClaims.map(async (c) => {
-                const claimHash = Buffer.from(c.claim.toLowerCase().trim()).toString("base64").slice(0, 24);
+                const claimHash = cacheDigest(c.claim);
                 const existing = await getClaimFingerprint(claimHash);
                 await setClaimFingerprint(claimHash, { verdict: c.verdict, confidence: c.confidence, last_verified: new Date().toISOString(), times_seen: (existing?.times_seen || 0) + 1 });
               })
@@ -4813,9 +4888,7 @@ app.post("/verify-gate", express.json(), async (req, res) => {
     const text = typeof content === "object" ? JSON.stringify(content) : content;
     // Run evaluation
     const startTime = Date.now();
-    const { createHash } = await import("crypto");
-    const textHash = createHash("sha256").update(text).digest("hex").slice(0, 16);
-    const cached = await getCachedEvaluation(textHash);
+    const cached = await getCachedEvaluation(text, gateCacheKey);
     let evalResult;
     if (cached) {
       evalResult = cached;
@@ -4829,13 +4902,21 @@ app.post("/verify-gate", express.json(), async (req, res) => {
       }, { headers: { Authorization: `Bearer ${PERPLEXITY_KEY}` }, timeout: 10000 });
       const sonarText = sonarRes.data.choices?.[0]?.message?.content || "";
       const combined = `Sonar verification: ${sonarText}`;
-      const supportedCount = (combined.match(/supported|confirmed|accurate|true|correct/gi) || []).length;
-      const refutedCount = (combined.match(/refuted|false|incorrect|inaccurate|disproven/gi) || []).length;
-      const totalSignals = supportedCount + refutedCount || 1;
-      const confidence = parseFloat((supportedCount / totalSignals).toFixed(2));
-      const recommendation = confidence >= 0.8 ? "act" : confidence >= 0.5 ? "verify" : "reject";
-      evalResult = { overall_confidence: confidence, recommendation, verification_sources: 1, adversarial_pass: true };
-      try { await cacheEvaluation(textHash, evalResult); } catch {}
+      const scored = scoreVerificationText(sonarText);
+      evalResult = {
+        overall_confidence: scored.confidence,
+        recommendation: scored.recommendation,
+        signal_state: scored.state,
+        supported_signals: scored.supported,
+        refuted_signals: scored.refuted,
+        // Real count of sources consulted. Single-source by design; say so.
+        verification_sources: 1,
+        // No adversarial pass runs on this route. Never assert a check that
+        // did not happen.
+        adversarial_pass: null,
+        adversarial_checked: false,
+      };
+      try { await setCachedEvaluation(text, evalResult, gateCacheKey, "gate"); } catch {}
     }
     const confidence = evalResult.overall_confidence ?? 0;
     const pass = confidence >= min_confidence;
@@ -4846,8 +4927,10 @@ app.post("/verify-gate", express.json(), async (req, res) => {
       confidence,
       min_confidence_required: min_confidence,
       recommendation: evalResult.recommendation,
-      verification_sources: evalResult.verification_sources || 2,
-      adversarial_pass: evalResult.adversarial_pass ?? true,
+      verification_sources: evalResult.verification_sources ?? 1,
+      adversarial_pass: evalResult.adversarial_pass ?? null,
+      adversarial_checked: evalResult.adversarial_checked ?? false,
+      signal_state: evalResult.signal_state ?? "unknown",
       latency_ms: latency,
       usage: "Embed trust verification into any API. POST content, get pass/fail with confidence score.",
       sdk: "pip install agentoracle-receipt-verify — createVerificationGate() middleware for Express",
