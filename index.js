@@ -4278,15 +4278,51 @@ async function setCachedEvaluation(text, data, keyFn = evalCacheKey, kind = "eva
   } catch { localCache.set(key, payload); }
 }
 
+// Fingerprint keys are deliberately NOT provider-scoped, unlike eval:/gate:.
+// A claim's identity is a property of the claim, not of the model that judged it,
+// and times_seen counts how often the claim has been ENCOUNTERED across the whole
+// corpus — fragmenting that per provider would destroy the accumulated signal the
+// store exists to hold. Cross-provider agreement is stronger evidence, not weaker.
+// The verdict, however, IS provider-dependent, so the provider is recorded INSIDE
+// the value next to the verdict. Key: provider-independent. Verdict: attributed.
+// This asymmetry is intentional; do not "fix" it to match the cache namespaces.
+//
+// Returns a discriminated result so a miss and a failure cannot be confused:
+//   { status: "hit",   value: <parsed object> }
+//   { status: "miss",  value: null }
+//   { status: "error", value: null, error: <message> }
+// JSON parsing happens HERE. Callers previously read properties off the raw JSON
+// string, which silently yielded undefined.
 async function getClaimFingerprint(claimHash) {
+  let raw;
   try {
-    const fp = await redisCmd("GET", "claim:" + claimHash);
-    return fp || null;
-  } catch { return null; }
+    raw = await redisCmd("GET", "claim:" + claimHash);
+  } catch (err) {
+    console.warn(`[FINGERPRINT] read failed for ${claimHash}: ${err && err.message}`);
+    return { status: "error", value: null, error: String(err && err.message || err) };
+  }
+  if (raw === null || raw === undefined || raw === "") return { status: "miss", value: null };
+  if (typeof raw === "object") return { status: "hit", value: raw };
+  try {
+    return { status: "hit", value: JSON.parse(raw) };
+  } catch (err) {
+    // Unparseable stored value: treat as an unrecognised shape, i.e. a miss, so
+    // the caller recomputes rather than degrading on a value it cannot read.
+    console.warn(`[FINGERPRINT] unparseable value for ${claimHash}; treating as miss`);
+    return { status: "miss", value: null };
+  }
 }
 
 async function setClaimFingerprint(claimHash, data) {
-  try { await redisCmd("SET", "claim:" + claimHash, JSON.stringify(data)); } catch {}
+  try {
+    await redisCmd("SET", "claim:" + claimHash, JSON.stringify(data));
+    return { status: "ok" };
+  } catch (err) {
+    // Was a bare catch {}. A silent write failure made a lost fingerprint
+    // indistinguishable from code that never ran.
+    console.warn(`[FINGERPRINT] write failed for ${claimHash}: ${err && err.message}`);
+    return { status: "error", error: String(err && err.message || err) };
+  }
 }
 
 async function getSourceRep(domain) {
@@ -4820,8 +4856,23 @@ app.post("/evaluate", async (req, res) => {
               setCachedEvaluation(text, response, evalCacheKey, "evaluation"),
               ...mergedClaims.map(async (c) => {
                 const claimHash = cacheDigest(c.claim);
-                const existing = await getClaimFingerprint(claimHash);
-                await setClaimFingerprint(claimHash, { verdict: c.verdict, confidence: c.confidence, last_verified: new Date().toISOString(), times_seen: (existing?.times_seen || 0) + 1 });
+                const prior = await getClaimFingerprint(claimHash);
+                if (prior.status === "error") {
+                  // Fail closed. Writing here would overwrite real history with 1.
+                  console.warn(`[FINGERPRINT] skipping update for ${claimHash}: read failed`);
+                  return;
+                }
+                await setClaimFingerprint(claimHash, {
+                  kind: "claim_fingerprint",
+                  shape_version: 1,
+                  verdict: c.verdict,
+                  confidence: c.confidence,
+                  // Provider recorded WITH the verdict; the key stays provider-independent.
+                  verdict_provider: CACHE_PROVIDER,
+                  first_seen: prior.value?.first_seen || new Date().toISOString(),
+                  last_verified: new Date().toISOString(),
+                  times_seen: (prior.value?.times_seen || 0) + 1,
+                });
               })
             ]);
           })(),
