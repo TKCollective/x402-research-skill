@@ -4260,22 +4260,74 @@ async function trackRequest(req, endpoint) {
   } catch {} // fire-and-forget, never block the response
 }
 
-async function getCachedEvaluation(text, keyFn = evalCacheKey) {
+// ── eval / gate cache shape validation ─────────────────────────────────────
+// Namespace covers space (route separation). Version covers time (schema drift).
+// Both are enforced on read. A value that the caller does not understand is a
+// MISS, not a degraded read. This closes the 71ms signal_state:"unknown" gap
+// where a pre-⑨-shape value reached the reader and was rendered unchecked.
+const CACHE_SHAPE_VERSIONS = { evaluation: 1, gate: 1 };
+
+function safeParseCached(raw) {
+  if (raw === null || raw === undefined || raw === "") return null;
+  if (typeof raw === "object") return raw;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+function cacheShapeMatches(value, expectedKind) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  if (value.kind !== expectedKind) return false;
+  const wanted = CACHE_SHAPE_VERSIONS[expectedKind];
+  if (typeof wanted !== "number") return false;
+  return value.shape_version === wanted;
+}
+
+// Read the cache. Returns a discriminated result so a miss and a failure cannot
+// be confused, and an unrecognised shape is a miss so the caller recomputes.
+//
+//   { status: "hit",   value: <parsed object of expectedKind> }
+//   { status: "miss",  value: null }
+//   { status: "error", value: null, error: <message> }
+async function getCachedEvaluation(text, keyFn = evalCacheKey, expectedKind = "evaluation") {
   const key = keyFn(text);
+  let raw, source = "redis";
   try {
-    const cached = await redisCmd("GET", key);
-    return cached || null;
-  } catch { return localCache.get(key) || null; }
+    raw = await redisCmd("GET", key);
+  } catch (err) {
+    console.warn(`[CACHE] read failed key=${key}: ${err && err.message}`);
+    // Fall back to local cache, but do NOT collapse that fallback into the
+    // same value shape as a Redis outage — a local hit is still a hit.
+    raw = localCache.get(key); source = "local";
+    if (raw === undefined || raw === null) {
+      return { status: "error", value: null, error: String(err && err.message || err) };
+    }
+  }
+  const parsed = safeParseCached(raw);
+  if (parsed === null) return { status: "miss", value: null };
+  if (!cacheShapeMatches(parsed, expectedKind)) {
+    console.warn(`[CACHE] shape mismatch key=${key} kind=${parsed.kind} version=${parsed.shape_version} expected=${expectedKind}/${CACHE_SHAPE_VERSIONS[expectedKind]} — treating as miss`);
+    return { status: "miss", value: null };
+  }
+  return { status: "hit", value: parsed, source };
 }
 
 async function setCachedEvaluation(text, data, keyFn = evalCacheKey, kind = "evaluation") {
   const key = keyFn(text);
+  const shape_version = CACHE_SHAPE_VERSIONS[kind];
+  if (typeof shape_version !== "number") {
+    console.warn(`[CACHE] refusing to write unknown kind=${kind} for key=${key}`);
+    return { status: "error", error: "unknown_kind" };
+  }
   const payload = (data && typeof data === "object" && !Array.isArray(data))
-    ? { ...data, kind } : data;
+    ? { ...data, kind, shape_version } : data;
   try {
     await redisCmd("SET", key, JSON.stringify(payload), "EX", "86400");
     localCache.set(key, payload);
-  } catch { localCache.set(key, payload); }
+    return { status: "ok" };
+  } catch (err) {
+    console.warn(`[CACHE] write failed key=${key}: ${err && err.message}`);
+    localCache.set(key, payload);
+    return { status: "ok", degraded: "local_only", error: String(err && err.message || err) };
+  }
 }
 
 // Fingerprint keys are deliberately NOT provider-scoped, unlike eval:/gate:.
@@ -4394,13 +4446,18 @@ app.post("/evaluate", async (req, res) => {
     text = text.slice(0, 4000);
 
     // ── CLAIM FINGERPRINT: Check cache first ──
-    const cached = await getCachedEvaluation(text);
-    if (cached) {
-      const cachedData = typeof cached === "string" ? JSON.parse(cached) : cached;
+    const prior = await getCachedEvaluation(text, evalCacheKey, "evaluation");
+    if (prior.status === "hit") {
+      const cachedData = prior.value;
+      // .meta is now guaranteed by cacheShapeMatches — an evaluation payload
+      // that lacked it would have read as a miss.
+      cachedData.meta = cachedData.meta || {};
       cachedData.meta.cache_hit = true;
       cachedData.meta.evaluation_time_ms = Date.now() - startTime;
       return res.json(cachedData);
     }
+    // status === "miss" (including unrecognised shape) or "error": fall through
+    // to a fresh evaluation. An outage is not served stale.
 
     // ── TIERED VERIFICATION (cost-optimized) ──
     // Tier 1: Single source (Sonar) — handles clear true/false claims
@@ -4939,10 +4996,10 @@ app.post("/verify-gate", express.json(), async (req, res) => {
     const text = typeof content === "object" ? JSON.stringify(content) : content;
     // Run evaluation
     const startTime = Date.now();
-    const cached = await getCachedEvaluation(text, gateCacheKey);
+    const cached = await getCachedEvaluation(text, gateCacheKey, "gate");
     let evalResult;
-    if (cached) {
-      evalResult = cached;
+    if (cached.status === "hit") {
+      evalResult = cached.value;
     } else {
       // Single-source verification for free tier (fast — Sonar only)
       const sonarRes = await axios.post("https://api.perplexity.ai/chat/completions", {
