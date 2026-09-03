@@ -191,26 +191,70 @@ const INFERENCE_PROVIDER = process.env.INFERENCE_PROVIDER || "sonar";
 const AGENT_URL = "https://api.perplexity.ai/v1/agent";
 const SONAR_URL = "https://api.perplexity.ai/chat/completions";
 
-function _logUsage(label, resp) {
+function _logUsage(label, resp, provider) {
   try {
     const u = resp && resp.data && resp.data.usage;
     if (!u) return;
     const cost = (u.cost && (u.cost.total ?? u.cost.total_cost)) ?? u.cost ?? null;
-    console.log(`[INFERENCE] ${label} provider=${INFERENCE_PROVIDER} ` +
+    // provider is the ACTUAL branch used for this call, not the env default —
+    // under per-call override the two differ, and ③ metering must attribute
+    // cost to the branch that ran or the flip's cost picture is wrong.
+    console.log(`[INFERENCE] ${label} provider=${provider} ` +
       `model=${(resp.data.model || "unknown")} cost=${cost === null ? "n/a" : cost} ` +
       `in=${u.prompt_tokens ?? u.input_tokens ?? "?"} out=${u.completion_tokens ?? u.output_tokens ?? "?"}`);
   } catch {}
 }
 
-// Preserve the shape callers already consume: choices[0].message.content and
-// data.model. Under agent, hoist output_text into the same slot.
+// Preserve the shape callers already consume: choices[0].message.content.
+//
+// Under agent, hoist wherever the content actually is into that slot. If it
+// isn't at any of the known locations, THROW. An empty-string fallback
+// propagates into scored verdicts (⑨'s scorer will score empty as PASS, which
+// is the canned-verdicts shape arriving through the migration). Throwing
+// stops at the route boundary before anything gets cached.
+//
+// Known content locations, empirically unverified at time of writing:
+//   d.output_text                        (Perplexity Agent docs)
+//   d.output[0].content                  (per-message shape)
+//   d.output[0].text                     (alt per-message shape)
+//   d.choices[0].message.content         (sonar-shape passthrough — accept it
+//                                         only if actually populated)
+// If bytes land elsewhere the throw surfaces the exact response body for
+// triage. The passthrough is an EXPLICIT check (not the shipped
+// d.choices ||= [...] short-circuit) because a malformed d.choices that
+// exists but is empty would silently satisfy the ||= guard and produce
+// undefined content at callers — same failure mode as the "" fallback via
+// a different route.
+class AgentResponseShapeError extends Error {
+  constructor(msg, body) {
+    super(msg);
+    this.name = "AgentResponseShapeError";
+    // Truncate body to keep logs readable but preserve enough to see the shape.
+    this.responseBody = body;
+    try { this.responseBodyPreview = JSON.stringify(body).slice(0, 800); } catch {}
+  }
+}
 function _normalizeAgentResponse(resp) {
   const d = resp && resp.data;
-  if (!d) return resp;
-  const content = d.output_text
-    ?? (Array.isArray(d.output) && d.output[0] && (d.output[0].content ?? d.output[0].text))
-    ?? "";
-  d.choices = d.choices || [{ message: { role: "assistant", content } }];
+  if (!d) throw new AgentResponseShapeError("agent response has no data field", resp);
+  // Sonar-shape passthrough — accept only if content is actually populated.
+  if (typeof d.choices?.[0]?.message?.content === "string" && d.choices[0].message.content.length > 0) return resp;
+  let content;
+  if (typeof d.output_text === "string") content = d.output_text;
+  else if (Array.isArray(d.output) && d.output[0]) {
+    const o = d.output[0];
+    if (typeof o.content === "string") content = o.content;
+    else if (typeof o.text === "string") content = o.text;
+  }
+  if (content === undefined || content === "") {
+    throw new AgentResponseShapeError(
+      "agent response content not at output_text / output[0].content / output[0].text — " +
+      "not falling back to empty string (poisons ⑨). Body preview: " +
+      (() => { try { return JSON.stringify(d).slice(0, 400); } catch { return "<unserializable>"; } })(),
+      d
+    );
+  }
+  d.choices = [{ message: { role: "assistant", content } }];
   return resp;
 }
 
@@ -244,24 +288,37 @@ function _sonarToAgent(body) {
 
 async function inferencePost(sonarBody, opts = {}) {
   const label = opts.label || "inference";
-  if (INFERENCE_PROVIDER === "sonar") {
+  // Per-call override wins over the global env default. This enables staged
+  // rollout — /free flipped to agent while every other route stays on sonar
+  // is one call-site change, not a redeploy. Absent an override, the env var
+  // is used. Absent both, sonar is the default.
+  //
+  // INVARIANT for callers during staged rollout: any call site that passes
+  // opts.provider MUST also gate its own cache read and write on the
+  // effective provider — CACHE_PROVIDER (line 140) is keyed off the env var,
+  // and a route being smoke-tested on a new backend must not seed a shared
+  // cache namespace other routes will read. The adapter contains no cache
+  // code; enforcement lives at the call site. See separate call-site cache
+  // sweep for /verify-gate and /evaluate.
+  const provider = opts.provider || INFERENCE_PROVIDER;
+  if (provider === "sonar") {
     const resp = await axios.post(SONAR_URL, sonarBody, {
       headers: { Authorization: `Bearer ${PERPLEXITY_KEY}` },
       timeout: opts.timeout ?? 30000,
     });
-    _logUsage(label, resp);
+    _logUsage(label, resp, provider);
     return resp;
   }
-  if (INFERENCE_PROVIDER === "agent") {
+  if (provider === "agent") {
     const agentBody = _sonarToAgent(sonarBody);
     const resp = await axios.post(AGENT_URL, agentBody, {
       headers: { Authorization: `Bearer ${PERPLEXITY_KEY}` },
       timeout: opts.timeout ?? 30000,
     });
-    _logUsage(label, resp);
+    _logUsage(label, resp, provider);
     return _normalizeAgentResponse(resp);
   }
-  throw new Error(`unknown INFERENCE_PROVIDER=${INFERENCE_PROVIDER}`);
+  throw new Error(`unknown provider=${provider} (env INFERENCE_PROVIDER=${INFERENCE_PROVIDER}, opts.provider=${opts.provider})`);
 }
 
 const FACILITATOR_URL =
