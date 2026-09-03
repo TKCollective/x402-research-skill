@@ -173,6 +173,97 @@ process.on("unhandledRejection", (reason) => {
 const PORT = parseInt(process.env.SERVER_PORT, 10) || 3000;
 const PAY_TO = process.env.PAY_TO_ADDRESS;
 const PERPLEXITY_KEY = process.env.PERPLEXITY_API_KEY;
+
+// ── inference adapter (①a) ─────────────────────────────────────────────────
+// One place: switchable Sonar/Agent, meters usage.cost, preserves the
+// choices[0].message.content shape callers already consume.
+//
+// Providers:
+//   sonar  (default)  POST https://api.perplexity.ai/chat/completions  (retires 2026-09-27)
+//   agent             POST https://api.perplexity.ai/v1/agent           (frozen-config)
+//
+// Frozen-config technique (empirically confirmed 2026-09-02):
+//   omit preset, pass model explicitly. tools_disabled is documented but
+//   returns HTTP 400 as unknown field, so it is not passed. No preset means
+//   no server-side search invoked without an explicit tool call, which is
+//   also what recomputability requires.
+const INFERENCE_PROVIDER = process.env.INFERENCE_PROVIDER || "sonar";
+const AGENT_URL = "https://api.perplexity.ai/v1/agent";
+const SONAR_URL = "https://api.perplexity.ai/chat/completions";
+
+function _logUsage(label, resp) {
+  try {
+    const u = resp && resp.data && resp.data.usage;
+    if (!u) return;
+    const cost = (u.cost && (u.cost.total ?? u.cost.total_cost)) ?? u.cost ?? null;
+    console.log(`[INFERENCE] ${label} provider=${INFERENCE_PROVIDER} ` +
+      `model=${(resp.data.model || "unknown")} cost=${cost === null ? "n/a" : cost} ` +
+      `in=${u.prompt_tokens ?? u.input_tokens ?? "?"} out=${u.completion_tokens ?? u.output_tokens ?? "?"}`);
+  } catch {}
+}
+
+// Preserve the shape callers already consume: choices[0].message.content and
+// data.model. Under agent, hoist output_text into the same slot.
+function _normalizeAgentResponse(resp) {
+  const d = resp && resp.data;
+  if (!d) return resp;
+  const content = d.output_text
+    ?? (Array.isArray(d.output) && d.output[0] && (d.output[0].content ?? d.output[0].text))
+    ?? "";
+  d.choices = d.choices || [{ message: { role: "assistant", content } }];
+  return resp;
+}
+
+// Sonar-shape body of the form { model, messages, temperature, max_tokens }
+// becomes an Agent request. A single leading system message is hoisted into
+// the instructions field; remaining messages are joined with two newlines as
+// the input.
+function _sonarToAgent(body) {
+  const messages = Array.isArray(body.messages) ? body.messages : [];
+  let instructions;
+  let userParts = [];
+  for (const m of messages) {
+    if (!m || typeof m !== "object") continue;
+    if (m.role === "system" && instructions === undefined) instructions = String(m.content || "");
+    else userParts.push(String(m.content || ""));
+  }
+  const out = { model: body.model, input: userParts.join("\n\n") };
+  if (instructions !== undefined) out.instructions = instructions;
+  // Forward temperature and max_tokens at top-level. Empirically unverified —
+  // Agent may honour, ignore, or reject as unknown. Site 5005 (/verify-gate)
+  // is the only caller passing temperature (0.1, to make scorer regex more
+  // reliable) and max_tokens (400, cost cap). Risk asymmetry favours
+  // forwarding: if Agent ignores, behaviour matches current (dropped-anyway);
+  // if Agent honours, verify-gate keeps its cap; if Agent rejects as unknown,
+  // cutover surfaces a 400 that ③ metering will make visible before any
+  // silent bill spike. See tools_disabled for the same empirical discipline.
+  if (body.temperature !== undefined) out.temperature = body.temperature;
+  if (body.max_tokens !== undefined) out.max_tokens = body.max_tokens;
+  return out;
+}
+
+async function inferencePost(sonarBody, opts = {}) {
+  const label = opts.label || "inference";
+  if (INFERENCE_PROVIDER === "sonar") {
+    const resp = await axios.post(SONAR_URL, sonarBody, {
+      headers: { Authorization: `Bearer ${PERPLEXITY_KEY}` },
+      timeout: opts.timeout ?? 30000,
+    });
+    _logUsage(label, resp);
+    return resp;
+  }
+  if (INFERENCE_PROVIDER === "agent") {
+    const agentBody = _sonarToAgent(sonarBody);
+    const resp = await axios.post(AGENT_URL, agentBody, {
+      headers: { Authorization: `Bearer ${PERPLEXITY_KEY}` },
+      timeout: opts.timeout ?? 30000,
+    });
+    _logUsage(label, resp);
+    return _normalizeAgentResponse(resp);
+  }
+  throw new Error(`unknown INFERENCE_PROVIDER=${INFERENCE_PROVIDER}`);
+}
+
 const FACILITATOR_URL =
   process.env.FACILITATOR_URL ||
   "https://facilitator.xpay.sh";
@@ -2037,8 +2128,7 @@ app.post("/preview", async (req, res) => {
       return res.json({ ...cachedPreview.data, cached: true, preview_remaining: Math.max(0, PREVIEW_RATE_LIMIT - pEntry.count), preview_limit: `${PREVIEW_RATE_LIMIT}/hour per IP (approximate — serverless instances may vary)` });
     }
 
-    const perplexityResponse = await axios.post(
-      "https://api.perplexity.ai/chat/completions",
+    const perplexityResponse = await inferencePost(
       {
         model: PERPLEXITY_MODEL,
         stream: false,
@@ -2058,11 +2148,6 @@ app.post("/preview", async (req, res) => {
         ],
       },
       {
-        headers: {
-          Authorization: `Bearer ${PERPLEXITY_KEY}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
         timeout: 15000,
       }
     );
@@ -3077,8 +3162,7 @@ app.post("/research", async (req, res) => {
         '"sources": array, "confidence_score": number }. ' +
         "Keep concise, accurate, real-time.";
 
-    const perplexityResponse = await axios.post(
-      "https://api.perplexity.ai/chat/completions",
+    const perplexityResponse = await inferencePost(
       {
         model: selectedModel,
         stream: false,
@@ -3089,11 +3173,6 @@ app.post("/research", async (req, res) => {
         ],
       },
       {
-        headers: {
-          Authorization: `Bearer ${PERPLEXITY_KEY}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
         timeout: useDeep ? 60000 : 30000,
       }
     );
@@ -3292,11 +3371,10 @@ app.post("/research/batch", async (req, res) => {
     }
 
     try {
-      const pResp = await axios.post("https://api.perplexity.ai/chat/completions", {
+      const pResp = await inferencePost({
         model: selectedModel, stream: false, max_tokens: maxLen,
         messages: [{ role: "system", content: systemPrompt }, { role: "user", content: trimmed }],
       }, {
-        headers: { Authorization: `Bearer ${PERPLEXITY_KEY}`, "Content-Type": "application/json", Accept: "application/json" },
         timeout: useDeep ? 60000 : 30000,
       });
 
@@ -3399,8 +3477,7 @@ app.post("/free", async (req, res) => {
   const requestStartTime = Date.now();
 
   try {
-    const perplexityResponse = await axios.post(
-      "https://api.perplexity.ai/chat/completions",
+    const perplexityResponse = await inferencePost(
       {
         model: PERPLEXITY_MODEL,
         stream: false,
@@ -3417,11 +3494,6 @@ app.post("/free", async (req, res) => {
         ],
       },
       {
-        headers: {
-          Authorization: `Bearer ${PERPLEXITY_KEY}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
         timeout: 30000,
       }
     );
@@ -3584,8 +3656,7 @@ app.post("/defi", async (req, res) => {
   }
 
   try {
-    const perplexityResponse = await axios.post(
-      "https://api.perplexity.ai/chat/completions",
+    const perplexityResponse = await inferencePost(
       {
         model: PERPLEXITY_MODEL,
         stream: false,
@@ -3608,11 +3679,6 @@ app.post("/defi", async (req, res) => {
         ],
       },
       {
-        headers: {
-          Authorization: `Bearer ${PERPLEXITY_KEY}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
         timeout: 30000,
       }
     );
@@ -3965,8 +4031,7 @@ app.post(["/deep-research", "/deep-research/skale"], async (req, res) => {
   const requestStartTime = Date.now();
 
   try {
-    const perplexityResponse = await axios.post(
-      "https://api.perplexity.ai/chat/completions",
+    const perplexityResponse = await inferencePost(
       {
         model: PERPLEXITY_MODEL_PRO,
         stream: false,
@@ -3987,11 +4052,6 @@ app.post(["/deep-research", "/deep-research/skale"], async (req, res) => {
         ],
       },
       {
-        headers: {
-          Authorization: `Bearer ${PERPLEXITY_KEY}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
         timeout: 60000,
       }
     );
@@ -4499,15 +4559,15 @@ app.post("/evaluate", async (req, res) => {
     const EVAL_BUDGET_MS = parseInt(process.env.EVAL_BUDGET_MS || "20000", 10);
     const evalStart = startTime;
     const sources = [
-      axios.post("https://api.perplexity.ai/chat/completions",
+      inferencePost(
         {model:PERPLEXITY_MODEL,stream:false,max_tokens:3000,messages:[{role:"system",content:verifyPrompt},{role:"user",content:text}]},
-        {headers:{Authorization:`Bearer ${PERPLEXITY_KEY}`,"Content-Type":"application/json"},timeout:30000}),
-      axios.post("https://api.perplexity.ai/chat/completions",
+        {timeout:30000}),
+      inferencePost(
         {model:PERPLEXITY_MODEL_PRO,stream:false,max_tokens:3000,messages:[{role:"system",content:verifyPrompt},{role:"user",content:text}]},
-        {headers:{Authorization:`Bearer ${PERPLEXITY_KEY}`,"Content-Type":"application/json"},timeout:45000}),
-      axios.post("https://api.perplexity.ai/chat/completions",
+        {timeout:45000}),
+      inferencePost(
         {model:PERPLEXITY_MODEL,stream:false,max_tokens:2000,messages:[{role:"system",content:adversarialPrompt},{role:"user",content:text}]},
-        {headers:{Authorization:`Bearer ${PERPLEXITY_KEY}`,"Content-Type":"application/json"},timeout:30000}),
+        {timeout:30000}),
       GEMMA_KEY ? gemmaVerify(decomposedClaims || text) : Promise.resolve(null),
     ];
     const labels = ["sonar", "sonar-pro", "adversarial", "gemma"];
@@ -5002,12 +5062,12 @@ app.post("/verify-gate", express.json(), async (req, res) => {
       evalResult = cached.value;
     } else {
       // Single-source verification for free tier (fast — Sonar only)
-      const sonarRes = await axios.post("https://api.perplexity.ai/chat/completions", {
+      const sonarRes = await inferencePost({
         model: PERPLEXITY_MODEL,
         messages: [{ role: "user", content: `Verify these claims. For each claim, state if it is supported, refuted, or uncertain. Cite sources.\n\n${text}` }],
         temperature: 0.1,
         max_tokens: 400,
-      }, { headers: { Authorization: `Bearer ${PERPLEXITY_KEY}` }, timeout: 10000 });
+      }, { timeout: 10000 });
       const sonarText = sonarRes.data.choices?.[0]?.message?.content || "";
       const combined = `Sonar verification: ${sonarText}`;
       const scored = scoreVerificationText(sonarText);
