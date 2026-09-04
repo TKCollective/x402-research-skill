@@ -188,6 +188,24 @@ const PERPLEXITY_KEY = process.env.PERPLEXITY_API_KEY;
 //   no server-side search invoked without an explicit tool call, which is
 //   also what recomputability requires.
 const INFERENCE_PROVIDER = process.env.INFERENCE_PROVIDER || "sonar";
+// Deployment default for cache namespacing. Same value the adapter defaults
+// to; named separately because the cache gates compare against it.
+const DEFAULT_PROVIDER = process.env.INFERENCE_PROVIDER || "sonar";
+
+// Per-route flip control for the staged Sonar->Agent rollout.
+// Set to "agent" during that route's flip window; leave undefined otherwise.
+//
+// NOT CALLER-REACHABLE BY DESIGN. Deliberately not read from req.body,
+// req.query, or headers. /verify-gate is free and unauthenticated: a
+// caller-settable provider would let any caller force agent traffic and skip
+// the cache on every request, which is an unauthenticated cost lever on a
+// fixed-price route.
+//
+// The fetch call and the read gate for each route both derive from the single
+// constant below, so they cannot drift out of agreement. Flipping a route is
+// one word here; reverting is one word back.
+const ROUTE_PROVIDER_EVALUATE = undefined;
+const ROUTE_PROVIDER_VERIFY_GATE = undefined;
 const AGENT_URL = "https://api.perplexity.ai/v1/agent";
 const SONAR_URL = "https://api.perplexity.ai/chat/completions";
 
@@ -4563,7 +4581,24 @@ app.post("/evaluate", async (req, res) => {
     text = text.slice(0, 4000);
 
     // ── CLAIM FINGERPRINT: Check cache first ──
-    const prior = await getCachedEvaluation(text, evalCacheKey, "evaluation");
+    // READ GATE ON RESOLVED INTENT, not resp.provider. This runs BEFORE any
+    // inferencePost call, so no fetch value exists yet. The write gate below
+    // uses resp.provider instead, because by then the fetch has happened.
+    // The asymmetry is deliberate: both directions preserve the same
+    // invariant (cache namespace = provider that produced the entry) by
+    // reading what is visible at their own point in time. Do not "fix" this
+    // into consistency. See standing_rules/
+    // provider_is_a_property_of_the_fetch_not_the_intent.md (precondition).
+    //
+    // ROUTE_PROVIDER_EVALUATE is a module constant, never caller-supplied.
+    // Under a route flip the read is skipped and `prior` is a synthetic miss,
+    // so control falls through to a fresh evaluation exactly as a real miss
+    // would. A route being smoke-tested against a backend we have never seen
+    // respond must not consult entries in the default namespace, nor seed them.
+    const resolvedProvider = ROUTE_PROVIDER_EVALUATE ?? DEFAULT_PROVIDER;
+    const prior = resolvedProvider === DEFAULT_PROVIDER
+      ? await getCachedEvaluation(text, evalCacheKey, "evaluation")
+      : { status: "miss" };
     if (prior.status === "hit") {
       const cachedData = prior.value;
       // .meta is now guaranteed by cacheShapeMatches — an evaluation payload
@@ -4618,13 +4653,13 @@ app.post("/evaluate", async (req, res) => {
     const sources = [
       inferencePost(
         {model:PERPLEXITY_MODEL,stream:false,max_tokens:3000,messages:[{role:"system",content:verifyPrompt},{role:"user",content:text}]},
-        {timeout:30000}),
+        {timeout:30000, label:"evaluate:primary", provider:ROUTE_PROVIDER_EVALUATE}),
       inferencePost(
         {model:PERPLEXITY_MODEL_PRO,stream:false,max_tokens:3000,messages:[{role:"system",content:verifyPrompt},{role:"user",content:text}]},
-        {timeout:45000}),
+        {timeout:45000, label:"evaluate:corroboration", provider:ROUTE_PROVIDER_EVALUATE}),
       inferencePost(
         {model:PERPLEXITY_MODEL,stream:false,max_tokens:2000,messages:[{role:"system",content:adversarialPrompt},{role:"user",content:text}]},
-        {timeout:30000}),
+        {timeout:30000, label:"evaluate:adversarial", provider:ROUTE_PROVIDER_EVALUATE}),
       GEMMA_KEY ? gemmaVerify(decomposedClaims || text) : Promise.resolve(null),
     ];
     const labels = ["sonar", "sonar-pro", "adversarial", "gemma"];
@@ -5022,12 +5057,41 @@ app.post("/evaluate", async (req, res) => {
         `receipt=${response.meta.receipt_status})`
       );
     }
+    // Provider values derived from the FETCH, not from env. settled[0..2] are
+    // the three inferencePost results; settled[3] is gemmaVerify and has no
+    // .provider, so the slice is explicit rather than a whole-array .every().
+    //
+    // Fail-closed on both: a null slot (timeout, upstream 5xx, normalizer
+    // throw) is a non-match for eligibility, consistent with fullyEvaluated
+    // already gating this block against partial evaluations.
+    const fetchedProviders = [settled[0], settled[1], settled[2]]
+      .filter(r => r != null)
+      .map(r => r.provider);
+    const distinctProviders = [...new Set(fetchedProviders)];
+    const evalCacheEligible =
+      settled[0]?.provider === DEFAULT_PROVIDER &&
+      settled[1]?.provider === DEFAULT_PROVIDER &&
+      settled[2]?.provider === DEFAULT_PROVIDER;
+    // verdict_provider records WHAT ACTUALLY JUDGED the claim. Reading
+    // CACHE_PROVIDER (env-derived) here would record the deployment default
+    // even when a route override sent the work elsewhere -- the intent-versus-
+    // fetch error in the one field whose purpose is recording the fetch.
+    // See standing_rules/provider_is_a_property_of_the_fetch_not_the_intent.md
+    // null when the non-null slots disagree: a single string cannot honestly
+    // represent a divergent set, and guessing one would be worse than absent.
+    const verdictProvider = distinctProviders.length === 1 ? distinctProviders[0] : null;
     if (persistBudget >= 500 && fullyEvaluated) {
       try {
         await Promise.race([
           (async () => {
             await Promise.all([
-              setCachedEvaluation(text, response, evalCacheKey, "evaluation"),
+              // Eval cache write is provider-scoped and conditional. The
+              // fingerprint writes below are NOT -- a claim's identity is a
+              // property of the claim, not of the provider that adjudicated
+              // it, so they must keep accumulating across the flip window.
+              ...(evalCacheEligible
+                ? [setCachedEvaluation(text, response, evalCacheKey, "evaluation")]
+                : []),
               ...mergedClaims.map(async (c) => {
                 const claimHash = cacheDigest(c.claim);
                 const prior = await getClaimFingerprint(claimHash);
@@ -5038,11 +5102,21 @@ app.post("/evaluate", async (req, res) => {
                 }
                 await setClaimFingerprint(claimHash, {
                   kind: "claim_fingerprint",
-                  shape_version: 1,
+                  // shape_version 2: verdict_provider widened to string | null.
+                  // null is a SPECIFIC STATE, not an absence -- it means the
+                  // non-null sources reported DIVERGENT providers. A reader
+                  // must be able to distinguish that from "unknown", the same
+                  // way not_evaluated is distinguishable from unverifiable.
+                  shape_version: 2,
                   verdict: c.verdict,
                   confidence: c.confidence,
                   // Provider recorded WITH the verdict; the key stays provider-independent.
-                  verdict_provider: CACHE_PROVIDER,
+                  // Derived from the FETCHED results, not from CACHE_PROVIDER
+                  // (env). Under a route override, CACHE_PROVIDER would record
+                  // the deployment default as the provider that produced this
+                  // verdict -- wrong in the one field whose entire purpose is
+                  // recording what actually judged the claim.
+                  verdict_provider: verdictProvider,
                   first_seen: prior.value?.first_seen || new Date().toISOString(),
                   last_verified: new Date().toISOString(),
                   times_seen: (prior.value?.times_seen || 0) + 1,
@@ -5113,7 +5187,19 @@ app.post("/verify-gate", express.json(), async (req, res) => {
     const text = typeof content === "object" ? JSON.stringify(content) : content;
     // Run evaluation
     const startTime = Date.now();
-    const cached = await getCachedEvaluation(text, gateCacheKey, "gate");
+    // READ GATE ON RESOLVED INTENT -- runs before inferencePost, so there is
+    // no resp.provider yet. The write gate below uses resp.provider. Both
+    // preserve cache namespace = provider that produced the entry. Do not
+    // collapse the two into one mechanism. See standing_rules/
+    // provider_is_a_property_of_the_fetch_not_the_intent.md (precondition).
+    //
+    // ROUTE_PROVIDER_VERIFY_GATE is a module constant. This route is FREE and
+    // UNAUTHENTICATED -- provider must never come from the request.
+    const resolvedProvider = ROUTE_PROVIDER_VERIFY_GATE ?? DEFAULT_PROVIDER;
+    let cached = { status: "miss" };
+    if (resolvedProvider === DEFAULT_PROVIDER) {
+      cached = await getCachedEvaluation(text, gateCacheKey, "gate");
+    }
     let evalResult;
     if (cached.status === "hit") {
       evalResult = cached.value;
@@ -5124,7 +5210,7 @@ app.post("/verify-gate", express.json(), async (req, res) => {
         messages: [{ role: "user", content: `Verify these claims. For each claim, state if it is supported, refuted, or uncertain. Cite sources.\n\n${text}` }],
         temperature: 0.1,
         max_tokens: 400,
-      }, { timeout: 10000 });
+      }, { timeout: 10000, label: "verify-gate", provider: ROUTE_PROVIDER_VERIFY_GATE });
       const sonarText = sonarRes.data.choices?.[0]?.message?.content || "";
       const combined = `Sonar verification: ${sonarText}`;
       const scored = scoreVerificationText(sonarText);
@@ -5141,7 +5227,14 @@ app.post("/verify-gate", express.json(), async (req, res) => {
         adversarial_pass: null,
         adversarial_checked: false,
       };
-      try { await setCachedEvaluation(text, evalResult, gateCacheKey, "gate"); } catch {}
+      // WRITE GATE ON resp.provider -- the fetch has happened, so the
+      // authoritative value is what actually ran (including a route flip),
+      // not the resolved intent the read gate used. Skip the write when the
+      // fetch did not run under the deployment default: a flipped route must
+      // not seed entries other routes read.
+      if (sonarRes?.provider === DEFAULT_PROVIDER) {
+        try { await setCachedEvaluation(text, evalResult, gateCacheKey, "gate"); } catch {}
+      }
     }
     const confidence = evalResult.overall_confidence ?? 0;
     const pass = confidence >= min_confidence;
