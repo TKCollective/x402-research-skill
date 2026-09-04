@@ -5085,12 +5085,37 @@ app.post("/evaluate", async (req, res) => {
     // gemmaRes?.status === "fulfilled" ? gemmaRes.value : null, and
     // parseEvalResponse's leading rejected-check. Reads consistently with
     // everything around it and makes the fulfilled-path intent visible.
-    const isFulfilledDefault = s =>
-      s && s.status === "fulfilled" && s.value && s.value.provider === DEFAULT_PROVIDER;
+    // Item (2) split with disqualify semantics for untagged-fulfilled.
+    //
+    // Three states per slot:
+    //   REJECTED (didn't run): silent -- filtered out.
+    //     finished_before_settle, budget_exceeded, upstream throws
+    //     all produce {status:"rejected"} with no value field.
+    //   FULFILLED-AND-TAGGED (ran, provider recorded): must match
+    //     DEFAULT_PROVIDER to keep eligibility.
+    //   FULFILLED-BUT-UNTAGGED (ran, provider unknown): DISQUALIFIES.
+    //     Item (1) tags every fulfilled inferencePost response; an
+    //     untagged fulfilled slot means an unknown code path ran.
+    //     Silence would hide it in cache-miss rates; the log below
+    //     names the specific slot instead.
+    const untaggedSlots = [];
+    for (let i = 0; i < 3; i++) {
+      const s = settled[i];
+      if (s && s.status === "fulfilled" && s.value && typeof s.value.provider !== "string") {
+        untaggedSlots.push(labels[i]);
+      }
+    }
+    if (untaggedSlots.length > 0) {
+      console.log(`[EVALUATE] Cache write skipped: untagged fulfilled slot(s): ${untaggedSlots.join(", ")} -- item (1) tag missing, provenance unaccounted`);
+    }
+    // At least one tagged contribution is required: an all-rejected
+    // settle must not be eligible-by-vacuity.
+    const contributed = [settled[0], settled[1], settled[2]]
+      .filter(s => s && s.status === "fulfilled" && s.value && typeof s.value.provider === "string");
     const evalCacheEligible =
-      isFulfilledDefault(settled[0]) &&
-      isFulfilledDefault(settled[1]) &&
-      isFulfilledDefault(settled[2]);
+      untaggedSlots.length === 0 &&
+      contributed.length > 0 &&
+      contributed.every(s => s.value.provider === DEFAULT_PROVIDER);
     // verdict_provider records WHAT ACTUALLY JUDGED the claim. Reading
     // CACHE_PROVIDER (env-derived) here would record the deployment default
     // even when a route override sent the work elsewhere -- the intent-versus-
