@@ -5064,14 +5064,30 @@ app.post("/evaluate", async (req, res) => {
     // Fail-closed on both: a null slot (timeout, upstream 5xx, normalizer
     // throw) is a non-match for eligibility, consistent with fullyEvaluated
     // already gating this block against partial evaluations.
+    // Only fulfilled slots contribute a provider; rejected slots have no
+    // value field and would map to undefined, which the Set collapse would
+    // then treat as a distinct "provider". Filter on status FIRST, then
+    // read .value.provider -- same status-first idiom as H1.
     const fetchedProviders = [settled[0], settled[1], settled[2]]
-      .filter(r => r != null)
-      .map(r => r.provider);
+      .filter(r => r && r.status === "fulfilled" && r.value)
+      .map(r => r.value.provider);
     const distinctProviders = [...new Set(fetchedProviders)];
+    // settled[i] is { status, value|reason } -- the raw inferencePost response
+    // lives at settled[i].value on the fulfilled path only. A rejected slot
+    // is { status: "rejected", reason: e } with NO value field, so the strict
+    // compare below fails on rejected slots and eligibility is fail-closed by
+    // construction. See the explicit rejected-slot assertion in H4.
+    //
+    // Status-first idiom matches the two existing readers in this file:
+    // gemmaRes?.status === "fulfilled" ? gemmaRes.value : null, and
+    // parseEvalResponse's leading rejected-check. Reads consistently with
+    // everything around it and makes the fulfilled-path intent visible.
+    const isFulfilledDefault = s =>
+      s && s.status === "fulfilled" && s.value && s.value.provider === DEFAULT_PROVIDER;
     const evalCacheEligible =
-      settled[0]?.provider === DEFAULT_PROVIDER &&
-      settled[1]?.provider === DEFAULT_PROVIDER &&
-      settled[2]?.provider === DEFAULT_PROVIDER;
+      isFulfilledDefault(settled[0]) &&
+      isFulfilledDefault(settled[1]) &&
+      isFulfilledDefault(settled[2]);
     // verdict_provider records WHAT ACTUALLY JUDGED the claim. Reading
     // CACHE_PROVIDER (env-derived) here would record the deployment default
     // even when a route override sent the work elsewhere -- the intent-versus-
