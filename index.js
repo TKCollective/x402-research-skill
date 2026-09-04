@@ -325,6 +325,7 @@ async function inferencePost(sonarBody, opts = {}) {
       timeout: opts.timeout ?? 30000,
     });
     _logUsage(label, resp, provider);
+    resp.provider = provider;
     return resp;
   }
   if (provider === "agent") {
@@ -334,7 +335,9 @@ async function inferencePost(sonarBody, opts = {}) {
       timeout: opts.timeout ?? 30000,
     });
     _logUsage(label, resp, provider);
-    return _normalizeAgentResponse(resp);
+    const tagged = _normalizeAgentResponse(resp);
+    tagged.provider = provider;
+    return tagged;
   }
   throw new Error(`unknown provider=${provider} (env INFERENCE_PROVIDER=${INFERENCE_PROVIDER}, opts.provider=${opts.provider})`);
 }
